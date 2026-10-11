@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MiniChess.Core.Actions;
 using MiniChess.Core.Common;
 using MiniChess.Core.Data;
 using MiniChess.Core.Presets;
@@ -11,8 +12,8 @@ using MiniChess.Core.Turns;
 namespace MiniChess.Core.Setup
 {
     /// <summary>
-    /// 배치 단계를 건너뛰고 바로 Battle 을 시작하는 테스트용 팩토리.
-    /// 각 팀의 유닛을 시작 위치 후보 칸에 앞에서부터 순서대로 배치한다.
+    /// 양 팀 배치를 자동으로 마치고 바로 Battle 을 시작하는 테스트용 팩토리.
+    /// 각 팀의 유닛을 시작 위치 후보 칸에 앞에서부터 순서대로 배치 명령(PlaceUnitsAction)으로 놓으므로 배치 규칙을 그대로 따른다.
     /// </summary>
     public static class QuickBattleFactory
     {
@@ -41,17 +42,15 @@ namespace MiniChess.Core.Setup
             SkillCatalog skills = null)
         {
             var issues = new List<string>();
-            List<UnitBaseStats> player1Stats = ResolveLineup(characters, player1Lineup, issues);
-            List<UnitBaseStats> player2Stats = ResolveLineup(characters, player2Lineup, issues);
+            CollectIssues(characters, player1Lineup, issues);
+            CollectIssues(characters, player2Lineup, issues);
             if (issues.Count > 0)
                 throw new GameConfigException(issues.Distinct().ToList());
 
-            var state = new GameState(rules, map, skills);
+            var state = new GameState(rules, map, skills, new CharacterCatalog(characters));
 
-            SpawnTeam(state, Team.Player1, player1Stats);
-            SpawnTeam(state, Team.Player2, player2Stats);
-
-            TurnSystem.StartBattle(state);
+            PlaceTeam(state, Team.Player1, player1Lineup);
+            PlaceTeam(state, Team.Player2, player2Lineup);
             return state;
         }
 
@@ -66,45 +65,28 @@ namespace MiniChess.Core.Setup
                 PrototypeTestPreset.CreateSkills());
         }
 
-        /// <summary>구성의 모든 캐릭터를 확인한다. 문제는 issues 에 모으고 해결된 능력치만 반환한다.</summary>
-        private static List<UnitBaseStats> ResolveLineup(
-            IReadOnlyList<CharacterDefinition> characters, IReadOnlyList<string> lineup, List<string> issues)
+        /// <summary>구성의 캐릭터가 모두 있고 필수 수치가 채워졌는지 확인한다. 문제는 issues 에 모은다.</summary>
+        private static void CollectIssues(IReadOnlyList<CharacterDefinition> characters, IReadOnlyList<string> lineup, List<string> issues)
         {
-            var resolved = new List<UnitBaseStats>();
-
             foreach (string id in lineup)
             {
                 CharacterDefinition definition = characters.FirstOrDefault(c => c.Id == id);
                 if (definition == null)
-                {
                     issues.Add($"캐릭터 Id '{id}' 없음");
-                    continue;
-                }
-
-                List<string> missing = definition.GetMissingFields();
-                if (missing.Count > 0)
-                {
-                    issues.AddRange(missing.Select(field => $"{field} 미설정"));
-                    continue;
-                }
-
-                resolved.Add(definition.ToBaseStats());
+                else
+                    issues.AddRange(definition.GetMissingFields().Select(field => $"{field} 미설정"));
             }
-
-            return resolved;
         }
 
-        private static void SpawnTeam(GameState state, Team team, IReadOnlyList<UnitBaseStats> lineupStats)
+        /// <summary>시작 위치 후보 칸 앞에서부터 차례로 배치 명령을 낸다. 배치 규칙(인원, 중복 등)을 어기면 예외.</summary>
+        private static void PlaceTeam(GameState state, Team team, IReadOnlyList<string> lineup)
         {
             IReadOnlyList<Position> spawnPositions = state.Board.GetSpawnPositions(team);
-            if (spawnPositions.Count < lineupStats.Count)
-                throw new InvalidOperationException($"{team} 시작 위치 {spawnPositions.Count}칸 < 유닛 {lineupStats.Count}개");
+            if (spawnPositions.Count < lineup.Count)
+                throw new InvalidOperationException($"{team} 시작 위치 {spawnPositions.Count}칸 < 유닛 {lineup.Count}개");
 
-            for (int i = 0; i < lineupStats.Count; i++)
-            {
-                Unit unit = state.CreateUnit(team, lineupStats[i]);
-                state.Board.TrySpawn(unit, spawnPositions[i]);
-            }
+            List<UnitPlacement> placements = lineup.Select((id, i) => new UnitPlacement(id, spawnPositions[i])).ToList();
+            new PlaceUnitsAction(team, placements).Execute(state);
         }
     }
 }

@@ -21,6 +21,9 @@ namespace MiniChess.Core.State
         /// <summary>이 플레이어의 턴이 시작된 횟수. 첫 턴 판정(AP 회복 생략)에 사용.</summary>
         public int TurnsStarted { get; internal set; }
 
+        /// <summary>Setup 단계에서 배치를 마쳤는지. 배치는 한 번만 할 수 있다.</summary>
+        public bool HasPlaced { get; internal set; }
+
         public IReadOnlyList<Unit> Units => _units;
         public IEnumerable<Unit> AliveUnits => _units.Where(unit => unit.IsAlive);
 

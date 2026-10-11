@@ -24,6 +24,9 @@ namespace MiniChess.Core.State
         /// <summary>이 경기에서 쓰는 스킬 정의.</summary>
         public SkillCatalog Skills { get; }
 
+        /// <summary>배치할 때 고를 수 있는 캐릭터 정의.</summary>
+        public CharacterCatalog Characters { get; }
+
         /// <summary>경기 중 발생한 상태 변화 기록.</summary>
         public GameEventLog Events { get; } = new GameEventLog();
 
@@ -56,11 +59,13 @@ namespace MiniChess.Core.State
         public bool IsGameOver => Phase == GamePhase.Ended;
         public PlayerState CurrentPlayer => GetPlayer(CurrentTeam);
 
-        public GameState(GameRuleData rules, MapData map, SkillCatalog skills = null)
+        /// <summary>유닛 없이 Setup 단계로 만든다. 외부에서는 GameController.Create 를 쓴다.</summary>
+        internal GameState(GameRuleData rules, MapData map, SkillCatalog skills = null, CharacterCatalog characters = null)
         {
             Rules = rules ?? throw new ArgumentNullException(nameof(rules));
             Board = new Board(map);
             Skills = skills ?? SkillCatalog.Empty;
+            Characters = characters ?? CharacterCatalog.Empty;
             Capture = CreateCapture(Board, rules.Capture);
 
             _players = new Dictionary<Team, PlayerState>
@@ -83,6 +88,12 @@ namespace MiniChess.Core.State
         public IEnumerable<Unit> AllUnits()
         {
             return GetPlayer(Team.Player1).Units.Concat(GetPlayer(Team.Player2).Units);
+        }
+
+        /// <summary>Id 로 유닛을 찾는다(죽은 유닛, 소환물 포함). 없으면 null.</summary>
+        public Unit FindUnit(int unitId)
+        {
+            return AllUnits().FirstOrDefault(unit => unit.Id == unitId);
         }
 
         /// <summary>새 유닛을 만들어 해당 팀 플레이어에 추가한다. 보드 배치는 별도로 한다.</summary>

@@ -59,11 +59,11 @@ namespace MiniChess.Core.Tests
                 PrototypeTestPreset.CreateRules(),
                 PrototypeTestPreset.CreateTestMap(),
                 PrototypeTestPreset.CreateCharacters(),
-                new[] { ChemistPiece.PieceId, FlamePiece.PieceId },
-                new[] { WarriorPiece.PieceId, WarriorPiece.PieceId, ChainGuardPiece.PieceId });
+                new[] { ChemistPiece.PieceId, FlamePiece.PieceId, MortarPiece.PieceId, SeamstressPiece.PieceId },
+                new[] { WarriorPiece.PieceId, ArcherPiece.PieceId, ChainGuardPiece.PieceId, GardenerPiece.PieceId });
 
-            Assert.Equal(new[] { "CHEMIST", "FLAME" }, state.GetPlayer(Team.Player1).Units.Select(u => u.Stats.Base.Id));
-            Assert.Equal(new[] { "WARRIOR", "WARRIOR", "CHAIN_GUARD" }, state.GetPlayer(Team.Player2).Units.Select(u => u.Stats.Base.Id));
+            Assert.Equal(new[] { "CHEMIST", "FLAME", "MORTAR", "SEAMSTRESS" }, state.GetPlayer(Team.Player1).Units.Select(u => u.Stats.Base.Id));
+            Assert.Equal(new[] { "WARRIOR", "ARCHER", "CHAIN_GUARD", "GARDENER" }, state.GetPlayer(Team.Player2).Units.Select(u => u.Stats.Base.Id));
         }
 
         [Fact]
