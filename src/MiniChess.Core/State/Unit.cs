@@ -33,6 +33,9 @@ namespace MiniChess.Core.State
         public bool IsAlive => Stats.IsAlive;
         public bool IsPlaced => Position.HasValue;
 
+        /// <summary>보드 위에 살아 있는지. 행동/피해/상태 부여 대상 판정의 기본.</summary>
+        public bool IsOnBoard => IsAlive && IsPlaced;
+
         public Unit(int id, Team team, IReadOnlyUnitBaseStats baseStats)
         {
             Id = id;

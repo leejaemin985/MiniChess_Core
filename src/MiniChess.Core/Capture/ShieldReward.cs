@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using MiniChess.Core.Combat;
 using MiniChess.Core.Common;
 using MiniChess.Core.State;
@@ -29,7 +28,8 @@ namespace MiniChess.Core.Capture
 
         internal override void Grant(GameState state, Team team)
         {
-            foreach (Unit unit in state.GetPlayer(team).Units.Where(u => u.IsAlive && u.IsPlaced).ToList())
+            // AddShield 가 보드 위에 살아 있는 유닛만 처리한다.
+            foreach (Unit unit in state.GetPlayer(team).Units)
                 DamageSystem.AddShield(state, unit, ShieldId, Amount, source: null);
         }
     }

@@ -2,6 +2,7 @@ using System.Linq;
 using MiniChess.Core.Combat;
 using MiniChess.Core.Common;
 using MiniChess.Core.Events;
+using MiniChess.Core.Skills;
 using MiniChess.Core.State;
 using MiniChess.Core.Turns;
 
@@ -55,14 +56,12 @@ namespace MiniChess.Core.Effects.Scheduled
             state.Events.Record(new StrikeLandedEvent(strike));
 
             // 발사는 행동이 아니다: 시전자는 발사한 턴에도 행동할 수 있다(사용자 확정).
-            foreach (Position position in strike.Cells)
+            foreach (Unit target in TargetFilter.Enemy.GetUnits(state.Board, strike.Cells, strike.Source))
             {
                 if (state.IsGameOver)
                     return;
 
-                Unit occupant = state.Board.GetCell(position).Occupant;
-                if (occupant != null && occupant.IsAlive && occupant.Team != strike.Source.Team)
-                    DamageSystem.Apply(state, new DamageRequest(strike.Source, occupant, strike.Damage, DamageType.Area));
+                DamageSystem.Apply(state, new DamageRequest(strike.Source, target, strike.Damage, DamageType.Area));
             }
         }
     }

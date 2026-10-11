@@ -36,8 +36,8 @@ namespace MiniChess.Core.State
             if (_units.Count == 0)
                 return false;
 
-            bool anyRegularAlive = _units.Any(unit => unit.IsAlive && !unit.IsSummon);
-            bool anySummonAlive = _units.Any(unit => unit.IsAlive && unit.IsSummon);
+            bool anyRegularAlive = AliveUnits.Any(unit => !unit.IsSummon);
+            bool anySummonAlive = AliveUnits.Any(unit => unit.IsSummon);
 
             if (anyRegularAlive)
                 return false;

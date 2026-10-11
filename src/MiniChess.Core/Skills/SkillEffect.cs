@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
-using MiniChess.Core.Common;
 using MiniChess.Core.State;
 
 namespace MiniChess.Core.Skills
@@ -16,10 +14,7 @@ namespace MiniChess.Core.Skills
         /// <summary>범위 안에서 조건에 맞는 살아 있는 유닛(범위 칸 순서).</summary>
         protected static List<Unit> GetUnitsInArea(SkillContext context, TargetFilter filter)
         {
-            return context.AffectedCells
-                .Select(position => context.State.Board.GetCell(position).Occupant)
-                .Where(unit => unit != null && unit.IsAlive && filter.Matches(context.Caster, unit))
-                .ToList();
+            return filter.GetUnits(context.State.Board, context.AffectedCells, context.Caster);
         }
     }
 }

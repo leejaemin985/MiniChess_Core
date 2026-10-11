@@ -20,7 +20,7 @@ namespace MiniChess.Core.Combat
             if (request == null) throw new ArgumentNullException(nameof(request));
 
             Unit target = request.Target;
-            if (!target.IsAlive || !target.IsPlaced)
+            if (!target.IsOnBoard)
                 return DamageOutcome.None;
 
             int amount = request.Amount;
@@ -64,7 +64,7 @@ namespace MiniChess.Core.Combat
             if (state == null) throw new ArgumentNullException(nameof(state));
             if (target == null) throw new ArgumentNullException(nameof(target));
 
-            if (!target.IsAlive || !target.IsPlaced || amount <= 0)
+            if (!target.IsOnBoard || amount <= 0)
                 return;
 
             ShieldInstance shield = target.Stats.SetShield(shieldId, amount, source);
@@ -89,7 +89,7 @@ namespace MiniChess.Core.Combat
             if (target == null) throw new ArgumentNullException(nameof(target));
             if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount));
 
-            if (!target.IsAlive || !target.IsPlaced)
+            if (!target.IsOnBoard)
                 return 0;
 
             int hpBefore = target.Stats.CurrentHp;

@@ -25,7 +25,7 @@ namespace MiniChess.Core.Actions
         {
             if (state.Phase != GamePhase.Battle) return MoveFailReason.NotBattlePhase;
             if (Unit.Team != state.CurrentTeam) return MoveFailReason.NotYourTurn;
-            if (!Unit.IsPlaced || !Unit.IsAlive) return MoveFailReason.UnitNotOnBoard;
+            if (!Unit.IsOnBoard) return MoveFailReason.UnitNotOnBoard;
 
             IReadOnlyList<Position> path = GetPath(state);
 

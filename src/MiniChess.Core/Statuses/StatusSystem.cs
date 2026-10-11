@@ -23,7 +23,7 @@ namespace MiniChess.Core.Statuses
             if (definition == null) throw new ArgumentNullException(nameof(definition));
             if (target == null) throw new ArgumentNullException(nameof(target));
 
-            if (!target.IsAlive || !target.IsPlaced)
+            if (!target.IsOnBoard)
                 return null;
 
             StatusEffect existing = target.FindStatus(definition.Id);

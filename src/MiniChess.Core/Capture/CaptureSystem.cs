@@ -66,8 +66,8 @@ namespace MiniChess.Core.Capture
         private static bool IsHeldBy(GameState state, Team team)
         {
             // 소환물(분신)은 점령을 진행하거나 유지하지 못한다(사용자 확정).
-            Unit occupant = state.Board.GetCell(state.Capture.Tile.Value).Occupant;
-            return occupant != null && occupant.IsAlive && !occupant.IsSummon && occupant.Team == team;
+            Unit occupant = state.Board.GetLivingUnit(state.Capture.Tile.Value);
+            return occupant != null && !occupant.IsSummon && occupant.Team == team;
         }
 
         private static void Complete(GameState state, Team team)

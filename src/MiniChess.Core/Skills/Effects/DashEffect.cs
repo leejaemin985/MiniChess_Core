@@ -43,11 +43,9 @@ namespace MiniChess.Core.Skills.Effects
             var front = new Position(
                 arrived.X + Math.Sign(context.Target.X - from.X),
                 arrived.Y + Math.Sign(context.Target.Y - from.Y));
-            if (!state.Board.IsInBounds(front))
-                return;
 
-            Unit occupant = state.Board.GetCell(front).Occupant;
-            if (occupant != null && occupant.IsAlive && TargetFilter.Enemy.Matches(caster, occupant))
+            Unit occupant = state.Board.GetLivingUnit(front);
+            if (TargetFilter.Enemy.Matches(caster, occupant))
                 DamageSystem.Apply(state, new DamageRequest(caster, occupant, Damage.Value, DamageType.Direct));
         }
     }

@@ -75,6 +75,16 @@ namespace MiniChess.Core.State
             return _cells[position.X, position.Y];
         }
 
+        /// <summary>칸 위의 살아 있는 유닛. 보드 밖이거나 비었으면 null.</summary>
+        public Unit GetLivingUnit(Position position)
+        {
+            if (!IsInBounds(position))
+                return null;
+
+            Unit occupant = GetCell(position).Occupant;
+            return occupant != null && occupant.IsAlive ? occupant : null;
+        }
+
         /// <summary>해당 팀의 시작 위치 후보 칸들.</summary>
         public IReadOnlyList<Position> GetSpawnPositions(Team team)
         {

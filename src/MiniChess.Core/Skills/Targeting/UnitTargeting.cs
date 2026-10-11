@@ -38,8 +38,7 @@ namespace MiniChess.Core.Skills.Targeting
 
             foreach (Position position in RangeCalculator.GetPositionsInRange(state.Board, center, Range.Value, Shape))
             {
-                Unit occupant = state.Board.GetCell(position).Occupant;
-                if (occupant != null && occupant.IsAlive && Filter.Matches(caster, occupant))
+                if (Filter.Matches(caster, state.Board.GetLivingUnit(position)))
                     yield return position;
             }
         }

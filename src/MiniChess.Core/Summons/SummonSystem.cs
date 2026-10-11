@@ -20,7 +20,7 @@ namespace MiniChess.Core.Summons
         /// <summary>owner 가 소환해 살아 있는 소환물들.</summary>
         public static IEnumerable<Unit> GetLivingSummons(GameState state, Unit owner)
         {
-            return state.GetPlayer(owner.Team).Units.Where(unit => unit.SummonOwner == owner && unit.IsAlive && unit.IsPlaced);
+            return state.GetPlayer(owner.Team).Units.Where(unit => unit.SummonOwner == owner && unit.IsOnBoard);
         }
 
         /// <summary>

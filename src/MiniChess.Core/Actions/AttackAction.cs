@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MiniChess.Core.Combat;
 using MiniChess.Core.Common;
+using MiniChess.Core.Skills;
 using MiniChess.Core.State;
 using MiniChess.Core.Statuses;
 
@@ -28,7 +29,7 @@ namespace MiniChess.Core.Actions
             AttackFailReason attackerReason = ValidateAttacker(state, Attacker);
             if (attackerReason != AttackFailReason.None) return attackerReason;
 
-            if (!Target.IsPlaced || !Target.IsAlive) return AttackFailReason.InvalidTarget;
+            if (!Target.IsOnBoard) return AttackFailReason.InvalidTarget;
             if (Target.Team == Attacker.Team) return AttackFailReason.TargetNotEnemy;
 
             if (!RangeCalculator.IsInRange(Attacker.Position.Value, Target.Position.Value, Attacker.Stats.AttackRange))
@@ -69,7 +70,7 @@ namespace MiniChess.Core.Actions
 
             foreach (StatusDefinition status in statuses.ToList())
             {
-                if (state.IsGameOver || !Target.IsAlive || !Target.IsPlaced)
+                if (state.IsGameOver || !Target.IsOnBoard)
                     return;
 
                 StatusSystem.Apply(state, status, Target, Attacker);
@@ -81,7 +82,7 @@ namespace MiniChess.Core.Actions
         {
             if (state.Phase != GamePhase.Battle) return AttackFailReason.NotBattlePhase;
             if (attacker.Team != state.CurrentTeam) return AttackFailReason.NotYourTurn;
-            if (!attacker.IsPlaced || !attacker.IsAlive) return AttackFailReason.AttackerNotOnBoard;
+            if (!attacker.IsOnBoard) return AttackFailReason.AttackerNotOnBoard;
             if (attacker.TurnState.ActionsEnded) return AttackFailReason.ActionsEnded;
             if (attacker.TurnState.CombatActionUsed) return AttackFailReason.AlreadyActed;
             if (StatusSystem.BlocksBasicAttack(state, attacker)) return AttackFailReason.BlockedByStatus;
@@ -95,21 +96,13 @@ namespace MiniChess.Core.Actions
         /// </summary>
         public static List<Unit> GetTargetsInRange(GameState state, Unit attacker)
         {
-            var targets = new List<Unit>();
             if (!attacker.IsPlaced)
-                return targets;
+                return new List<Unit>();
 
             List<Position> positions = RangeCalculator.GetPositionsInRange(
                 state.Board, attacker.Position.Value, attacker.Stats.AttackRange);
 
-            foreach (Position position in positions)
-            {
-                Unit occupant = state.Board.GetCell(position).Occupant;
-                if (occupant != null && occupant.IsAlive && occupant.Team != attacker.Team)
-                    targets.Add(occupant);
-            }
-
-            return targets;
+            return TargetFilter.Enemy.GetUnits(state.Board, positions, attacker);
         }
     }
 }

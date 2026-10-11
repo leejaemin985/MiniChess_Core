@@ -59,7 +59,7 @@ namespace MiniChess.Core.Actions
         {
             if (state.Phase != GamePhase.Battle) return SkillFailReason.NotBattlePhase;
             if (caster.Team != state.CurrentTeam) return SkillFailReason.NotYourTurn;
-            if (!caster.IsPlaced || !caster.IsAlive) return SkillFailReason.CasterNotOnBoard;
+            if (!caster.IsOnBoard) return SkillFailReason.CasterNotOnBoard;
 
             SkillDefinition skill = caster.HasSkill(skillId) ? state.Skills.Find(skillId) : null;
             if (skill == null) return SkillFailReason.SkillNotOwned;

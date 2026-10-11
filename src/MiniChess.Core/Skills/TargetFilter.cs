@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using MiniChess.Core.Common;
 using MiniChess.Core.State;
 
 namespace MiniChess.Core.Skills
@@ -37,6 +40,15 @@ namespace MiniChess.Core.Skills
                 case TargetFilter.Any: return true;
                 default: throw new ArgumentOutOfRangeException(nameof(filter), filter, null);
             }
+        }
+
+        /// <summary>칸들 위의 살아 있는 유닛 중 caster 기준으로 조건에 맞는 유닛(칸 순서). 범위 효과/대상 목록 공용.</summary>
+        public static List<Unit> GetUnits(this TargetFilter filter, Board board, IEnumerable<Position> cells, Unit caster)
+        {
+            return cells
+                .Select(board.GetLivingUnit)
+                .Where(unit => filter.Matches(caster, unit))
+                .ToList();
         }
     }
 }

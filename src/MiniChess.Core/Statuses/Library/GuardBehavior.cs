@@ -67,7 +67,7 @@ namespace MiniChess.Core.Statuses.Library
             // 직접 피해만 대신 받는다. 전가 피해(Redirected)는 다시 전가하지 않아 순환이 생기지 않는다.
             if (request.Target != protectedUnit || request.Type != DamageType.Direct || currentAmount <= 0)
                 return currentAmount;
-            if (guardian == null || !guardian.IsAlive || !guardian.IsPlaced)
+            if (guardian == null || !guardian.IsOnBoard)
                 return currentAmount;
             if (RangeCalculator.GetDistance(guardian.Position.Value, protectedUnit.Position.Value) > MaxDistance)
                 return currentAmount;

@@ -58,8 +58,8 @@ namespace MiniChess.Core.Skills.Targeting
                 if (chosen.Contains(position))
                     continue;
 
-                Unit occupant = state.Board.GetCell(position).Occupant;
-                if (occupant != null && occupant.IsAlive && Filter.Matches(caster, occupant) && CanBeMoved(state, caster, occupant))
+                Unit occupant = state.Board.GetLivingUnit(position);
+                if (Filter.Matches(caster, occupant) && CanBeMoved(state, caster, occupant))
                     yield return position;
             }
         }
