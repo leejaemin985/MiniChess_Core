@@ -12,7 +12,7 @@ namespace MiniChess.Core.Actions
     /// 플레이어가 자기 유닛의 스킬을 지정한 칸(들)에 사용하는 명령.
     /// 처리 순서: 검사 → SkillUsedEvent → AP 차감 → 행동 상태 반영 → 범위 계산 → 효과 순서대로 실행 → (옵션) 행동 종료.
     /// </summary>
-    public class UseSkillAction
+    internal class UseSkillAction
     {
         public Unit Caster { get; }
         public string SkillId { get; }

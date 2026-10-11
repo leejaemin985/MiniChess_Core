@@ -33,7 +33,7 @@ namespace MiniChess.Core.Turns
         };
 
         /// <summary>Setup 단계를 끝내고 Battle 단계로 넘어가 선공 팀의 첫 턴을 시작한다.</summary>
-        public static void StartBattle(GameState state)
+        internal static void StartBattle(GameState state)
         {
             if (state.Phase != GamePhase.Setup)
                 throw new InvalidOperationException($"Battle 은 Setup 단계에서만 시작할 수 있음. 현재: {state.Phase}");

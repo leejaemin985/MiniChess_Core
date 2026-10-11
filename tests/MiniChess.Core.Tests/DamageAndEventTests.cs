@@ -186,7 +186,7 @@ namespace MiniChess.Core.Tests
         {
             var (state, _) = new TestGame().Place(Team.Player1, 0, 0).Place(Team.Player2, 6, 6).Start();
 
-            IReadOnlyList<GameEvent> events = new EndTurnAction(Team.Player1).Execute(state);
+            IReadOnlyList<GameEvent> events = new EndTurnAction(Team.Player1).Execute(state).Events;
 
             Assert.Collection(events,
                 e => Assert.Equal((Team.Player1, 1), (((TurnEndedEvent)e).Team, ((TurnEndedEvent)e).TurnNumber)),

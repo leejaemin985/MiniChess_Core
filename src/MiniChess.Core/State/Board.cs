@@ -154,7 +154,7 @@ namespace MiniChess.Core.State
         }
 
         /// <summary>보드 밖에 있는 유닛을 해당 칸에 올릴 수 있는지.</summary>
-        public bool CanSpawn(Unit unit, Position position)
+        internal bool CanSpawn(Unit unit, Position position)
         {
             return unit != null
                 && !unit.IsPlaced
@@ -162,7 +162,7 @@ namespace MiniChess.Core.State
         }
 
         /// <summary>보드 밖에 있는 유닛을 빈 칸에 올린다. 올릴 수 없으면 false.</summary>
-        public bool TrySpawn(Unit unit, Position position)
+        internal bool TrySpawn(Unit unit, Position position)
         {
             if (!CanSpawn(unit, position))
                 return false;

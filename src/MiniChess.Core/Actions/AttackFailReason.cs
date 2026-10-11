@@ -6,6 +6,12 @@ namespace MiniChess.Core.Actions
         NotBattlePhase,
         NotYourTurn,
 
+        /// <summary>요청한 Id 의 유닛이 없음.</summary>
+        UnknownUnit,
+
+        /// <summary>요청한 팀의 유닛이 아님.</summary>
+        NotYourUnit,
+
         /// <summary>공격하는 유닛이 보드 위에 없거나 사망.</summary>
         AttackerNotOnBoard,
 

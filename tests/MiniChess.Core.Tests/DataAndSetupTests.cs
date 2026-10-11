@@ -60,7 +60,7 @@ namespace MiniChess.Core.Tests
                 PrototypeTestPreset.CreateTestMap(),
                 PrototypeTestPreset.CreateCharacters(),
                 new[] { ChemistPiece.PieceId, FlamePiece.PieceId, MortarPiece.PieceId, SeamstressPiece.PieceId },
-                new[] { WarriorPiece.PieceId, ArcherPiece.PieceId, ChainGuardPiece.PieceId, GardenerPiece.PieceId });
+                new[] { WarriorPiece.PieceId, ArcherPiece.PieceId, ChainGuardPiece.PieceId, GardenerPiece.PieceId }).State;
 
             Assert.Equal(new[] { "CHEMIST", "FLAME", "MORTAR", "SEAMSTRESS" }, state.GetPlayer(Team.Player1).Units.Select(u => u.Stats.Base.Id));
             Assert.Equal(new[] { "WARRIOR", "ARCHER", "CHAIN_GUARD", "GARDENER" }, state.GetPlayer(Team.Player2).Units.Select(u => u.Stats.Base.Id));
@@ -82,7 +82,7 @@ namespace MiniChess.Core.Tests
         [Fact]
         public void CreateDefault_StartsFourVersusFourBattle()
         {
-            GameState state = QuickBattleFactory.CreateDefault();
+            GameState state = QuickBattleFactory.CreateDefault().State;
 
             Assert.Equal(GamePhase.Battle, state.Phase);
             Assert.Equal(4, state.GetPlayer(Team.Player1).Units.Count);

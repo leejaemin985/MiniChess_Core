@@ -10,7 +10,7 @@ namespace MiniChess.Core.Skills
     /// <summary>
     /// 표현 계층용 조회(스킬 버튼, 지정 가능 칸 하이라이트, 범위 미리보기). 상태를 바꾸지 않는다.
     /// </summary>
-    public static class SkillQueries
+    internal static class SkillQueries
     {
         /// <summary>유닛이 가진 스킬(슬롯 순). 경기 스킬 목록에 정의가 없는 Id 는 Definition 이 null.</summary>
         public static List<(string Id, SkillDefinition Definition)> GetSkills(GameState state, Unit unit)

@@ -13,7 +13,7 @@ namespace MiniChess.Core.Actions
     /// 플레이어가 자기 유닛으로 적 유닛을 기본 공격하는 명령.
     /// 벽은 공격을 막지 않으며 사거리만 판정한다.
     /// </summary>
-    public class AttackAction
+    internal class AttackAction
     {
         public Unit Attacker { get; }
         public Unit Target { get; }

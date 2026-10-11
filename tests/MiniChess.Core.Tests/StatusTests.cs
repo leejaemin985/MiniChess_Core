@@ -179,7 +179,7 @@ namespace MiniChess.Core.Tests
             var trigger = new StatusTiming(TurnStep.EndDamageOverTime, TimingOwner.SourceOwner, includeApplicationTurn: true);
             StatusSystem.Apply(state, Def(trigger: trigger, behavior: behavior), u[1], u[0]);
 
-            IReadOnlyList<GameEvent> events = new EndTurnAction(Team.Player1).Execute(state);
+            IReadOnlyList<GameEvent> events = new EndTurnAction(Team.Player1).Execute(state).Events;
 
             Assert.True(state.IsGameOver);
             Assert.Equal(Team.Player1, state.Winner);

@@ -10,7 +10,7 @@ namespace MiniChess.Core.Actions
     /// 플레이어가 자기 유닛을 직선으로 이동시키는 명령.
     /// 턴/행동 여부/AP 같은 플레이어 규칙만 검사하고, 실제 이동은 MovementResolver 에 맡긴다.
     /// </summary>
-    public class MoveAction
+    internal class MoveAction
     {
         public Unit Unit { get; }
         public Position Destination { get; }

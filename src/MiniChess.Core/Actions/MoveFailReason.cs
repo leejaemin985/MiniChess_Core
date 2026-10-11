@@ -5,6 +5,12 @@ namespace MiniChess.Core.Actions
         None,
         NotBattlePhase,
         NotYourTurn,
+
+        /// <summary>요청한 Id 의 유닛이 없음.</summary>
+        UnknownUnit,
+
+        /// <summary>요청한 팀의 유닛이 아님.</summary>
+        NotYourUnit,
         UnitNotOnBoard,
 
         /// <summary>전투 행동 후라 자발적 이동/추가 전투 행동 불가.</summary>
