@@ -795,6 +795,11 @@ namespace MiniChess.Core.Tests
             Assert.Equal(new Position(1, 1), u[2].Position);
             Assert.Equal(new Position(0, 0), u[0].Position);
             Assert.Equal(2, result.Events.OfType<UnitMovedEvent>().Count(e => e.Kind == MoveKind.Swap));
+
+            // 지정 칸 전부가 결과와 시전 이벤트에 남는다
+            var targets = new[] { new Position(1, 1), new Position(3, 0) };
+            Assert.Equal(targets, result.Targets);
+            Assert.Equal(targets, result.Events.OfType<SkillUsedEvent>().Single().Targets);
         }
 
         [Fact]

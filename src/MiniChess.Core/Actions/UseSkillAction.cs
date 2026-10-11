@@ -89,7 +89,7 @@ namespace MiniChess.Core.Actions
             int eventStart = state.Events.Count;
 
             IReadOnlyList<Position> affectedCells = skill.Area.GetCells(state, Caster, Target, Rotation);
-            state.Events.Record(new SkillUsedEvent(Caster, skill, Target, Rotation, affectedCells));
+            state.Events.Record(new SkillUsedEvent(Caster, skill, Targets, Rotation, affectedCells));
 
             state.GetPlayer(Caster.Team).Ap.TrySpend(skill.ApCost.Value);
             if (skill.ActionKind != SkillActionKind.Movement)
@@ -107,7 +107,7 @@ namespace MiniChess.Core.Actions
             if (skill.EndsCasterActions)
                 Caster.TurnState.EndActions();
 
-            return new SkillResult(Caster, skill, Target, Rotation, affectedCells, state.Events.Since(eventStart));
+            return new SkillResult(Caster, skill, Targets, Rotation, affectedCells, state.Events.Since(eventStart));
         }
 
         private static SkillFailReason CheckTurnState(Unit caster, SkillDefinition skill)
