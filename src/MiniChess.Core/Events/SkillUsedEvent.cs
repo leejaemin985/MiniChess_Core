@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using MiniChess.Core.Common;
 using MiniChess.Core.Skills;
+using MiniChess.Core.Skills.Areas;
 using MiniChess.Core.State;
 
 namespace MiniChess.Core.Events
@@ -11,13 +12,18 @@ namespace MiniChess.Core.Events
         public Unit Caster { get; }
         public SkillDefinition Skill { get; }
         public Position Target { get; }
+
+        /// <summary>범위 회전(시계 방향). 회전하는 범위의 스킬에만 의미가 있다.</summary>
+        public AreaRotation Rotation { get; }
+
         public IReadOnlyList<Position> AffectedCells { get; }
 
-        public SkillUsedEvent(Unit caster, SkillDefinition skill, Position target, IReadOnlyList<Position> affectedCells)
+        public SkillUsedEvent(Unit caster, SkillDefinition skill, Position target, AreaRotation rotation, IReadOnlyList<Position> affectedCells)
         {
             Caster = caster;
             Skill = skill;
             Target = target;
+            Rotation = rotation;
             AffectedCells = affectedCells;
         }
     }

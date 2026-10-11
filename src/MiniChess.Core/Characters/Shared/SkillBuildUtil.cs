@@ -30,17 +30,14 @@ namespace MiniChess.Core.Characters.Shared
 
         /// <summary>
         /// 범위 정보의 기준점에 맞는 지정 부품. range/requirement/includeCasterCell 은 선택 칸 기준일 때만 쓴다.
+        /// 회전은 지정과 별개로 사용 명령의 회전값으로 받는다.
         /// </summary>
         public static SkillTargeting AreaTargeting(AreaTuning area, int? range, CellRequirement requirement, bool includeCasterCell = false)
         {
             if (area.Anchor == AreaAnchor.Target)
-            {
-                // 회전 범위는 방향이 정해지는 직선 칸만 지정할 수 있다.
-                RangeShape shape = area.Rotate ? RangeShape.Orthogonal : RangeShape.Square;
-                return new CellTargeting(range, requirement, shape, includeCasterCell: includeCasterCell && !area.Rotate);
-            }
+                return new CellTargeting(range, requirement, RangeShape.Square, includeCasterCell: includeCasterCell);
 
-            return area.Rotate ? new DirectionTargeting() : (SkillTargeting)new SelfTargeting();
+            return new SelfTargeting();
         }
     }
 }

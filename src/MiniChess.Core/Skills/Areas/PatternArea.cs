@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using MiniChess.Core.Common;
 using MiniChess.Core.State;
@@ -17,8 +16,7 @@ namespace MiniChess.Core.Skills.Areas
 
     /// <summary>
     /// 모양(AreaShape)과 기준점으로 정하는 범위. 보드 밖 칸은 제외하고, 벽 칸은 포함한다(효과가 각자 판단).
-    /// Rotate 면 기준점과 무관하게 시전자 → 선택 칸 방향(상하좌우)으로 모양을 회전한다.
-    /// 방향이 직선이 아니면(대각선, 같은 칸) 범위가 비므로, 지정은 직선 칸으로 제한해야 한다.
+    /// Rotate 면 플레이어가 고른 회전(시계 방향 90도 단위)으로 기준점을 중심으로 모양을 돌린다.
     /// </summary>
     public class PatternArea : SkillArea
     {
@@ -43,16 +41,12 @@ namespace MiniChess.Core.Skills.Areas
             Require(Shape, path, nameof(Shape), issues);
         }
 
-        public override IReadOnlyList<Position> GetCells(GameState state, Unit caster, Position target)
+        public override IReadOnlyList<Position> GetCells(GameState state, Unit caster, Position target, AreaRotation rotation = AreaRotation.R0)
         {
             var cells = new List<Position>();
             Position origin = Anchor == AreaAnchor.Caster ? caster.Position.Value : target;
 
-            int facingX = 0, facingY = 1;
-            if (Rotate && !TryGetFacing(caster.Position.Value, target, out facingX, out facingY))
-                return cells;
-
-            foreach ((int dx, int dy) in Shape.GetOffsets(facingX, facingY))
+            foreach ((int dx, int dy) in Shape.GetOffsets(Rotate ? rotation : AreaRotation.R0))
             {
                 var position = new Position(origin.X + dx, origin.Y + dy);
                 if (state.Board.IsInBounds(position))
@@ -60,14 +54,6 @@ namespace MiniChess.Core.Skills.Areas
             }
 
             return cells;
-        }
-
-        /// <summary>from → to 가 상하좌우 직선이면 그 방향의 단위 벡터.</summary>
-        private static bool TryGetFacing(Position from, Position to, out int x, out int y)
-        {
-            x = Math.Sign(to.X - from.X);
-            y = Math.Sign(to.Y - from.Y);
-            return (x == 0) != (y == 0);
         }
     }
 }

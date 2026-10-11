@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using MiniChess.Core.Common;
 using MiniChess.Core.Skills.Areas;
-using MiniChess.Core.Skills.Targeting;
 using MiniChess.Core.State;
 using MiniChess.Core.Tests.Support;
 using Xunit;
@@ -86,41 +85,56 @@ namespace MiniChess.Core.Tests
         }
 
         [Theory]
-        [InlineData(3, 4, new[] { 3, 4, 3, 5 })]   // 위
-        [InlineData(4, 3, new[] { 4, 3, 5, 3 })]   // 오른쪽
-        [InlineData(3, 2, new[] { 3, 2, 3, 1 })]   // 아래
-        [InlineData(2, 3, new[] { 2, 3, 1, 3 })]   // 왼쪽
-        public void CasterAnchor_Rotate_FacesSelectedDirection(int targetX, int targetY, int[] expected)
-        {
-            var (state, caster) = Setup();
-            var area = new PatternArea(AreaShape.Parse(ForwardLine), AreaAnchor.Caster, rotate: true);
-
-            IReadOnlyList<Position> cells = area.GetCells(state, caster, new Position(targetX, targetY));
-
-            Assert.Equal(Cells((expected[0], expected[1]), (expected[2], expected[3])), cells.ToHashSet());
-        }
-
-        [Theory]
-        [InlineData(3, 5, new[] { 2, 5, 3, 5, 4, 5, 5, 5 })]   // 위: 가로로 놓임
-        [InlineData(5, 3, new[] { 5, 4, 5, 3, 5, 2, 5, 1 })]   // 오른쪽: 세로로 회전
-        public void TargetAnchor_Rotate_TurnsShapeByCasterToTargetDirection(int targetX, int targetY, int[] expected)
+        [InlineData(AreaRotation.R0, new[] { 2, 4, 3, 4, 4, 4, 5, 4 })]     // 그린 그대로: 가로, 오른쪽으로 2칸
+        [InlineData(AreaRotation.R90, new[] { 3, 5, 3, 4, 3, 3, 3, 2 })]    // 시계 90: 세로, 아래로 2칸
+        [InlineData(AreaRotation.R180, new[] { 4, 4, 3, 4, 2, 4, 1, 4 })]   // 가로, 왼쪽으로 2칸
+        [InlineData(AreaRotation.R270, new[] { 3, 3, 3, 4, 3, 5, 3, 6 })]   // 세로, 위로 2칸
+        public void TargetAnchor_Rotate_TurnsClockwiseAroundSelectedCell_RegardlessOfCasterDirection(AreaRotation rotation, int[] expected)
         {
             var (state, caster) = Setup();
             var area = new PatternArea(AreaShape.Parse(new[] { "#@##" }), AreaAnchor.Target, rotate: true);
 
-            IReadOnlyList<Position> cells = area.GetCells(state, caster, new Position(targetX, targetY));
+            // 시전자 (3,3) 기준 대각선 칸도 기준점이 될 수 있다
+            IReadOnlyList<Position> cells = area.GetCells(state, caster, new Position(3, 4), rotation);
 
             var expectedCells = Enumerable.Range(0, expected.Length / 2).Select(i => new Position(expected[i * 2], expected[i * 2 + 1]));
             Assert.Equal(expectedCells.ToHashSet(), cells.ToHashSet());
         }
 
-        [Fact]
-        public void Rotate_WithDiagonalTarget_IsEmpty()
+        [Theory]
+        [InlineData(AreaRotation.R0, new[] { 3, 4, 3, 5 })]    // 위
+        [InlineData(AreaRotation.R90, new[] { 4, 3, 5, 3 })]   // 오른쪽
+        [InlineData(AreaRotation.R180, new[] { 3, 2, 3, 1 })]  // 아래
+        [InlineData(AreaRotation.R270, new[] { 2, 3, 1, 3 })]  // 왼쪽
+        public void CasterAnchor_Rotate_TurnsClockwiseAroundCaster(AreaRotation rotation, int[] expected)
         {
             var (state, caster) = Setup();
-            var area = new PatternArea(AreaShape.Parse(new[] { "#@##" }), AreaAnchor.Target, rotate: true);
+            var area = new PatternArea(AreaShape.Parse(ForwardLine), AreaAnchor.Caster, rotate: true);
 
-            Assert.Empty(area.GetCells(state, caster, new Position(4, 4)));
+            IReadOnlyList<Position> cells = area.GetCells(state, caster, caster.Position.Value, rotation);
+
+            Assert.Equal(Cells((expected[0], expected[1]), (expected[2], expected[3])), cells.ToHashSet());
+        }
+
+        [Fact]
+        public void NonRotatingArea_IgnoresRotation()
+        {
+            var (state, caster) = Setup();
+            var area = new PatternArea(AreaShape.Parse(new[] { "#@##" }), AreaAnchor.Target);
+
+            IReadOnlyList<Position> cells = area.GetCells(state, caster, new Position(3, 3), AreaRotation.R90);
+
+            Assert.Equal(Cells((2, 3), (3, 3), (4, 3), (5, 3)), cells.ToHashSet());
+        }
+
+        [Theory]
+        [InlineData(AreaRotation.R0, AreaRotation.R90)]
+        [InlineData(AreaRotation.R90, AreaRotation.R180)]
+        [InlineData(AreaRotation.R180, AreaRotation.R270)]
+        [InlineData(AreaRotation.R270, AreaRotation.R0)]
+        public void Rotation_Next_StepsClockwiseAndWraps(AreaRotation current, AreaRotation next)
+        {
+            Assert.Equal(next, current.Next());
         }
 
         [Fact]
@@ -130,20 +144,6 @@ namespace MiniChess.Core.Tests
             new PatternArea(null, AreaAnchor.Target).CollectConfigIssues("SKILL.Area", issues);
 
             Assert.Contains("SKILL.Area.Shape 미설정", issues);
-        }
-
-        #endregion
-
-        #region DirectionTargeting
-
-        [Fact]
-        public void DirectionTargeting_OffersOrthogonalNeighborsOnBoard()
-        {
-            var (state, caster) = Setup(0, 0);
-
-            var candidates = new DirectionTargeting().GetCandidates(state, caster).ToHashSet();
-
-            Assert.Equal(Cells((0, 1), (1, 0)), candidates);
         }
 
         #endregion

@@ -56,7 +56,7 @@ namespace MiniChess.Core.Characters.Pieces
         }
 
         /// <summary>
-        /// 일자 베기: 사거리 안에서 지정한 칸 기준의 일자 범위 안 적 전원에게 피해(명세 4.2, 사용자 확정: 선택 칸 기준 가로 4칸, 방향 회전).
+        /// 일자 베기: 사거리 안에서 지정한 칸 기준의 일자 범위 안 적 전원에게 피해(명세 4.2, 사용자 확정: 사거리 안(대각선 포함) 선택 칸 기준 가로 4칸, 플레이어가 시계 방향 회전).
         /// 벽은 공격을 막지 않는다. 직접 피해라 이 본체의 저주 표식을 소모하고 추가 피해를 준다.
         /// </summary>
         public static SkillDefinition Slash(SlashTuning t)

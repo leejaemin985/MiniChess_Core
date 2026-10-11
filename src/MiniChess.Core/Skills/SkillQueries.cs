@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MiniChess.Core.Actions;
 using MiniChess.Core.Common;
+using MiniChess.Core.Skills.Areas;
 using MiniChess.Core.State;
 
 namespace MiniChess.Core.Skills
@@ -34,14 +35,23 @@ namespace MiniChess.Core.Skills
             return state.Skills.Find(skillId).Targeting.GetCandidates(state, caster, chosen).Distinct().ToList();
         }
 
-        /// <summary>해당 칸을 지정했을 때 효과가 적용될 칸(범위 미리보기). 설정 오류가 있으면 빈 목록.</summary>
-        public static IReadOnlyList<Position> GetAffectedCells(GameState state, Unit caster, string skillId, Position target)
+        /// <summary>
+        /// 해당 칸을 지정했을 때 효과가 적용될 칸(범위 미리보기). 설정 오류가 있으면 빈 목록.
+        /// 회전하는 범위는 회전 버튼을 누를 때마다 rotation 을 바꿔 다시 조회한다.
+        /// </summary>
+        public static IReadOnlyList<Position> GetAffectedCells(GameState state, Unit caster, string skillId, Position target, AreaRotation rotation = AreaRotation.R0)
         {
             SkillDefinition skill = state.Skills.Find(skillId);
             if (skill == null || skill.GetConfigIssues().Count > 0)
                 return new List<Position>();
 
-            return skill.Area.GetCells(state, caster, target);
+            return skill.Area.GetCells(state, caster, target, rotation);
+        }
+
+        /// <summary>스킬 범위를 플레이어가 회전할 수 있는지(회전 버튼 표시 판단용).</summary>
+        public static bool CanRotate(GameState state, string skillId)
+        {
+            return state.Skills.Find(skillId)?.Area is PatternArea area && area.Rotate;
         }
     }
 }

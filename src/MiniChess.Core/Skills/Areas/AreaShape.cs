@@ -8,7 +8,7 @@ namespace MiniChess.Core.Skills.Areas
     /// <code>
     ///   @ = 기준점(범위 포함)   o = 기준점(범위 미포함)   # = 범위   . = 빈칸
     /// </code>
-    /// 회전하는 범위는 위쪽을 바라보는 모양으로 작성한다.
+    /// 회전하는 범위는 그린 모양이 회전 0(AreaRotation.R0)이다.
     /// </summary>
     public class AreaShape
     {
@@ -19,7 +19,7 @@ namespace MiniChess.Core.Skills.Areas
 
         public static readonly AreaShape SingleCell = Parse(new[] { "@" });
 
-        /// <summary>기준점에서의 상대 좌표(위쪽을 바라볼 때).</summary>
+        /// <summary>기준점에서의 상대 좌표(회전 0).</summary>
         public IReadOnlyList<(int Dx, int Dy)> Offsets { get; }
 
         private AreaShape(IReadOnlyList<(int Dx, int Dy)> offsets)
@@ -80,12 +80,18 @@ namespace MiniChess.Core.Skills.Areas
             return new AreaShape(offsets);
         }
 
-        /// <summary>facing 방향(상하좌우 단위 벡터)을 바라보도록 회전한 상대 좌표.</summary>
-        public IEnumerable<(int Dx, int Dy)> GetOffsets(int facingX, int facingY)
+        /// <summary>시계 방향으로 회전한 상대 좌표.</summary>
+        public IEnumerable<(int Dx, int Dy)> GetOffsets(AreaRotation rotation)
         {
-            // 위(0,1) 기준 모양을 (fx,fy) 방향으로 회전: 오른쪽이면 (dx,dy) → (dy,-dx)
             foreach ((int dx, int dy) in Offsets)
-                yield return (dx * facingY + dy * facingX, dy * facingY - dx * facingX);
+            {
+                // 시계 방향 90도: (dx,dy) → (dy,-dx)
+                (int x, int y) = (dx, dy);
+                for (int i = 0; i < (int)rotation; i++)
+                    (x, y) = (y, -x);
+
+                yield return (x, y);
+            }
         }
     }
 }

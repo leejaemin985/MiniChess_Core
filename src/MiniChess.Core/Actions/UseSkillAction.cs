@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using MiniChess.Core.Common;
 using MiniChess.Core.Events;
 using MiniChess.Core.Skills;
+using MiniChess.Core.Skills.Areas;
 using MiniChess.Core.State;
 
 namespace MiniChess.Core.Actions
@@ -22,17 +23,21 @@ namespace MiniChess.Core.Actions
         /// <summary>첫 번째 지정 칸.</summary>
         public Position Target => Targets[0];
 
-        public UseSkillAction(Unit caster, string skillId, Position target)
-            : this(caster, skillId, new[] { target })
+        /// <summary>범위 회전(시계 방향). 회전하는 범위의 스킬에만 의미가 있다.</summary>
+        public AreaRotation Rotation { get; }
+
+        public UseSkillAction(Unit caster, string skillId, Position target, AreaRotation rotation = AreaRotation.R0)
+            : this(caster, skillId, new[] { target }, rotation)
         {
         }
 
-        public UseSkillAction(Unit caster, string skillId, IReadOnlyList<Position> targets)
+        public UseSkillAction(Unit caster, string skillId, IReadOnlyList<Position> targets, AreaRotation rotation = AreaRotation.R0)
         {
             Caster = caster ?? throw new ArgumentNullException(nameof(caster));
             SkillId = skillId ?? throw new ArgumentNullException(nameof(skillId));
             Targets = targets ?? throw new ArgumentNullException(nameof(targets));
             if (targets.Count == 0) throw new ArgumentException("지정 칸이 비어 있음", nameof(targets));
+            Rotation = rotation;
         }
 
         public SkillFailReason Validate(GameState state)
@@ -83,8 +88,8 @@ namespace MiniChess.Core.Actions
             SkillDefinition skill = state.Skills.Find(SkillId);
             int eventStart = state.Events.Count;
 
-            IReadOnlyList<Position> affectedCells = skill.Area.GetCells(state, Caster, Target);
-            state.Events.Record(new SkillUsedEvent(Caster, skill, Target, affectedCells));
+            IReadOnlyList<Position> affectedCells = skill.Area.GetCells(state, Caster, Target, Rotation);
+            state.Events.Record(new SkillUsedEvent(Caster, skill, Target, Rotation, affectedCells));
 
             state.GetPlayer(Caster.Team).Ap.TrySpend(skill.ApCost.Value);
             if (skill.ActionKind != SkillActionKind.Movement)
@@ -102,7 +107,7 @@ namespace MiniChess.Core.Actions
             if (skill.EndsCasterActions)
                 Caster.TurnState.EndActions();
 
-            return new SkillResult(Caster, skill, Target, affectedCells, state.Events.Since(eventStart));
+            return new SkillResult(Caster, skill, Target, Rotation, affectedCells, state.Events.Since(eventStart));
         }
 
         private static SkillFailReason CheckTurnState(Unit caster, SkillDefinition skill)

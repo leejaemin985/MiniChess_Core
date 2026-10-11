@@ -11,6 +11,7 @@ using MiniChess.Core.Events;
 using MiniChess.Core.Movement;
 using MiniChess.Core.Presets;
 using MiniChess.Core.Skills;
+using MiniChess.Core.Skills.Areas;
 using MiniChess.Core.State;
 using MiniChess.Core.Statuses.Library;
 using MiniChess.Core.Tests.Support;
@@ -904,7 +905,7 @@ namespace MiniChess.Core.Tests
 
         #region Slash
 
-        // 사용자 확정: 선택 칸 기준 가로 4칸, 시전자 → 선택 칸 방향으로 회전, 범위 안 적 전원, 벽에 막히지 않음
+        // 사용자 확정: 사거리 안(대각선 포함) 선택 칸 기준 가로 4칸, 플레이어가 시계 방향으로 회전, 범위 안 적 전원, 벽에 막히지 않음
         [Fact]
         public void Slash_HitsEveryEnemyInHorizontal4CellsAtSelectedCell_ThroughWalls()
         {
@@ -926,19 +927,24 @@ namespace MiniChess.Core.Tests
         }
 
         [Fact]
-        public void Slash_RotatesWithDirection_AndAllowsOnlyStraightCellsInRange()
+        public void Slash_AllowsDiagonalCellsInRange_AndRotatesByPlayerChoice()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 3, 3, With(ScythePiece.SlashId))
-                .Place(Team.Player2, 5, 1)
+                .Place(Team.Player2, 5, 3) // 회전 범위 안
+                .Place(Team.Player2, 6, 5) // 회전 전 범위에만 있음
                 .Start();
 
-            Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], ScythePiece.SlashId, 4, 4)); // 대각선
+            Assert.Equal(SkillFailReason.None, Check(state, u[0], ScythePiece.SlashId, 5, 5));          // 대각선
             Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], ScythePiece.SlashId, 6, 3)); // 사거리 초과
+            Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], ScythePiece.SlashId, 3, 3)); // 자기 칸
 
-            Use(state, u[0], ScythePiece.SlashId, 5, 3); // 오른쪽 → 세로 (5,4)~(5,1)
+            // (5,5) 기준 시계 90도 → 세로 (5,6)~(5,3)
+            SkillResult result = new UseSkillAction(u[0], ScythePiece.SlashId, new Position(5, 5), AreaRotation.R90).Execute(state);
 
+            Assert.Equal(AreaRotation.R90, result.Rotation);
             Assert.Equal(7, u[1].Stats.CurrentHp);
+            Assert.Equal(10, u[2].Stats.CurrentHp);
         }
 
         #endregion
