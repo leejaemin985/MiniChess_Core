@@ -36,5 +36,14 @@ namespace MiniChess.Core.Movement
 
             return StatusSystem.CheckMove(state, mover, initiator, kind, cells);
         }
+
+        /// <summary>
+        /// 걸린 상태효과가 이 방식의 이동(1칸 기준)을 막지 않는지. 행동 잠금은 보지 않는다.
+        /// 스킬 사용 조건과 지정 후보 판정(옮겨질 유닛 거르기)에 쓴다.
+        /// </summary>
+        public static bool IsAllowedByStatuses(GameState state, Unit mover, Unit initiator, MoveKind kind)
+        {
+            return StatusSystem.CheckMove(state, mover, initiator, kind, cells: 1) == MoveBlockReason.None;
+        }
     }
 }

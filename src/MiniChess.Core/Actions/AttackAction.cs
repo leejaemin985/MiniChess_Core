@@ -32,13 +32,7 @@ namespace MiniChess.Core.Actions
             if (!Target.IsOnBoard) return AttackFailReason.InvalidTarget;
             if (Target.Team == Attacker.Team) return AttackFailReason.TargetNotEnemy;
 
-            if (!RangeCalculator.IsInRange(Attacker.Position.Value, Target.Position.Value, Attacker.Stats.AttackRange))
-                return AttackFailReason.OutOfRange;
-
-            if (!state.GetPlayer(Attacker.Team).Ap.CanSpend(state.Rules.ActionCost.BasicAttackCost))
-                return AttackFailReason.NotEnoughAp;
-
-            return AttackFailReason.None;
+            return ValidateRangeAndAp(state, Attacker, Target.Position.Value);
         }
 
         public AttackResult Execute(GameState state)
@@ -49,8 +43,7 @@ namespace MiniChess.Core.Actions
 
             int eventStart = state.Events.Count;
 
-            state.GetPlayer(Attacker.Team).Ap.TrySpend(state.Rules.ActionCost.BasicAttackCost);
-            Attacker.TurnState.MarkCombatActionUsed();
+            PayCost(state, Attacker);
 
             var request = new DamageRequest(Attacker, Target, Attacker.Stats.Attack, DamageType.Direct);
             DamageOutcome outcome = DamageSystem.Apply(state, request);
@@ -88,6 +81,25 @@ namespace MiniChess.Core.Actions
             if (StatusSystem.BlocksBasicAttack(state, attacker)) return AttackFailReason.BlockedByStatus;
 
             return AttackFailReason.None;
+        }
+
+        /// <summary>대상 칸이 사거리 안이고 기본 공격 AP 가 있는지. 장애물 공격과 공용.</summary>
+        internal static AttackFailReason ValidateRangeAndAp(GameState state, Unit attacker, Position target)
+        {
+            if (!RangeCalculator.IsInRange(attacker.Position.Value, target, attacker.Stats.AttackRange))
+                return AttackFailReason.OutOfRange;
+
+            if (!state.GetPlayer(attacker.Team).Ap.CanSpend(state.Rules.ActionCost.BasicAttackCost))
+                return AttackFailReason.NotEnoughAp;
+
+            return AttackFailReason.None;
+        }
+
+        /// <summary>기본 공격 비용(AP, 전투 행동)을 치른다. 장애물 공격과 공용.</summary>
+        internal static void PayCost(GameState state, Unit attacker)
+        {
+            state.GetPlayer(attacker.Team).Ap.TrySpend(state.Rules.ActionCost.BasicAttackCost);
+            attacker.TurnState.MarkCombatActionUsed();
         }
 
         /// <summary>

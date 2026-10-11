@@ -3,7 +3,6 @@ using System.Linq;
 using MiniChess.Core.Common;
 using MiniChess.Core.Movement;
 using MiniChess.Core.State;
-using MiniChess.Core.Statuses;
 
 namespace MiniChess.Core.Skills.Targeting
 {
@@ -66,8 +65,7 @@ namespace MiniChess.Core.Skills.Targeting
 
         private bool CanBeMoved(GameState state, Unit caster, Unit unit)
         {
-            return MovedBy == null
-                || StatusSystem.CheckMove(state, unit, caster, MovedBy.Value, cells: 1) == MoveBlockReason.None;
+            return MovedBy == null || MovementControl.IsAllowedByStatuses(state, unit, caster, MovedBy.Value);
         }
     }
 }

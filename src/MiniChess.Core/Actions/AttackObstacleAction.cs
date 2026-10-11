@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using MiniChess.Core.Combat;
 using MiniChess.Core.Common;
 using MiniChess.Core.Effects;
 using MiniChess.Core.Effects.Zones;
@@ -31,13 +30,7 @@ namespace MiniChess.Core.Actions
 
             if (FindObstacle(state, Target) == null) return AttackFailReason.InvalidTarget;
 
-            if (!RangeCalculator.IsInRange(Attacker.Position.Value, Target, Attacker.Stats.AttackRange))
-                return AttackFailReason.OutOfRange;
-
-            if (!state.GetPlayer(Attacker.Team).Ap.CanSpend(state.Rules.ActionCost.BasicAttackCost))
-                return AttackFailReason.NotEnoughAp;
-
-            return AttackFailReason.None;
+            return AttackAction.ValidateRangeAndAp(state, Attacker, Target);
         }
 
         /// <summary>장애물을 친다. 파괴되었으면 true.</summary>
@@ -49,8 +42,7 @@ namespace MiniChess.Core.Actions
 
             int eventStart = state.Events.Count;
 
-            state.GetPlayer(Attacker.Team).Ap.TrySpend(state.Rules.ActionCost.BasicAttackCost);
-            Attacker.TurnState.MarkCombatActionUsed();
+            AttackAction.PayCost(state, Attacker);
 
             bool destroyed = FindObstacle(state, Target).TakeHit(state, Attacker, Target);
 

@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using MiniChess.Core.Common;
 using MiniChess.Core.Movement;
 using MiniChess.Core.State;
-using MiniChess.Core.Statuses;
 using MiniChess.Core.Summons;
 
 namespace MiniChess.Core.Skills.Targeting
@@ -24,7 +23,7 @@ namespace MiniChess.Core.Skills.Targeting
         {
             foreach (Unit summon in SummonSystem.GetLivingSummons(state, caster))
             {
-                if (MovedBy == null || StatusSystem.CheckMove(state, summon, caster, MovedBy.Value, cells: 1) == MoveBlockReason.None)
+                if (MovedBy == null || MovementControl.IsAllowedByStatuses(state, summon, caster, MovedBy.Value))
                     yield return summon.Position.Value;
             }
         }

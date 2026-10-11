@@ -1,6 +1,5 @@
 using MiniChess.Core.Movement;
 using MiniChess.Core.State;
-using MiniChess.Core.Statuses;
 
 namespace MiniChess.Core.Skills.Conditions
 {
@@ -19,7 +18,7 @@ namespace MiniChess.Core.Skills.Conditions
 
         public override bool IsMet(GameState state, Unit caster)
         {
-            return StatusSystem.CheckMove(state, caster, caster, Kind, cells: 1) == MoveBlockReason.None;
+            return MovementControl.IsAllowedByStatuses(state, caster, caster, Kind);
         }
     }
 }
