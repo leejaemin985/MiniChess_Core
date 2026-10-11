@@ -36,7 +36,7 @@ namespace MiniChess.Core.Skills.Targeting
             if (Filter.Matches(caster, caster))
                 yield return center;
 
-            foreach (Position position in RangeShapes.GetCells(state.Board, center, Range.Value, Shape))
+            foreach (Position position in RangeCalculator.GetPositionsInRange(state.Board, center, Range.Value, Shape))
             {
                 Unit occupant = state.Board.GetCell(position).Occupant;
                 if (occupant != null && occupant.IsAlive && Filter.Matches(caster, occupant))

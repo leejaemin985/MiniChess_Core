@@ -51,7 +51,7 @@ namespace MiniChess.Core.Skills.Targeting
 
             Position center = caster.Position.Value;
             IEnumerable<Position> cells = new[] { center }
-                .Concat(RangeShapes.GetCells(state.Board, center, Range.Value, RangeShape.Square));
+                .Concat(RangeCalculator.GetPositionsInRange(state.Board, center, Range.Value, RangeShape.Square));
 
             foreach (Position position in cells)
             {

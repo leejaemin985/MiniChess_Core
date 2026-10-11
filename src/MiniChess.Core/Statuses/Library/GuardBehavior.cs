@@ -1,5 +1,6 @@
 using System.Linq;
 using MiniChess.Core.Combat;
+using MiniChess.Core.Common;
 using MiniChess.Core.Events;
 using MiniChess.Core.State;
 

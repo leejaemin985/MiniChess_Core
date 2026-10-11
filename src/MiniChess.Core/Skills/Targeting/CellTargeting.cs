@@ -62,7 +62,7 @@ namespace MiniChess.Core.Skills.Targeting
             if (IncludeCasterCell && CanPlaceLayer(state, center))
                 yield return center;
 
-            foreach (Position position in RangeShapes.GetCells(state.Board, center, Range.Value, Shape))
+            foreach (Position position in RangeCalculator.GetPositionsInRange(state.Board, center, Range.Value, Shape))
             {
                 if (Satisfies(state.Board, position) && CanPlaceLayer(state, position))
                     yield return position;

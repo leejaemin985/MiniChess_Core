@@ -44,36 +44,4 @@ namespace MiniChess.Core.Skills
             return true;
         }
     }
-
-    /// <summary>사거리 모양.</summary>
-    public enum RangeShape
-    {
-        /// <summary>체비셰프 거리(대각선 포함 정사각형). 공격/스킬 사거리의 기본.</summary>
-        Square,
-
-        /// <summary>상하좌우 직선 위의 칸만.</summary>
-        Orthogonal,
-    }
-
-    internal static class RangeShapes
-    {
-        /// <summary>center 기준 range 이내의 보드 위 칸(center 제외).</summary>
-        public static IEnumerable<Position> GetCells(Board board, Position center, int range, RangeShape shape)
-        {
-            for (int dx = -range; dx <= range; dx++)
-            {
-                for (int dy = -range; dy <= range; dy++)
-                {
-                    if (dx == 0 && dy == 0)
-                        continue;
-                    if (shape == RangeShape.Orthogonal && dx != 0 && dy != 0)
-                        continue;
-
-                    var position = new Position(center.X + dx, center.Y + dy);
-                    if (board.IsInBounds(position))
-                        yield return position;
-                }
-            }
-        }
-    }
 }

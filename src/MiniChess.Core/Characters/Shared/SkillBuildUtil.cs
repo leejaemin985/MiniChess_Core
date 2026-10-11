@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MiniChess.Core.Common;
 using MiniChess.Core.Skills;
 using MiniChess.Core.Skills.Areas;
 using MiniChess.Core.Skills.Effects;

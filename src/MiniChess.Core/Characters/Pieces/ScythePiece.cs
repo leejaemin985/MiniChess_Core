@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using MiniChess.Core.Characters.Shared;
+using MiniChess.Core.Common;
 using MiniChess.Core.Data;
 using MiniChess.Core.Movement;
 using MiniChess.Core.Skills;

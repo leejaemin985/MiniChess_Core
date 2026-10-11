@@ -28,7 +28,7 @@ namespace MiniChess.Core.Skills.Targeting
                 yield break;
 
             Position center = caster.Position.Value;
-            foreach (Position position in RangeShapes.GetCells(state.Board, center, Range.Value, RangeShape.Orthogonal))
+            foreach (Position position in RangeCalculator.GetPositionsInRange(state.Board, center, Range.Value, RangeShape.Orthogonal))
             {
                 if (state.Board.IsPathClear(state.Board.GetStraightPath(center, position)))
                     yield return position;
