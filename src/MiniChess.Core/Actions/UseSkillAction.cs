@@ -63,7 +63,7 @@ namespace MiniChess.Core.Actions
 
             SkillDefinition skill = caster.HasSkill(skillId) ? state.Skills.Find(skillId) : null;
             if (skill == null) return SkillFailReason.SkillNotOwned;
-            if (skill.GetConfigIssues().Count > 0) return SkillFailReason.ConfigMissing;
+            if (!skill.IsConfigured) return SkillFailReason.ConfigMissing;
 
             SkillFailReason turnReason = CheckTurnState(caster, skill);
             if (turnReason != SkillFailReason.None) return turnReason;

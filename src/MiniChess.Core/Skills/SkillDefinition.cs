@@ -64,8 +64,7 @@ namespace MiniChess.Core.Skills
         {
             var issues = new List<string>();
 
-            if (ApCost == null)
-                issues.Add($"{Id}.{nameof(ApCost)} 미설정");
+            SkillComponent.Require(ApCost, Id, nameof(ApCost), issues);
 
             Targeting.CollectConfigIssues($"{Id}.{nameof(Targeting)}", issues);
             Area.CollectConfigIssues($"{Id}.{nameof(Area)}", issues);
@@ -77,12 +76,12 @@ namespace MiniChess.Core.Skills
                 Conditions[i].CollectConfigIssues($"{Id}.{nameof(Conditions)}[{i}]", issues);
 
             foreach ((string name, object value) in RequiredTuning)
-            {
-                if (value == null)
-                    issues.Add($"{Id}.{name} 미설정");
-            }
+                SkillComponent.Require(value, Id, name, issues);
 
             return issues;
         }
+
+        /// <summary>필수 설정이 모두 채워져 사용 가능한 정의인지.</summary>
+        public bool IsConfigured => GetConfigIssues().Count == 0;
     }
 }

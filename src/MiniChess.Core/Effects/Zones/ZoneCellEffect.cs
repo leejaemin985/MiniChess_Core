@@ -27,7 +27,7 @@ namespace MiniChess.Core.Effects.Zones
 
             if (context.Turn.Step == TurnStep.EndDurationTick
                 && context.Turn.ActiveTeam == Zone.OwnerTeam
-                && context.Cell.GetEffect(Layer) == this)
+                && context.Cell.Contains(this))
             {
                 Zone.TickLifetime(context.State);
             }

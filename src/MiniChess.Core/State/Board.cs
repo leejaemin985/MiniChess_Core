@@ -75,6 +75,16 @@ namespace MiniChess.Core.State
             return _cells[position.X, position.Y];
         }
 
+        /// <summary>보드의 모든 칸. (y, x) 오름차순(아래 줄부터 왼쪽 → 오른쪽).</summary>
+        public IEnumerable<BoardCell> AllCells()
+        {
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                    yield return _cells[x, y];
+            }
+        }
+
         /// <summary>칸 위의 살아 있는 유닛. 보드 밖이거나 비었으면 null.</summary>
         public Unit GetLivingUnit(Position position)
         {

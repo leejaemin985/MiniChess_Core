@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using MiniChess.Core.Common;
-using MiniChess.Core.Effects;
 using MiniChess.Core.Effects.Zones;
 using MiniChess.Core.State;
 
@@ -36,22 +34,12 @@ namespace MiniChess.Core.Skills.Conditions
 
         public static int CountActiveZones(GameState state, Unit caster, string skillId)
         {
-            var zones = new HashSet<FieldZone>();
-            Board board = state.Board;
-
-            for (int x = 0; x < board.Width; x++)
-            {
-                for (int y = 0; y < board.Height; y++)
-                {
-                    foreach (ZoneCellEffect effect in board.GetCell(new Position(x, y)).GetEffectsInOrder().OfType<ZoneCellEffect>())
-                    {
-                        if (effect.Zone.Source == caster && effect.Zone.SkillId == skillId)
-                            zones.Add(effect.Zone);
-                    }
-                }
-            }
-
-            return zones.Count;
+            return state.Board.AllCells()
+                .SelectMany(cell => cell.GetEffectsInOrder().OfType<ZoneCellEffect>())
+                .Select(effect => effect.Zone)
+                .Where(zone => zone.Source == caster && zone.SkillId == skillId)
+                .Distinct()
+                .Count();
         }
     }
 }

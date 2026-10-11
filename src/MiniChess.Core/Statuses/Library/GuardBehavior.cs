@@ -1,4 +1,3 @@
-using System.Linq;
 using MiniChess.Core.Combat;
 using MiniChess.Core.Common;
 using MiniChess.Core.Events;
@@ -26,9 +25,9 @@ namespace MiniChess.Core.Statuses.Library
             StatusEffect status = context.Status;
             GameState state = context.State;
 
-            foreach (StatusEffect other in state.AllUnits().SelectMany(u => u.Statuses).ToList())
+            foreach (StatusEffect other in StatusSystem.FindBySource(state, status.Source))
             {
-                if (other != status && other.Definition.Id == status.Definition.Id && other.Source == status.Source)
+                if (other != status && other.Definition.Id == status.Definition.Id)
                     StatusSystem.Remove(state, other, StatusRemoveReason.Replaced);
             }
 

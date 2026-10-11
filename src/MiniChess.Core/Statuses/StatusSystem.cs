@@ -77,13 +77,17 @@ namespace MiniChess.Core.Statuses
         /// <summary>source 가 건 상태 중 RemoveOnSourceDeath 인 것을 모두 제거한다(건 유닛 사망 시).</summary>
         internal static void RemoveLinkedTo(GameState state, Unit source)
         {
-            List<StatusEffect> linked = state.AllUnits()
-                .SelectMany(unit => unit.Statuses)
-                .Where(status => status.Source == source && status.Definition.RemoveOnSourceDeath)
-                .ToList();
-
-            foreach (StatusEffect status in linked)
+            foreach (StatusEffect status in FindBySource(state, source).Where(s => s.Definition.RemoveOnSourceDeath))
                 Remove(state, status, StatusRemoveReason.SourceDied);
+        }
+
+        /// <summary>source 가 모든 유닛에게 건 상태(스냅샷). 반환 후 제거해도 안전하다.</summary>
+        public static List<StatusEffect> FindBySource(GameState state, Unit source)
+        {
+            return state.AllUnits()
+                .SelectMany(unit => unit.Statuses)
+                .Where(status => status.Source == source)
+                .ToList();
         }
 
         /// <summary>

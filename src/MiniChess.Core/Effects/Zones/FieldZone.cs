@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using MiniChess.Core.Common;
 using MiniChess.Core.Events;
 using MiniChess.Core.State;
@@ -38,12 +37,6 @@ namespace MiniChess.Core.Effects.Zones
             PlacedTurnNumber = placedTurnNumber;
         }
 
-        /// <summary>구역에 속한 효과가 하나라도 보드에 남아 있는지.</summary>
-        public bool IsOnBoard(Board board)
-        {
-            return _cells.Any(c => board.GetCell(c.Position).GetEffect(c.Effect.Layer) == c.Effect);
-        }
-
         internal void Register(Position position, ZoneCellEffect effect)
         {
             _cells.Add((position, effect));
@@ -66,7 +59,7 @@ namespace MiniChess.Core.Effects.Zones
         {
             foreach ((Position position, ZoneCellEffect effect) in _cells)
             {
-                if (state.Board.GetCell(position).GetEffect(effect.Layer) == effect)
+                if (state.Board.GetCell(position).Contains(effect))
                     CellEffectSystem.Remove(state, position, effect.Layer, reason);
             }
         }

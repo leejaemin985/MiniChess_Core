@@ -89,25 +89,19 @@ namespace MiniChess.Core.Effects
         internal static void RunStep(TurnContext context)
         {
             GameState state = context.State;
-            Board board = state.Board;
 
-            for (int y = 0; y < board.Height; y++)
+            foreach (BoardCell cell in state.Board.AllCells())
             {
-                for (int x = 0; x < board.Width; x++)
+                foreach (ICellTurnEffect effect in cell.GetEffectsInOrder().OfType<ICellTurnEffect>().ToList())
                 {
-                    BoardCell cell = board.GetCell(new Position(x, y));
+                    if (state.IsGameOver)
+                        return;
 
-                    foreach (ICellTurnEffect effect in cell.GetEffectsInOrder().OfType<ICellTurnEffect>().ToList())
-                    {
-                        if (state.IsGameOver)
-                            return;
+                    // 앞선 효과 처리로 제거/교체되었을 수 있다.
+                    if (!cell.Contains(effect))
+                        continue;
 
-                        // 앞선 효과 처리로 제거/교체되었을 수 있다.
-                        if (cell.GetEffect(effect.Layer) != effect)
-                            continue;
-
-                        effect.OnTurnStep(new CellTurnContext(context, cell));
-                    }
+                    effect.OnTurnStep(new CellTurnContext(context, cell));
                 }
             }
         }

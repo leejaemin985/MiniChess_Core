@@ -120,22 +120,11 @@ namespace MiniChess.Core.State
         /// <summary>맵의 점령 칸(최대 1칸)으로 점령 상태를 만든다. 규칙이 없으면 비활성.</summary>
         private static CaptureState CreateCapture(Board board, CaptureRuleData rule)
         {
-            Position? tile = null;
+            List<Position> tiles = board.AllCells().Where(cell => cell.IsCaptureTile).Select(cell => cell.Position).ToList();
+            if (tiles.Count > 1)
+                throw new InvalidOperationException($"점령 칸은 맵에 최대 1칸: {string.Join(", ", tiles)}");
 
-            for (int x = 0; x < board.Width; x++)
-            {
-                for (int y = 0; y < board.Height; y++)
-                {
-                    var position = new Position(x, y);
-                    if (!board.GetCell(position).IsCaptureTile)
-                        continue;
-
-                    if (tile.HasValue)
-                        throw new InvalidOperationException($"점령 칸은 맵에 최대 1칸: {tile.Value}, {position}");
-
-                    tile = position;
-                }
-            }
+            Position? tile = tiles.Count == 1 ? tiles[0] : null;
 
             return rule == null
                 ? new CaptureState(tile, 0, active: false)

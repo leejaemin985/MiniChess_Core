@@ -11,13 +11,8 @@ namespace MiniChess.Core.Skills
         /// <summary>비어 있는 필수 설정을 issues 에 추가한다. path 는 보고용 위치(예: "WARRIOR_SMASH.Effects[0]").</summary>
         public virtual void CollectConfigIssues(string path, List<string> issues) { }
 
-        protected static void Require(int? value, string path, string field, List<string> issues)
-        {
-            if (value == null)
-                issues.Add($"{path}.{field} 미설정");
-        }
-
-        protected static void Require(object value, string path, string field, List<string> issues)
+        /// <summary>value 가 null 이면 "{path}.{field} 미설정" 을 issues 에 추가한다. 설정 누락 보고 형식의 단일 출처.</summary>
+        internal static void Require(object value, string path, string field, List<string> issues)
         {
             if (value == null)
                 issues.Add($"{path}.{field} 미설정");

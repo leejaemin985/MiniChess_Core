@@ -42,7 +42,7 @@ namespace MiniChess.Core.Skills
         public static IReadOnlyList<Position> GetAffectedCells(GameState state, Unit caster, string skillId, Position target, AreaRotation rotation = AreaRotation.R0)
         {
             SkillDefinition skill = state.Skills.Find(skillId);
-            if (skill == null || skill.GetConfigIssues().Count > 0)
+            if (skill == null || !skill.IsConfigured)
                 return new List<Position>();
 
             return skill.Area.GetCells(state, caster, target, rotation);

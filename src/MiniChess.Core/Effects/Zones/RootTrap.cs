@@ -37,7 +37,7 @@ namespace MiniChess.Core.Effects.Zones
             if (context.Unit.IsAlive)
                 StatusSystem.Apply(context.State, Root, context.Unit, Zone.Source, Zone.OwnerTeam);
 
-            if (SingleUse && context.Cell.GetEffect(Layer) == this)
+            if (SingleUse && context.Cell.Contains(this))
                 CellEffectSystem.Remove(context.State, context.Cell.Position, Layer, CellEffectRemoveReason.Consumed);
 
             return CellEnterResult.Stop;

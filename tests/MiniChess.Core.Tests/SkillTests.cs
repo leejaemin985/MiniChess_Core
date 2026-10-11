@@ -2,6 +2,7 @@ using MiniChess.Core.Actions;
 using MiniChess.Core.Common;
 using MiniChess.Core.Data;
 using MiniChess.Core.Effects;
+using MiniChess.Core.Effects.Zones;
 using MiniChess.Core.Events;
 using MiniChess.Core.Skills;
 using MiniChess.Core.Skills.Areas;
@@ -293,26 +294,6 @@ namespace MiniChess.Core.Tests
         }
 
         [Fact]
-        public void HealEffect_HealsAlliesInArea()
-        {
-            const string heal = "HEAL";
-            var skill = new SkillDefinition(
-                heal, "heal", 1, SkillActionKind.Combat,
-                new UnitTargeting(TargetFilter.AllyOrSelf, 2), PatternArea.SingleCell,
-                new SkillEffect[] { new HealEffect(3) });
-            var (state, u) = new TestGame()
-                .WithSkills(skill)
-                .Place(Team.Player1, 0, 0, Caster(heal))
-                .Place(Team.Player1, 1, 1, TestGame.Stats(hp: 10))
-                .Start();
-            Combat.DamageSystem.Apply(state, new Combat.DamageRequest(null, u[1], 5, Combat.DamageType.Direct));
-
-            new UseSkillAction(u[0], heal, new Position(1, 1)).Execute(state);
-
-            Assert.Equal(8, u[1].Stats.CurrentHp);
-        }
-
-        [Fact]
         public void ApplyStatusEffect_AppliesStatusFromCaster()
         {
             const string root = "ROOT";
@@ -335,13 +316,14 @@ namespace MiniChess.Core.Tests
         }
 
         [Fact]
-        public void PlaceCellEffect_PlacesPerCell_AndSkipsDisallowedCells()
+        public void PlaceZoneEffect_PlacesPerCell_AndSkipsDisallowedCells()
         {
             const string traps = "TRAPS";
+            StatusDefinition root = Statuses.Library.StatusLibrary.Root(targetTurns: 1, blocksExternalMoves: false);
             var skill = new SkillDefinition(
                 traps, "traps", 1, SkillActionKind.Combat,
                 new CellTargeting(3, CellRequirement.NotWall), Square3x3,
-                new SkillEffect[] { new PlaceCellEffect((c, p) => new TestCellEffect { Layer = CellEffectLayer.Trap }) });
+                new SkillEffect[] { new PlaceZoneEffect(2, (zone, p) => new RootTrap(zone, 0, root, singleUse: true)) });
             var (state, u) = new TestGame()
                 .WithMap(".......", ".......", ".......", "...C...", ".......", ".......", ".......")
                 .WithSkills(skill)

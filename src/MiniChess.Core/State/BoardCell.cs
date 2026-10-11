@@ -47,6 +47,12 @@ namespace MiniChess.Core.State
             return GetEffect(layer) != null;
         }
 
+        /// <summary>이 효과가 아직 이 칸에 설치되어 있는지(제거/교체되지 않았는지).</summary>
+        public bool Contains(ICellEffect effect)
+        {
+            return effect != null && GetEffect(effect.Layer) == effect;
+        }
+
         /// <summary>효과를 자신의 레이어에 설치한다. 같은 레이어의 기존 효과는 덮어쓴다. 규칙 검사/이벤트는 CellEffectSystem 이 한다.</summary>
         internal void SetEffect(ICellEffect effect)
         {
