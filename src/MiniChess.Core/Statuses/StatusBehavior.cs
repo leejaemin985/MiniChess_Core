@@ -21,7 +21,8 @@ namespace MiniChess.Core.Statuses
 
     /// <summary>
     /// 상태의 실제 동작. 필요한 훅만 재정의한다.
-    /// 피해 처리에 끼어드는 상태는 OnApplied/OnRemoved 에서 IDamageInterceptor 를 등록/해제한다.
+    /// 동작은 정의 단위로 공유되므로 상태 한 건에 묶인 값은 StatusEffect.BehaviorData 에 둔다.
+    /// 피해 처리에 끼어드는 상태는 OnApplied 에서 IDamageInterceptor 를 등록해 BehaviorData 에 두고, OnRemoved 에서 해제한다.
     /// </summary>
     public abstract class StatusBehavior
     {

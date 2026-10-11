@@ -7,7 +7,7 @@ namespace MiniChess.Core.Statuses.Library
 {
     /// <summary>
     /// 호위: 상태를 받은 유닛(보호 대상)의 직접 피해를 상태를 건 유닛(호위자)이 대신 받는다.
-    /// 걸릴 때 피해 가로채기를 등록하고, 풀릴 때 해제한다. 호위자는 한 명만 보호하므로
+    /// 걸릴 때 피해 가로채기를 등록해 상태(BehaviorData)에 묶어 두고, 풀릴 때 해제한다. 호위자는 한 명만 보호하므로
     /// 같은 호위자가 다른 대상에게 건 호위는 새로 걸 때 해제한다.
     /// </summary>
     public class GuardBehavior : StatusBehavior
@@ -31,15 +31,14 @@ namespace MiniChess.Core.Statuses.Library
                     StatusSystem.Remove(state, other, StatusRemoveReason.Replaced);
             }
 
-            state.AddDamageInterceptor(new GuardInterceptor(status, MaxDistance));
+            var interceptor = new GuardInterceptor(status, MaxDistance);
+            status.BehaviorData = interceptor;
+            state.AddDamageInterceptor(interceptor);
         }
 
         public override void OnRemoved(StatusContext context)
         {
-            IDamageInterceptor interceptor = context.State.DamageInterceptors
-                .FirstOrDefault(i => i is GuardInterceptor guard && guard.Status == context.Status);
-
-            if (interceptor != null)
+            if (context.Status.BehaviorData is GuardInterceptor interceptor)
                 context.State.RemoveDamageInterceptor(interceptor);
         }
     }

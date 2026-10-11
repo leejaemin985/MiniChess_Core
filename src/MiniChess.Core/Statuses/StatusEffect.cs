@@ -21,6 +21,12 @@ namespace MiniChess.Core.Statuses
         /// <summary>걸리거나 갱신된 경기 턴 번호.</summary>
         public int AppliedTurnNumber { get; private set; }
 
+        /// <summary>
+        /// 동작(StatusBehavior)이 이 상태 한 건에 묶어 두는 값(등록한 가로채기 등).
+        /// 동작은 정의 단위로 공유되므로 건별 값은 여기에 둔다. 동작 외에는 쓰지 않는다.
+        /// </summary>
+        public object BehaviorData { get; set; }
+
         internal StatusEffect(StatusDefinition definition, Unit target, Unit source, Team sourceTeam, int turnNumber)
         {
             Definition = definition;
