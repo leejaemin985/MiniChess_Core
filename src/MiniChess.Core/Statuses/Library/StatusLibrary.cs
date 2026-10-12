@@ -105,22 +105,17 @@ namespace MiniChess.Core.Statuses.Library
         }
 
         /// <summary>
-        /// 설치: 영구 상태(해체할 때까지). 자발적 이동과 기본 공격 불가, 외부 강제 이동은 허용.
-        /// 걸릴 때 보호막(shieldId)을 받고 풀릴 때 그 보호막이 사라진다. 다시 걸어도 아무 일 없다.
+        /// 설치: 영구 상태(해체할 때까지). 자발적 이동과 기본 공격 불가, 외부 강제 이동은 허용. 다시 걸어도 아무 일 없다.
+        /// 설치형 캐릭터 공용이며, 설치/해체 시 부가 효과(보호막 등)는 각 캐릭터의 스킬이 정한다.
         /// </summary>
-        /// <param name="shieldId">설치 보호막 Id.</param>
-        /// <param name="shieldAmount">설치 시 받는 보호막 양.</param>
-        public static StatusDefinition Installed(string shieldId, int? shieldAmount)
+        public static StatusDefinition Installed()
         {
-            if (shieldAmount == null)
-                return null;
-
             return new StatusDefinition(
                 InstalledId,
                 duration: 1,
                 StatusStackPolicy.Ignore,
                 decrement: null,
-                behavior: new InstalledBehavior(shieldId, shieldAmount.Value));
+                behavior: new InstalledBehavior());
         }
 
         /// <summary>

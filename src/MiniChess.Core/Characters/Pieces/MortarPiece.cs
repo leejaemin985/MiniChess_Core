@@ -36,7 +36,7 @@ namespace MiniChess.Core.Characters.Pieces
         /// <summary>
         /// 설치/해체: 같은 버튼으로 설치 상태를 켜고 끈다(명세 5.2, 사용자 확정). 전투 행동이다.
         /// 설치 중: 자발적 이동/기본 공격 불가, 외부 강제 이동은 허용, 지연 포격 사용 가능.
-        /// 설치하면 보호막을 받고(재설치 시 중첩 없이 재충전), 해체하면 그 보호막이 사라진다.
+        /// 설치하면 보호막(Id = 스킬 Id)을 받고(재설치 시 중첩 없이 재충전), 해체하면 그 보호막이 사라진다.
         /// </summary>
         public static SkillDefinition Install(InstallTuning t)
         {
@@ -44,7 +44,13 @@ namespace MiniChess.Core.Characters.Pieces
                 InstallId, "설치 / 해체", t.ApCost, SkillActionKind.Combat,
                 new SelfTargeting(),
                 PatternArea.SingleCell,
-                new SkillEffect[] { new ToggleStatusEffect(StatusLibrary.Installed(InstallId, t.ShieldAmount)) });
+                new SkillEffect[]
+                {
+                    new ToggleStatusEffect(
+                        StatusLibrary.Installed(),
+                        onEnable: new SkillEffect[] { new ApplyShieldEffect(InstallId, t.ShieldAmount) },
+                        onDisable: new SkillEffect[] { new RemoveShieldEffect(InstallId) }),
+                });
         }
 
         /// <summary>

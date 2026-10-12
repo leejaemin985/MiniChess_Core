@@ -958,7 +958,7 @@ namespace MiniChess.Core.Tests
 
         /// <summary>박격포를 설치 상태로 만든다(지연 포격은 설치 상태에서만 사용 가능).</summary>
         private static void InstallMortar(GameState state, Unit mortar) =>
-            Statuses.StatusSystem.Apply(state, StatusLibrary.Installed(MortarPiece.InstallId, 2), mortar, mortar);
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Installed(), mortar, mortar);
 
         // 사용자 확정: 시전 시 조준, 다음 내 턴 시작에 발사
         [Fact]
