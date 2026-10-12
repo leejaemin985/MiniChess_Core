@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using MiniChess.Core.Characters.Shared;
-using MiniChess.Core.Common;
 using MiniChess.Core.Data;
 using MiniChess.Core.Movement;
 using MiniChess.Core.Skills;
@@ -70,7 +69,7 @@ namespace MiniChess.Core.Characters.Pieces
         }
 
         /// <summary>
-        /// 그림자 분신: 본체 상하좌우 인접 빈 칸에 분신을 소환한다(명세 4.3, 사용자 확정).
+        /// 그림자 분신: 본체 주변 8칸(대각선 포함) 중 빈 칸에 분신을 소환한다(명세 4.3, 사용자 확정).
         /// 본체당 1개(살아 있으면 재소환 불가), 소환한 턴에 본체는 행동 종료, 분신은 그 턴부터 팀 AP 로 이동/공격 가능.
         /// 분신의 기본 공격은 피해 0 이며 적중 시 저주 표식을 건다. 본체가 죽으면 분신도 사라진다.
         /// 분신은 점령과 전멸 판정에서 제외된다.
@@ -81,7 +80,7 @@ namespace MiniChess.Core.Characters.Pieces
 
             return new SkillDefinition(
                 ShadowCloneId, "그림자 분신", t.ApCost, SkillActionKind.Combat,
-                new CellTargeting(1, CellRequirement.Empty, RangeShape.Orthogonal),
+                new CellTargeting(1, CellRequirement.Empty),
                 PatternArea.SingleCell,
                 new SkillEffect[] { new SummonEffect(CloneStats(t), new[] { mark }) },
                 new SkillCondition[] { new NoLivingSummonCondition() },

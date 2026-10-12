@@ -1288,7 +1288,7 @@ namespace MiniChess.Core.Tests
         }
 
         [Fact]
-        public void ShadowClone_TargetsOnlyEmptyOrthogonalNeighbors()
+        public void ShadowClone_TargetsEmptyNeighborsIncludingDiagonals()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 3, 0, Scythe())
@@ -1296,7 +1296,7 @@ namespace MiniChess.Core.Tests
                 .Place(Team.Player2, 6, 6)
                 .Start();
 
-            Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], ScythePiece.ShadowCloneId, 4, 1)); // 대각선
+            Assert.Equal(SkillFailReason.None, Check(state, u[0], ScythePiece.ShadowCloneId, 4, 1));          // 대각선
             Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], ScythePiece.ShadowCloneId, 3, 2)); // 2칸
             Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], ScythePiece.ShadowCloneId, 2, 0)); // 유닛
             Assert.Equal(SkillFailReason.None, Check(state, u[0], ScythePiece.ShadowCloneId, 4, 0));
