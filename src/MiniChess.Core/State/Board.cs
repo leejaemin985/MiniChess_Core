@@ -114,13 +114,10 @@ namespace MiniChess.Core.State
             if (sameColumn == sameRow)
                 return path;
 
-            int stepX = Math.Sign(to.X - from.X);
-            int stepY = Math.Sign(to.Y - from.Y);
-
             var current = from;
             while (current != to)
             {
-                current = new Position(current.X + stepX, current.Y + stepY);
+                current = current.StepToward(to);
                 path.Add(current);
             }
 

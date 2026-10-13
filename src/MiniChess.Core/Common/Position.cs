@@ -14,6 +14,19 @@ namespace MiniChess.Core.Common
             Y = y;
         }
 
+        /// <summary>target 쪽 방향(가로/세로 각각 -1, 0, 1). 같은 칸이면 (0, 0).</summary>
+        public (int X, int Y) DirectionTo(Position target) => (Math.Sign(target.X - X), Math.Sign(target.Y - Y));
+
+        /// <summary>(dx, dy) 만큼 떨어진 칸.</summary>
+        public Position Offset(int dx, int dy) => new Position(X + dx, Y + dy);
+
+        /// <summary>target 쪽으로 한 칸 나아간 칸. 같은 칸이면 자기 자신.</summary>
+        public Position StepToward(Position target)
+        {
+            (int dx, int dy) = DirectionTo(target);
+            return Offset(dx, dy);
+        }
+
         public bool Equals(Position other) => X == other.X && Y == other.Y;
         public override bool Equals(object obj) => obj is Position other && Equals(other);
         public override int GetHashCode() => HashCode.Combine(X, Y);

@@ -55,7 +55,11 @@ namespace MiniChess.Core.Characters.Pieces
                 DashId, "돌진", t.ApCost, SkillActionKind.Combat,
                 new StraightMoveTargeting(t.Range),
                 PatternArea.SingleCell,
-                new SkillEffect[] { new DashEffect(t.Damage) },
+                new SkillEffect[]
+                {
+                    new DashEffect(),
+                    new FrontStrikeEffect(t.Damage),
+                },
                 new SkillCondition[] { new CanMoveCondition(MoveKind.Dash) });
         }
     }

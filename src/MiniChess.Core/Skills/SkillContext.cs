@@ -11,6 +11,9 @@ namespace MiniChess.Core.Skills
         public Unit Caster { get; }
         public SkillDefinition Skill { get; }
 
+        /// <summary>시전 시작 시점의 시전자 위치. 이동하는 효과 뒤에도 원래 위치와 진행 방향을 알 수 있다.</summary>
+        public Position CasterOrigin { get; }
+
         /// <summary>플레이어가 지정한 칸 전부(지정 순).</summary>
         public IReadOnlyList<Position> Targets { get; }
 
@@ -25,6 +28,7 @@ namespace MiniChess.Core.Skills
             State = state;
             Caster = caster;
             Skill = skill;
+            CasterOrigin = caster.Position.Value;
             Targets = targets;
             AffectedCells = affectedCells;
         }
