@@ -4,12 +4,16 @@ using MiniChess.Core.State;
 
 namespace MiniChess.Core.Skills.Conditions
 {
-    /// <summary>시전자가 이 스킬로 조준해 착탄을 기다리는 예약 포격 수가 한도 미만일 때만 사용 가능.</summary>
+    /// <summary>
+    /// 예약 효과 개수 제한. 시전자가 이 스킬로 걸어 둔 예약(아직 발동 전)이 Max 개 미만일 때만 사용할 수 있다.
+    /// 예약이 발동하면 개수에서 빠진다.
+    /// </summary>
     public class MaxActiveStrikesCondition : SkillCondition
     {
+        /// <summary>개수를 셀 스킬.</summary>
         public string SkillId { get; }
 
-        /// <summary>동시에 유지할 수 있는 예약 수. [TBD 가능]</summary>
+        /// <summary>시전자당 동시에 걸어 둘 수 있는 예약 수. [TBD 가능]</summary>
         public int? Max { get; }
 
         public MaxActiveStrikesCondition(string skillId, int? max)
