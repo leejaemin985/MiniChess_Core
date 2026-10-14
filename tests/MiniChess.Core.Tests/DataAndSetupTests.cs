@@ -1,8 +1,11 @@
 using MiniChess.Core.Actions;
 using MiniChess.Core.Characters;
 using MiniChess.Core.Characters.Pieces;
+using MiniChess.Core.Combat;
 using MiniChess.Core.Common;
+using MiniChess.Core.Controller;
 using MiniChess.Core.Data;
+using MiniChess.Core.Events;
 using MiniChess.Core.Presets;
 using MiniChess.Core.Setup;
 using MiniChess.Core.State;
@@ -133,6 +136,105 @@ namespace MiniChess.Core.Tests
             new AttackAction(u[0], u[1]).Execute(state);
 
             Assert.False(state.IsGameOver);
+        }
+
+        #endregion
+
+        #region Turn limit / seed
+
+        private static void EndTurns(GameState state, int count)
+        {
+            for (int i = 0; i < count; i++)
+                new EndTurnAction(state.CurrentTeam).Execute(state);
+        }
+
+        private static TestGame TurnLimitGame(int maxTurns = 2)
+        {
+            return new TestGame().WithRules(r => r.Match.MaxTurns = maxTurns);
+        }
+
+        // 사용자 확정: 최대 턴(전체 턴 번호)이 끝나면 판정. 1) 살아 있는 유닛 수
+        [Fact]
+        public void TurnLimit_MoreLivingUnitsWins_AndNoNextTurnStarts()
+        {
+            var (state, _) = TurnLimitGame()
+                .Place(Team.Player1, 0, 0, TestGame.Stats(hp: 1))
+                .Place(Team.Player1, 1, 0, TestGame.Stats(hp: 1))
+                .Place(Team.Player2, 6, 6, TestGame.Stats(hp: 20))
+                .Start();
+
+            EndTurns(state, 1);
+            Assert.False(state.IsGameOver);
+            EndTurns(state, 1);
+
+            Assert.Equal(Team.Player1, state.Winner);
+            Assert.Equal(GameEndReason.TurnLimit, state.Events.All.OfType<GameEndedEvent>().Single().Reason);
+            Assert.DoesNotContain(state.Events.All.OfType<TurnStartedEvent>(), e => e.TurnNumber == 3);
+            Assert.Equal(EndTurnFailReason.NotBattlePhase, new EndTurnAction(state.CurrentTeam).Validate(state));
+        }
+
+        // 사용자 확정: 2) 유닛 수가 같으면 남은 체력 합. 보호막은 제외
+        [Fact]
+        public void TurnLimit_SameUnitCount_HigherHpSumWins_IgnoringShields()
+        {
+            var (state, u) = TurnLimitGame()
+                .Place(Team.Player1, 0, 0, TestGame.Stats(hp: 10))
+                .Place(Team.Player2, 6, 6, TestGame.Stats(hp: 11))
+                .Start();
+            DamageSystem.AddShield(state, u[0], "TEST", 5, source: null);
+
+            EndTurns(state, 2);
+
+            Assert.Equal(Team.Player2, state.Winner);
+        }
+
+        // 사용자 확정: 소환물은 판정에서 제외. 모두 같으면 무승부
+        [Fact]
+        public void TurnLimit_IgnoresSummons_AndAllEqualIsDraw()
+        {
+            var (state, u) = TurnLimitGame()
+                .Place(Team.Player1, 0, 0, TestGame.Stats(hp: 10))
+                .Place(Team.Player1, 1, 0, TestGame.Stats(hp: 10))
+                .Place(Team.Player2, 6, 6, TestGame.Stats(hp: 10))
+                .Start();
+            u[1].IsSummon = true;
+
+            EndTurns(state, 2);
+
+            Assert.True(state.IsGameOver);
+            Assert.Null(state.Winner);
+        }
+
+        [Fact]
+        public void TurnLimit_Zero_MeansNoLimit()
+        {
+            var (state, _) = TurnLimitGame(maxTurns: 0)
+                .Place(Team.Player1, 0, 0)
+                .Place(Team.Player2, 6, 6)
+                .Start();
+
+            EndTurns(state, 10);
+
+            Assert.False(state.IsGameOver);
+        }
+
+        [Fact]
+        public void Seed_FromConfig_IsKept_AndSameSeedGivesSameRandom()
+        {
+            GameState Create(int seed) => GameController.Create(new GameConfig
+            {
+                Rules = PrototypeTestPreset.CreateRules(),
+                Map = PrototypeTestPreset.CreateTestMap(),
+                Seed = seed,
+            }).State;
+
+            GameState a = Create(1234);
+            GameState b = Create(1234);
+
+            Assert.Equal(1234, a.Seed);
+            Assert.Equal(
+                Enumerable.Range(0, 10).Select(_ => a.Random.Next(100)).ToList(),
+                Enumerable.Range(0, 10).Select(_ => b.Random.Next(100)).ToList());
         }
 
         #endregion

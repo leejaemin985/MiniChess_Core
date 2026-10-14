@@ -35,7 +35,8 @@ namespace MiniChess.Core.Controller
             if (config.Map == null) throw new ArgumentException("Map 이 없음", nameof(config));
 
             var characters = new CharacterCatalog(config.Characters ?? Array.Empty<CharacterDefinition>());
-            return new GameController(new GameState(config.Rules, config.Map, config.Skills, characters));
+            int seed = config.Seed ?? (int)DateTime.UtcNow.Ticks;
+            return new GameController(new GameState(config.Rules, config.Map, config.Skills, characters, seed));
         }
 
         #region Commands

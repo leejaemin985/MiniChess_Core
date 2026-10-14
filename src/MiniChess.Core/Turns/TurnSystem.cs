@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using MiniChess.Core.Capture;
+using MiniChess.Core.Combat;
 using MiniChess.Core.Common;
 using MiniChess.Core.Data;
 using MiniChess.Core.Effects;
@@ -14,6 +17,7 @@ namespace MiniChess.Core.Turns
     /// Battle 단계의 턴 진행(시작/종료/교대)을 담당한다.
     /// 각 TurnStep 을 순서대로 처리하며, 단계마다 상태효과 → 칸 효과 → 예약 포격 순으로 훅을 실행한다.
     /// 처리 중 경기가 끝나면 남은 단계와 다음 턴 시작을 진행하지 않는다.
+    /// 최대 턴(MatchRuleData.MaxTurns)이 끝나면 다음 턴 대신 판정으로 경기를 끝낸다.
     /// </summary>
     public static class TurnSystem
     {
@@ -62,6 +66,13 @@ namespace MiniChess.Core.Turns
 
             state.Events.Record(new TurnEndedEvent(endingTeam, state.TurnNumber));
 
+            int maxTurns = state.Rules.Match.MaxTurns;
+            if (maxTurns > 0 && state.TurnNumber >= maxTurns)
+            {
+                DeathSystem.EndGame(state, JudgeAtTurnLimit(state), GameEndReason.TurnLimit);
+                return;
+            }
+
             state.CurrentTeam = GetOpponent(endingTeam);
             state.TurnNumber++;
 
@@ -100,6 +111,21 @@ namespace MiniChess.Core.Turns
 
             // TurnStep.StartCapture: 시작 효과(예약 포격 등)로 점령 칸의 유닛이 사라졌을 수 있어 마지막에 판정한다.
             CaptureSystem.OnTurnStart(state, state.CurrentTeam);
+        }
+
+        /// <summary>최대 턴 판정: 살아 있는 유닛 수 → 남은 체력 합. 소환물과 보호막은 제외. 모두 같으면 무승부(null).</summary>
+        private static Team? JudgeAtTurnLimit(GameState state)
+        {
+            List<Unit> p1 = state.GetPlayer(Team.Player1).AliveUnits.Where(unit => !unit.IsSummon).ToList();
+            List<Unit> p2 = state.GetPlayer(Team.Player2).AliveUnits.Where(unit => !unit.IsSummon).ToList();
+
+            int compare = p1.Count.CompareTo(p2.Count);
+            if (compare == 0)
+                compare = p1.Sum(unit => unit.Stats.CurrentHp).CompareTo(p2.Sum(unit => unit.Stats.CurrentHp));
+
+            if (compare == 0)
+                return null;
+            return compare > 0 ? Team.Player1 : Team.Player2;
         }
 
         private static void RunHooks(GameState state, TurnStep step, Team activeTeam)

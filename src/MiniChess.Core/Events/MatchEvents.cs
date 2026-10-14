@@ -41,14 +41,26 @@ namespace MiniChess.Core.Events
         }
     }
 
+    public enum GameEndReason
+    {
+        /// <summary>한쪽 또는 양쪽 전멸.</summary>
+        Elimination,
+
+        /// <summary>최대 턴 도달 후 판정.</summary>
+        TurnLimit,
+    }
+
     public class GameEndedEvent : GameEvent
     {
         /// <summary>승리 팀. 무승부면 null.</summary>
         public Team? Winner { get; }
 
-        public GameEndedEvent(Team? winner)
+        public GameEndReason Reason { get; }
+
+        public GameEndedEvent(Team? winner, GameEndReason reason)
         {
             Winner = winner;
+            Reason = reason;
         }
     }
 }

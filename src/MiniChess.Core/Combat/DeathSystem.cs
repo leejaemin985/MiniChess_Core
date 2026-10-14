@@ -56,14 +56,19 @@ namespace MiniChess.Core.Combat
             if (!player1Eliminated && !player2Eliminated)
                 return;
 
+            Team? winner = null;
+            if (player1Eliminated != player2Eliminated)
+                winner = player1Eliminated ? Team.Player2 : Team.Player1;
+
+            EndGame(state, winner, GameEndReason.Elimination);
+        }
+
+        /// <summary>경기를 끝낸다. 전멸/턴 제한 등 모든 종료가 이곳을 거친다.</summary>
+        internal static void EndGame(GameState state, Team? winner, GameEndReason reason)
+        {
             state.Phase = GamePhase.Ended;
-
-            if (player1Eliminated && player2Eliminated)
-                state.Winner = null;
-            else
-                state.Winner = player1Eliminated ? Team.Player2 : Team.Player1;
-
-            state.Events.Record(new GameEndedEvent(state.Winner));
+            state.Winner = winner;
+            state.Events.Record(new GameEndedEvent(winner, reason));
         }
     }
 }

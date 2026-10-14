@@ -39,8 +39,11 @@ namespace MiniChess.Core.State
         /// <summary>점령 목표 상태.</summary>
         public CaptureState Capture { get; }
 
-        /// <summary>규칙이 쓰는 무작위 값(점령 보상 선택 등). 테스트에서 고정값으로 바꿀 수 있다.</summary>
-        public IRandomSource Random { get; internal set; } = new SystemRandomSource();
+        /// <summary>이 경기의 무작위 시드. 로그에 남겨두면 같은 경기를 재현할 수 있다.</summary>
+        public int Seed { get; }
+
+        /// <summary>규칙이 쓰는 무작위 값(점령 보상 선택 등). Seed 로 만들며, 테스트에서 고정값으로 바꿀 수 있다.</summary>
+        public IRandomSource Random { get; internal set; }
 
         public GamePhase Phase { get; internal set; }
 
@@ -60,8 +63,10 @@ namespace MiniChess.Core.State
         public PlayerState CurrentPlayer => GetPlayer(CurrentTeam);
 
         /// <summary>유닛 없이 Setup 단계로 만든다. 외부에서는 GameController.Create 를 쓴다.</summary>
-        internal GameState(GameRuleData rules, MapData map, SkillCatalog skills = null, CharacterCatalog characters = null)
+        internal GameState(GameRuleData rules, MapData map, SkillCatalog skills = null, CharacterCatalog characters = null, int seed = 0)
         {
+            Seed = seed;
+            Random = new SystemRandomSource(seed);
             Rules = rules ?? throw new ArgumentNullException(nameof(rules));
             Board = new Board(map);
             Skills = skills ?? SkillCatalog.Empty;

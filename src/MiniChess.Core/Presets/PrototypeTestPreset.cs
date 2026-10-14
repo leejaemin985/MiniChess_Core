@@ -42,6 +42,8 @@ namespace MiniChess.Core.Presets
                     FirstTeam = Team.Player1,
                     // 사용자 확정: 소환물(분신)은 전멸 판정에서 제외
                     SummonElimination = SummonEliminationPolicy.ExcludeSummons,
+                    // 사용자 확정: 전체 턴 번호 200. [가정] 수치는 플레이 테스트로 조정
+                    MaxTurns = 200,
                 },
                 // [프로토타입] 명세 v0.1 3.5. 판정 시점(자기 Turn Start)과 보상 종류는 사용자 확정, 보상 수치는 [가정]
                 Capture = new CaptureRuleData

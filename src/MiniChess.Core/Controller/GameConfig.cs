@@ -15,5 +15,11 @@ namespace MiniChess.Core.Controller
 
         /// <summary>캐릭터들이 쓰는 스킬 정의.</summary>
         public SkillCatalog Skills { get; set; }
+
+        /// <summary>
+        /// 무작위 값(점령 보상 등)의 시드. 비우면 생성 시각으로 정한다.
+        /// 실제 쓴 값은 GameState.Seed 에 남으며, 같은 시드와 같은 요청 순서면 같은 경기가 재현된다.
+        /// </summary>
+        public int? Seed { get; set; }
     }
 }
