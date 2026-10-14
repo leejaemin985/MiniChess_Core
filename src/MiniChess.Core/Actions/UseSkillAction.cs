@@ -95,14 +95,7 @@ namespace MiniChess.Core.Actions
             if (skill.ActionKind != SkillActionKind.Movement)
                 Caster.TurnState.MarkCombatActionUsed();
 
-            var context = new SkillContext(state, Caster, skill, Targets, affectedCells);
-            foreach (SkillEffect effect in skill.Effects)
-            {
-                if (state.IsGameOver)
-                    break;
-
-                effect.Apply(context);
-            }
+            SkillEffect.ApplyAll(skill.Effects, new SkillContext(state, Caster, skill, Targets, affectedCells));
 
             if (skill.EndsCasterActions)
                 Caster.TurnState.EndActions();

@@ -48,7 +48,7 @@ namespace MiniChess.Core.Tests
         {
             SkillDefinition[] skills = PresetSkills();
 
-            Assert.Equal(19, skills.Length);
+            Assert.Equal(20, skills.Length); // 슬롯 18 + 고유 기능 2(분신 교환, 해체)
             Assert.All(skills, s => Assert.Empty(s.GetConfigIssues()));
         }
 
@@ -954,26 +954,31 @@ namespace MiniChess.Core.Tests
 
         #endregion
 
-        #region Delayed strike
+        #region Mortar - Bombard
 
-        /// <summary>박격포를 설치 상태로 만든다(지연 포격은 설치 상태에서만 사용 가능).</summary>
+        private static UnitBaseStats Mortar() =>
+            TestGame.Stats("mortar", skills: new[] { MortarPiece.BombardId, MortarPiece.ShockShellId, MortarPiece.UninstallId });
+
+        /// <summary>박격포를 설치 상태로 만든다(보호막 없이 상태만).</summary>
         private static void InstallMortar(GameState state, Unit mortar) =>
             Statuses.StatusSystem.Apply(state, StatusLibrary.Installed(), mortar, mortar);
 
-        // 사용자 확정: 시전 시 조준, 다음 내 턴 시작에 발사
+        // 사용자 확정: 해체 상태에서 포격하면 설치 + 보호막, 다음 내 턴 시작에 착탄
         [Fact]
-        public void DelayedStrike_NoImmediateDamage_LandsOnEnemiesAtCastersNextTurnStart()
+        public void Bombard_WhenNotInstalled_InstallsWithShield_AndLandsAtNextTurnStart()
         {
             var (state, u) = Game()
-                .Place(Team.Player1, 0, 0, With(MortarPiece.DelayedStrikeId))
+                .Place(Team.Player1, 0, 0, Mortar())
                 .Place(Team.Player2, 3, 3)
                 .Place(Team.Player2, 3, 4) // 범위 안 (십자 위)
                 .Place(Team.Player2, 4, 4) // 범위 밖 (대각선)
                 .Place(Team.Player1, 2, 3) // 범위 안 아군
                 .Start();
-            InstallMortar(state, u[0]);
 
-            Use(state, u[0], MortarPiece.DelayedStrikeId, 3, 3);
+            Use(state, u[0], MortarPiece.BombardId, 3, 3);
+
+            Assert.NotNull(u[0].FindStatus(StatusLibrary.InstalledId));
+            Assert.Equal(2, u[0].Stats.Shield);
             Assert.Equal(10, u[1].Stats.CurrentHp);
             Assert.Single(state.ScheduledStrikes);
 
@@ -989,37 +994,40 @@ namespace MiniChess.Core.Tests
             Assert.Contains(state.Events.Since(0), e => e is UnitDamagedEvent d && d.Target == u[1] && d.Type == DamageType.Area);
         }
 
-        // 사용자 확정: 발사는 행동이 아니다. 발사한 턴에 다시 조준할 수 있다
+        // 사용자 확정: 착탄한 턴에는 다시 포격 또는 해체만 남는다. 다시 포격해도 보호막은 재충전되지 않는다
         [Fact]
-        public void DelayedStrike_FiringDoesNotUseAction_CanAimAgainSameTurn()
+        public void Bombard_LandingTurn_LeavesOnlyBombardOrUninstall()
         {
             var (state, u) = Game()
-                .Place(Team.Player1, 0, 0, With(MortarPiece.DelayedStrikeId))
-                .Place(Team.Player2, 3, 3, TestGame.Stats(hp: 20))
+                .Place(Team.Player1, 0, 0, Mortar())
+                .Place(Team.Player2, 1, 1)
                 .Start();
-            InstallMortar(state, u[0]);
-
-            Use(state, u[0], MortarPiece.DelayedStrikeId, 3, 3);
+            Use(state, u[0], MortarPiece.BombardId, 4, 4);
             EndTurn(state);
+            Hit(state, u[0], 1); // 보호막 2 → 1
             EndTurn(state); // 착탄
 
-            Assert.Equal(14, u[1].Stats.CurrentHp);
-            Assert.False(u[0].TurnState.ActionsEnded);
-            Assert.False(u[0].TurnState.CombatActionUsed);
-            Assert.Equal(SkillFailReason.None, Check(state, u[0], MortarPiece.DelayedStrikeId, 3, 3));
+            Assert.False(u[0].TurnState.CombatActionUsed); // 착탄은 행동이 아니다
+            Assert.Equal(SkillFailReason.None, Check(state, u[0], MortarPiece.BombardId, 4, 4));
+            Assert.Equal(SkillFailReason.None, Check(state, u[0], MortarPiece.UninstallId, 0, 0));
+            Assert.Equal(SkillFailReason.ConditionNotMet, Check(state, u[0], MortarPiece.ShockShellId, 1, 1));
+            Assert.Equal(MoveFailReason.Installed, new MoveAction(u[0], new Position(0, 1)).Validate(state));
+            Assert.Equal(AttackFailReason.BlockedByStatus, new AttackAction(u[0], u[1]).Validate(state));
+
+            Use(state, u[0], MortarPiece.BombardId, 4, 4);
+            Assert.Equal(1, u[0].Stats.Shield);
         }
 
         // 사용자 확정: 착탄 위치는 조준한 칸에 고정, 예상하고 움직이면 피할 수 있다
         [Fact]
-        public void DelayedStrike_EnemyMovingOutOfAimedArea_Dodges()
+        public void Bombard_EnemyMovingOutOfAimedArea_Dodges()
         {
             var (state, u) = Game()
-                .Place(Team.Player1, 0, 0, With(MortarPiece.DelayedStrikeId))
+                .Place(Team.Player1, 0, 0, Mortar())
                 .Place(Team.Player2, 3, 3)
                 .Start();
-            InstallMortar(state, u[0]);
 
-            Use(state, u[0], MortarPiece.DelayedStrikeId, 3, 3);
+            Use(state, u[0], MortarPiece.BombardId, 3, 3);
             EndTurn(state);
             new MoveAction(u[1], new Position(3, 6)).Execute(state);
             EndTurn(state);
@@ -1029,16 +1037,15 @@ namespace MiniChess.Core.Tests
 
         // 사용자 확정: 착탄 전에 시전자가 죽으면 예약 취소
         [Fact]
-        public void DelayedStrike_IsCancelledWhenCasterDies()
+        public void Bombard_IsCancelledWhenCasterDies()
         {
             var (state, u) = Game()
-                .Place(Team.Player1, 0, 0, With(MortarPiece.DelayedStrikeId))
+                .Place(Team.Player1, 0, 0, Mortar())
                 .Place(Team.Player1, 6, 0)
                 .Place(Team.Player2, 3, 3)
                 .Start();
-            InstallMortar(state, u[0]);
 
-            Use(state, u[0], MortarPiece.DelayedStrikeId, 3, 3);
+            Use(state, u[0], MortarPiece.BombardId, 3, 3);
             EndTurn(state);
             DamageSystem.Apply(state, new DamageRequest(u[2], u[0], 99, DamageType.Direct));
 
@@ -1050,90 +1057,47 @@ namespace MiniChess.Core.Tests
         }
 
         [Fact]
-        public void DelayedStrike_AllowsOneActiveStrikePerCaster()
+        public void Bombard_AllowsOneActiveStrikePerCaster()
         {
             var (state, u) = Game()
-                .Place(Team.Player1, 0, 0, With(MortarPiece.DelayedStrikeId))
+                .Place(Team.Player1, 0, 0, Mortar())
                 .Place(Team.Player2, 6, 6)
                 .Start();
-            InstallMortar(state, u[0]);
-            var condition = new Skills.Conditions.MaxActiveStrikesCondition(MortarPiece.DelayedStrikeId, 1);
+            var condition = new Skills.Conditions.MaxActiveStrikesCondition(MortarPiece.BombardId, 1);
 
             Assert.True(condition.IsMet(state, u[0]));
-            Use(state, u[0], MortarPiece.DelayedStrikeId, 3, 3);
+            Use(state, u[0], MortarPiece.BombardId, 3, 3);
             Assert.False(condition.IsMet(state, u[0]));
         }
 
         #endregion
 
-        #region Install
+        #region Mortar - Uninstall
 
-        private static UnitBaseStats Mortar() => With(MortarPiece.InstallId, MortarPiece.DelayedStrikeId);
-
-        // 사용자 확정: 해체 상태로 시작, 설치 중 자발적 이동/기본 공격 불가, 설치 시 보호막
+        // 사용자 확정: 해체는 설치 중에만 가능한 전투 행동. 설치와 보호막이 사라지고, 다음 턴부터 이동/충격탄 가능
         [Fact]
-        public void Install_BlocksMoveAndBasicAttack_AndGivesShield()
+        public void Uninstall_RemovesInstallAndShield_AsCombatAction()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 0, 0, Mortar())
-                .Place(Team.Player2, 1, 1)
+                .Place(Team.Player2, 1, 2)
                 .Start();
-            Assert.Null(u[0].FindStatus(StatusLibrary.InstalledId));
-            Assert.Equal(SkillFailReason.ConditionNotMet, Check(state, u[0], MortarPiece.DelayedStrikeId, 3, 3));
+            Assert.Equal(SkillFailReason.ConditionNotMet, Check(state, u[0], MortarPiece.UninstallId, 0, 0));
 
-            Use(state, u[0], MortarPiece.InstallId, 0, 0);
+            Use(state, u[0], MortarPiece.BombardId, 4, 4);
             EndTurn(state);
             EndTurn(state);
 
-            Assert.NotNull(u[0].FindStatus(StatusLibrary.InstalledId));
-            Assert.Equal(2, u[0].Stats.Shield);
-            Assert.Equal(MoveFailReason.Installed, new MoveAction(u[0], new Position(0, 1)).Validate(state));
-            Assert.Equal(AttackFailReason.BlockedByStatus, new AttackAction(u[0], u[1]).Validate(state));
-            Assert.Equal(SkillFailReason.None, Check(state, u[0], MortarPiece.DelayedStrikeId, 3, 3));
-        }
-
-        // 사용자 확정: 해체하면 설치 보호막 제거, 다시 이동/공격 가능
-        [Fact]
-        public void Uninstall_RemovesShield_AndRestoresMovement()
-        {
-            var (state, u) = Game()
-                .Place(Team.Player1, 0, 0, Mortar())
-                .Place(Team.Player2, 6, 6)
-                .Start();
-            Use(state, u[0], MortarPiece.InstallId, 0, 0);
-            EndTurn(state);
-            EndTurn(state);
-
-            Use(state, u[0], MortarPiece.InstallId, 0, 0); // 해체
+            Use(state, u[0], MortarPiece.UninstallId, 0, 0);
             Assert.Null(u[0].FindStatus(StatusLibrary.InstalledId));
             Assert.Equal(0, u[0].Stats.Shield);
+            Assert.Equal(SkillFailReason.AlreadyActed, Check(state, u[0], MortarPiece.ShockShellId, 1, 2));
+            Assert.Equal(MoveFailReason.AlreadyActed, new MoveAction(u[0], new Position(0, 1)).Validate(state));
 
             EndTurn(state);
             EndTurn(state);
+            Assert.Equal(SkillFailReason.None, Check(state, u[0], MortarPiece.ShockShellId, 1, 2));
             Assert.Equal(MoveFailReason.None, new MoveAction(u[0], new Position(0, 1)).Validate(state));
-        }
-
-        // 사용자 확정: 설치 → 조준 → 착탄 턴에는 다시 조준 또는 해체만 남는다
-        [Fact]
-        public void Mortar_FiringTurn_LeavesOnlyAimAgainOrUninstall()
-        {
-            var (state, u) = Game()
-                .Place(Team.Player1, 0, 0, Mortar())
-                .Place(Team.Player2, 3, 3, TestGame.Stats(hp: 20))
-                .Place(Team.Player2, 1, 1)
-                .Start();
-            Use(state, u[0], MortarPiece.InstallId, 0, 0);
-            EndTurn(state);
-            EndTurn(state);
-            Use(state, u[0], MortarPiece.DelayedStrikeId, 3, 3);
-            EndTurn(state);
-            EndTurn(state); // 착탄
-
-            Assert.Equal(14, u[1].Stats.CurrentHp);
-            Assert.Equal(SkillFailReason.None, Check(state, u[0], MortarPiece.DelayedStrikeId, 3, 3));
-            Assert.Equal(SkillFailReason.None, Check(state, u[0], MortarPiece.InstallId, 0, 0));
-            Assert.Equal(MoveFailReason.Installed, new MoveAction(u[0], new Position(0, 1)).Validate(state));
-            Assert.Equal(AttackFailReason.BlockedByStatus, new AttackAction(u[0], u[2]).Validate(state));
         }
 
         // 사용자 확정: 설치 중에도 외부 강제 이동(워프 교환 등)은 허용
@@ -1151,6 +1115,59 @@ namespace MiniChess.Core.Tests
             Warp(u[0], (1, 0), (2, 0)).Execute(state);
 
             Assert.Equal(new Position(2, 0), u[1].Position);
+        }
+
+        #endregion
+
+        #region Mortar - Shock shell / Knockback
+
+        // 사용자 확정(코어 규칙): 세로 차이 >= 가로 차이면 상하, 가로 차이가 더 크면 좌우. 미는 쪽에서 멀어지는 방향
+        [Theory]
+        [InlineData(5, 4, 1, 0)]   // 가로 2 > 세로 1 → 오른쪽
+        [InlineData(4, 5, 0, 1)]   // 세로 2 > 가로 1 → 위
+        [InlineData(5, 5, 0, 1)]   // 같으면 상하 → 위
+        [InlineData(1, 1, 0, -1)]  // 같으면 상하 → 아래
+        [InlineData(0, 4, -1, 0)]  // 가로 3 > 세로 1 → 왼쪽
+        public void Knockback_Direction_FollowsAxisWithLargerGap_TiesGoVertical(int targetX, int targetY, int expectedX, int expectedY)
+        {
+            Assert.Equal((expectedX, expectedY), Knockback.GetDirection(new Position(3, 3), new Position(targetX, targetY)));
+        }
+
+        [Fact]
+        public void ShockShell_DamagesAndPushesEnemyAway()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 3, 1, Mortar())
+                .Place(Team.Player2, 4, 2)
+                .Start();
+
+            SkillResult result = Use(state, u[0], MortarPiece.ShockShellId, 4, 2);
+
+            Assert.Equal(9, u[1].Stats.CurrentHp);
+            Assert.Equal(new Position(4, 4), u[1].Position); // 가로 1 = 세로 1 → 위로 2칸
+            Assert.All(result.Events.OfType<UnitMovedEvent>(), e => Assert.Equal(MoveKind.Knockback, e.Kind));
+        }
+
+        // 사용자 확정: 벽/유닛/장애물/보드 끝에 막히면 그 앞에서 멈추고 추가 피해 없음
+        [Fact]
+        public void ShockShell_StopsBeforeBlocker_WithoutExtraDamage()
+        {
+            var (state, u) = Game()
+                .WithMap(".......", ".......", "...#...", ".......", ".......", ".......", ".......")
+                .WithRules(r => r.Ap.StartAp = 6)
+                .Place(Team.Player1, 3, 1, Mortar())
+                .Place(Team.Player2, 3, 2)
+                .Place(Team.Player1, 0, 4, Mortar())
+                .Place(Team.Player2, 0, 5)
+                .Start();
+
+            Use(state, u[0], MortarPiece.ShockShellId, 3, 2); // 벽 (3,4) 앞
+            Use(state, u[2], MortarPiece.ShockShellId, 0, 5); // 보드 끝 (0,6)
+
+            Assert.Equal(new Position(3, 3), u[1].Position);
+            Assert.Equal(new Position(0, 6), u[3].Position);
+            Assert.Equal(9, u[1].Stats.CurrentHp);
+            Assert.Equal(9, u[3].Stats.CurrentHp);
         }
 
         #endregion

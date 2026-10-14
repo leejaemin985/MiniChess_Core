@@ -2,7 +2,7 @@ using MiniChess.Core.State;
 
 namespace MiniChess.Core.Skills.Conditions
 {
-    /// <summary>시전자에게 해당 상태가 걸려 있을 때만 사용 가능(설치 상태에서만 포격 등).</summary>
+    /// <summary>시전자에게 해당 상태가 걸려 있을 때만 사용 가능(설치 중에만 해체 등).</summary>
     public class HasStatusCondition : SkillCondition
     {
         public string StatusId { get; }

@@ -69,8 +69,7 @@ namespace MiniChess.Core.Skills
             Targeting.CollectConfigIssues($"{Id}.{nameof(Targeting)}", issues);
             Area.CollectConfigIssues($"{Id}.{nameof(Area)}", issues);
 
-            for (int i = 0; i < Effects.Count; i++)
-                Effects[i].CollectConfigIssues($"{Id}.{nameof(Effects)}[{i}]", issues);
+            SkillEffect.CollectAll(Effects, $"{Id}.{nameof(Effects)}", issues);
 
             for (int i = 0; i < Conditions.Count; i++)
                 Conditions[i].CollectConfigIssues($"{Id}.{nameof(Conditions)}[{i}]", issues);

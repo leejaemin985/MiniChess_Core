@@ -191,19 +191,24 @@ namespace MiniChess.Core.Presets
             t.Gardener.SingleShield.Range = 2;
             t.Gardener.SingleShield.Amount = 3;
 
-            t.Mortar.Install.ApCost = 2;
-            t.Mortar.Install.ShieldAmount = 2;
-
-            t.Mortar.DelayedStrike.ApCost = 4;
-            t.Mortar.DelayedStrike.Range = 4;
-            t.Mortar.DelayedStrike.Area.Shape = new[]
+            t.Mortar.Bombard.ApCost = 4;
+            t.Mortar.Bombard.Range = 4;
+            t.Mortar.Bombard.Area.Shape = new[]
             {
                 ".#.",
                 "#@#",
                 ".#.",
             };
-            t.Mortar.DelayedStrike.Damage = 6;
-            t.Mortar.DelayedStrike.MaxActive = 1;
+            t.Mortar.Bombard.Damage = 6;
+            t.Mortar.Bombard.MaxActive = 1;
+            t.Mortar.Bombard.InstallShieldAmount = 2;
+
+            t.Mortar.Uninstall.ApCost = 2;
+
+            t.Mortar.ShockShell.ApCost = 3;
+            t.Mortar.ShockShell.Range = 2;
+            t.Mortar.ShockShell.Damage = 1;
+            t.Mortar.ShockShell.PushCells = 2;
 
             t.Scythe.Slash.ApCost = 3;
             t.Scythe.Slash.Range = 2;

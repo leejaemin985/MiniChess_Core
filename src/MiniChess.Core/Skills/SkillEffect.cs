@@ -16,5 +16,24 @@ namespace MiniChess.Core.Skills
         {
             return filter.GetUnits(context.State.Board, context.AffectedCells, context.Caster);
         }
+
+        /// <summary>효과 목록을 순서대로 실행한다. 도중에 경기가 끝나면 나머지는 실행하지 않는다.</summary>
+        internal static void ApplyAll(IReadOnlyList<SkillEffect> effects, SkillContext context)
+        {
+            foreach (SkillEffect effect in effects)
+            {
+                if (context.State.IsGameOver)
+                    return;
+
+                effect.Apply(context);
+            }
+        }
+
+        /// <summary>효과 목록의 설정 누락을 "{path}[i]" 위치로 모은다.</summary>
+        internal static void CollectAll(IReadOnlyList<SkillEffect> effects, string path, List<string> issues)
+        {
+            for (int i = 0; i < effects.Count; i++)
+                effects[i].CollectConfigIssues($"{path}[{i}]", issues);
+        }
     }
 }
