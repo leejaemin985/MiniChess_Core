@@ -45,7 +45,8 @@ namespace MiniChess.Core.Actions
 
             PayCost(state, Attacker);
 
-            var request = new DamageRequest(Attacker, Target, Attacker.Stats.Attack, DamageType.Direct);
+            int damage = Attacker.Stats.Attack + StatusSystem.ConsumeBasicAttackBonus(state, Attacker);
+            var request = new DamageRequest(Attacker, Target, damage, DamageType.Direct);
             DamageOutcome outcome = DamageSystem.Apply(state, request);
             ApplyOnHitStatuses(state);
 

@@ -42,6 +42,12 @@ namespace MiniChess.Core.Statuses
             return false;
         }
 
+        /// <summary>대상이 유닛을 기본 공격할 때 더할 피해. 0 보다 크면 그 기본 공격에서 상태가 소모된다(차징 등).</summary>
+        public virtual int BasicAttackBonus(StatusContext context)
+        {
+            return 0;
+        }
+
         /// <summary>이 상태가 대상의 이동을 막는지.</summary>
         /// <param name="initiator">이동을 일으킨 유닛. 대상 자신이면 자발적 이동.</param>
         /// <param name="cells">이번 이동의 칸 수.</param>

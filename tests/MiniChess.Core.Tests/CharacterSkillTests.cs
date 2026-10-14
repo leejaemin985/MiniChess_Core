@@ -48,7 +48,7 @@ namespace MiniChess.Core.Tests
         {
             SkillDefinition[] skills = PresetSkills();
 
-            Assert.Equal(20, skills.Length); // 슬롯 18 + 고유 기능 2(분신 교환, 해체)
+            Assert.Equal(22, skills.Length); // 슬롯 20 + 고유 기능 2(분신 교환, 해체)
             Assert.All(skills, s => Assert.Empty(s.GetConfigIssues()));
         }
 
@@ -71,7 +71,7 @@ namespace MiniChess.Core.Tests
             var ids = PresetSkills().Select(s => s.Id).ToHashSet();
             var slotted = PieceModules.CreateDefinitions().SelectMany(c => c.SkillSlots).Where(id => id != null).ToList();
 
-            Assert.Equal(18, slotted.Count);
+            Assert.Equal(20, slotted.Count);
             Assert.All(slotted, id => Assert.Contains(id, ids));
         }
 
@@ -1512,6 +1512,100 @@ namespace MiniChess.Core.Tests
             Statuses.StatusSystem.Apply(state, StatusLibrary.Root(targetTurns: 1, blocksExternalMoves: false), u[0], u[1]);
 
             Assert.Equal(SkillFailReason.ConditionNotMet, Check(state, u[0], ScythePiece.CloneSwapId, 3, 1));
+        }
+
+        #endregion
+
+        #region Assassin
+
+        private static UnitBaseStats Assassin() =>
+            TestGame.Stats("assassin", hp: 9, attack: 4, range: 1, skills: new[] { AssassinPiece.LeapId, AssassinPiece.ChargeId });
+
+        // 사용자 확정: 사거리 4 안의 빈 칸으로 순간이동(벽/유닛을 넘음), 이동 계열이라 도약 후 기본 공격 가능
+        [Fact]
+        public void Leap_TeleportsOverWallsToEmptyCellInRange_ThenCanAttack()
+        {
+            var (state, u) = Game()
+                .WithMap(".......", ".......", ".......", ".......", ".......", "#######", ".......")
+                .WithRules(r => r.Ap.StartAp = 6)
+                .Place(Team.Player1, 0, 0, Assassin())
+                .Place(Team.Player2, 2, 4)
+                .Start();
+
+            Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], AssassinPiece.LeapId, 2, 4)); // 유닛 있는 칸
+            Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], AssassinPiece.LeapId, 1, 1)); // 벽
+            Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], AssassinPiece.LeapId, 0, 5)); // 사거리 초과
+
+            SkillResult result = Use(state, u[0], AssassinPiece.LeapId, 2, 3); // 벽 줄 너머
+
+            Assert.Equal(new Position(2, 3), u[0].Position);
+            Assert.Equal(MoveKind.Warp, result.Events.OfType<UnitMovedEvent>().Single().Kind);
+            Assert.False(u[0].TurnState.CombatActionUsed);
+
+            new AttackAction(u[0], u[1]).Execute(state);
+            Assert.Equal(6, u[1].Stats.CurrentHp);
+        }
+
+        [Fact]
+        public void Leap_IsBlockedWhenRooted_OrAfterCombatAction()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0, Assassin())
+                .Place(Team.Player1, 6, 0, Assassin())
+                .Place(Team.Player2, 6, 1)
+                .Start();
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Root(1, false), u[0], u[2]);
+
+            Assert.Equal(SkillFailReason.ConditionNotMet, Check(state, u[0], AssassinPiece.LeapId, 2, 2));
+
+            new AttackAction(u[1], u[2]).Execute(state);
+            Assert.Equal(SkillFailReason.MoveLocked, Check(state, u[1], AssassinPiece.LeapId, 4, 2));
+        }
+
+        // 사용자 확정: 차징 후 다음 내 턴의 기본 공격에 추가 피해. 보호막/호위 없는 궁수(체력 8)는 한 번에 쓰러진다
+        [Fact]
+        public void Charge_NextTurnBasicAttackDealsBonus_DownsUnprotectedArcher()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 3, 3, Assassin())
+                .Place(Team.Player2, 3, 4, TestGame.Stats(hp: 8))
+                .Place(Team.Player2, 6, 6)
+                .Start();
+
+            Use(state, u[0], AssassinPiece.ChargeId, 3, 3);
+            Assert.NotNull(u[0].FindStatus(StatusLibrary.ChargedId));
+            Assert.Equal(AttackFailReason.AlreadyActed, new AttackAction(u[0], u[1]).Validate(state)); // 차징은 전투 행동
+
+            EndTurn(state);
+            EndTurn(state);
+            AttackResult attack = new AttackAction(u[0], u[1]).Execute(state);
+
+            Assert.True(attack.TargetDied);
+            Assert.Equal(8, attack.Damage);
+            Assert.Null(u[0].FindStatus(StatusLibrary.ChargedId));
+        }
+
+        // 사용자 확정: 차징은 다음 내 턴 끝까지 유지, 첫 기본 공격에 소모
+        [Fact]
+        public void Charge_IsConsumedByFirstAttack_OrExpiresAtEndOfNextOwnTurn()
+        {
+            var (state, u) = Game()
+                .WithRules(r => r.Ap.StartAp = 6)
+                .Place(Team.Player1, 3, 3, Assassin())
+                .Place(Team.Player1, 0, 0, Assassin())
+                .Place(Team.Player2, 3, 4, TestGame.Stats(hp: 20))
+                .Start();
+            Use(state, u[0], AssassinPiece.ChargeId, 3, 3);
+            Use(state, u[1], AssassinPiece.ChargeId, 0, 0);
+            EndTurn(state);
+            EndTurn(state);
+
+            Assert.Equal(8, new AttackAction(u[0], u[2]).Execute(state).Damage);
+            Assert.Null(u[0].FindStatus(StatusLibrary.ChargedId));
+            Assert.NotNull(u[1].FindStatus(StatusLibrary.ChargedId)); // 공격하지 않은 쪽은 이번 턴 동안 유지
+
+            EndTurn(state);
+            Assert.Null(u[1].FindStatus(StatusLibrary.ChargedId));
         }
 
         #endregion

@@ -52,7 +52,7 @@ namespace MiniChess.Core.Tests
 
             Assert.Equal(GamePhase.Setup, game.State.Phase);
             Assert.Equal(14, game.GetPlacementCells(Team.Player1).Count);
-            Assert.Equal(9, game.GetCharacters().Count);
+            Assert.Equal(10, game.GetCharacters().Count);
             Assert.Equal(EndTurnFailReason.NotBattlePhase, game.EndTurn(new EndTurnRequest(Team.Player1)).Reason);
         }
 

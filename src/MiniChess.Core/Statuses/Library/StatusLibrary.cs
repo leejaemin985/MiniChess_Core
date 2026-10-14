@@ -14,6 +14,7 @@ namespace MiniChess.Core.Statuses.Library
         public const string GuardId = "GUARD";
         public const string InstalledId = "INSTALLED";
         public const string CurseMarkId = "CURSE_MARK";
+        public const string ChargedId = "CHARGED";
 
         // 대상 소유자의 턴 종료 단계. 걸린 그 턴은 세지 않아, 1 이면 대상의 다음 자기 턴까지 유지된다.
         private static readonly StatusTiming TargetDurationTick =
@@ -135,6 +136,24 @@ namespace MiniChess.Core.Statuses.Library
                 StatusStackPolicy.Refresh,
                 TargetDurationTick,
                 behavior: new CurseMarkBehavior(bonusDamage.Value));
+        }
+
+        /// <summary>
+        /// 차징: 대상의 다음 기본 공격에 추가 피해, 공격하면 소모. 걸린 턴은 세지 않아 대상의 다음 자기 턴 끝까지 유지된다.
+        /// 다시 걸면 남은 횟수를 갱신한다.
+        /// </summary>
+        /// <param name="bonusDamage">기본 공격 추가 피해.</param>
+        public static StatusDefinition Charged(int? bonusDamage)
+        {
+            if (bonusDamage == null)
+                return null;
+
+            return new StatusDefinition(
+                ChargedId,
+                duration: 1,
+                StatusStackPolicy.Refresh,
+                TargetDurationTick,
+                behavior: new ChargedBehavior(bonusDamage.Value));
         }
     }
 }

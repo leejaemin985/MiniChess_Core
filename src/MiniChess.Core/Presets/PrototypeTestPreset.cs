@@ -79,7 +79,7 @@ namespace MiniChess.Core.Presets
             };
         }
 
-        /// <summary>9개 캐릭터에 임시 수치를 채운 정의. [가정] ASSUMPTIONS.md 참고.</summary>
+        /// <summary>모든 캐릭터에 임시 수치를 채운 정의. [가정] ASSUMPTIONS.md 참고.</summary>
         public static List<CharacterDefinition> CreateCharacters()
         {
             var temporaryStats = new Dictionary<string, (int Hp, int Attack, int Range)>
@@ -93,6 +93,7 @@ namespace MiniChess.Core.Presets
                 { FlamePiece.PieceId,      (9,  3, 2) },
                 { SeamstressPiece.PieceId, (9,  2, 2) },
                 { ChainGuardPiece.PieceId, (15, 2, 1) },
+                { AssassinPiece.PieceId,   (9,  4, 1) },
             };
 
             return PieceModules.CreateDefinitions()
@@ -231,6 +232,11 @@ namespace MiniChess.Core.Presets
             t.Seamstress.Obstacle.Hits = 1;
             t.Seamstress.Obstacle.Lifetime = 2;
             t.Seamstress.Obstacle.MaxActive = 1;
+
+            t.Assassin.Leap.ApCost = 3;
+            t.Assassin.Leap.Range = 4;
+            t.Assassin.Charge.ApCost = 2;
+            t.Assassin.Charge.BonusDamage = 4;
 
             t.Archer.Bola.ApCost = 3;
             t.Archer.Bola.Range = 3;
