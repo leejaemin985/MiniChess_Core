@@ -23,9 +23,10 @@ namespace MiniChess.Core.Skills
 
     public static class TargetFilterExtensions
     {
+        /// <summary>unit 이 caster 기준으로 조건에 맞는지. 대상 지정 불가 상태(봉인 등)의 유닛은 항상 제외한다.</summary>
         public static bool Matches(this TargetFilter filter, Unit caster, Unit unit)
         {
-            if (unit == null)
+            if (unit == null || !unit.IsTargetable)
                 return false;
 
             bool isSelf = ReferenceEquals(caster, unit);

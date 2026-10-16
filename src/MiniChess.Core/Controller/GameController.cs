@@ -227,6 +227,19 @@ namespace MiniChess.Core.Controller
             return SkillQueries.GetAffectedCells(State, caster, skillId, target, rotation);
         }
 
+        /// <summary>
+        /// 방향을 골라 미는 스킬(자리 교정 등)의 예상 도착 칸. 밀리지 않으면 대상의 현재 칸.
+        /// targets 는 모든 지정 칸(대상, 방향 칸). 지정이 유효하지 않거나 미는 스킬이 아니면 null.
+        /// </summary>
+        public Position? GetPushPreview(int unitId, string skillId, IReadOnlyList<Position> targets)
+        {
+            Unit caster = State.FindUnit(unitId);
+            if (caster == null || targets == null)
+                return null;
+
+            return SkillQueries.PredictPush(State, caster, skillId, targets);
+        }
+
         #endregion
     }
 }

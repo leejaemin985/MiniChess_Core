@@ -35,5 +35,8 @@ namespace MiniChess.Core.Actions
 
         /// <summary>설치 상태라 자발적 이동 불가.</summary>
         Installed,
+
+        /// <summary>봉인 상태라 이동 불가.</summary>
+        Sealed,
     }
 }

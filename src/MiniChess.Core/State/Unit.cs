@@ -56,6 +56,9 @@ namespace MiniChess.Core.State
             return _statuses.FirstOrDefault(status => status.Definition.Id == definitionId);
         }
 
+        /// <summary>공격·스킬·범위 효과의 대상이 될 수 있는지(봉인 등 대상 지정 불가 상태가 없는지).</summary>
+        public bool IsTargetable => !_statuses.Any(status => status.Definition.Behavior?.MakesUntargetable == true);
+
         public bool HasStatus(StatusEffect status)
         {
             return _statuses.Contains(status);

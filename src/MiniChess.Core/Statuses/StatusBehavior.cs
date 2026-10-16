@@ -42,6 +42,24 @@ namespace MiniChess.Core.Statuses
             return false;
         }
 
+        /// <summary>이 상태가 대상의 스킬 사용을 막는지.</summary>
+        public virtual bool BlocksSkillUse(StatusContext context)
+        {
+            return false;
+        }
+
+        /// <summary>이 상태가 대상의 체력 변화(피해와 회복)를 막는지. 피해를 대신 받는 효과(호위)도 이 대상에게 넘기지 않는다.</summary>
+        public virtual bool BlocksHpChange(StatusContext context)
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// 이 상태의 대상을 공격·스킬·범위 효과의 대상으로 고를 수 없는지.
+        /// 대상 판정(TargetFilter)은 경기 상태 없이 이뤄지므로 상태 정보 없이 정한다.
+        /// </summary>
+        public virtual bool MakesUntargetable => false;
+
         /// <summary>대상이 유닛을 기본 공격할 때 더할 피해. 0 보다 크면 그 기본 공격에서 상태가 소모된다(차징 등).</summary>
         public virtual int BasicAttackBonus(StatusContext context)
         {

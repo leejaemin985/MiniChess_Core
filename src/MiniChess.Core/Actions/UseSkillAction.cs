@@ -5,6 +5,7 @@ using MiniChess.Core.Events;
 using MiniChess.Core.Skills;
 using MiniChess.Core.Skills.Areas;
 using MiniChess.Core.State;
+using MiniChess.Core.Statuses;
 
 namespace MiniChess.Core.Actions
 {
@@ -67,6 +68,8 @@ namespace MiniChess.Core.Actions
 
             SkillFailReason turnReason = CheckTurnState(caster, skill);
             if (turnReason != SkillFailReason.None) return turnReason;
+
+            if (StatusSystem.BlocksSkillUse(state, caster)) return SkillFailReason.BlockedByStatus;
 
             foreach (SkillCondition condition in skill.Conditions)
             {

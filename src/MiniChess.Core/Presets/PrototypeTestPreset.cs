@@ -96,6 +96,7 @@ namespace MiniChess.Core.Presets
                 { SeamstressPiece.PieceId, (9,  2, 2) },
                 { ChainGuardPiece.PieceId, (15, 2, 1) },
                 { AssassinPiece.PieceId,   (9,  4, 1) },
+                { SculptorPiece.PieceId,   (9,  2, 2) },
             };
 
             return PieceModules.CreateDefinitions()
@@ -239,6 +240,13 @@ namespace MiniChess.Core.Presets
             t.Assassin.Leap.Range = 4;
             t.Assassin.Charge.ApCost = 2;
             t.Assassin.Charge.BonusDamage = 4;
+
+            t.Sculptor.Seal.ApCost = 4;
+            t.Sculptor.Seal.Range = 3;
+            t.Sculptor.Correction.ApCost = 2;
+            t.Sculptor.Correction.Range = 3;
+            t.Sculptor.Correction.Damage = 1;
+            t.Sculptor.Correction.PushCells = 1;
 
             t.Archer.Bola.ApCost = 3;
             t.Archer.Bola.Range = 3;

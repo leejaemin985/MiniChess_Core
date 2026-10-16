@@ -23,6 +23,9 @@ namespace MiniChess.Core.Skills.Targeting
         {
             foreach (Unit summon in SummonSystem.GetLivingSummons(state, caster))
             {
+                if (!summon.IsTargetable)
+                    continue;
+
                 if (MovedBy == null || MovementControl.IsAllowedByStatuses(state, summon, caster, MovedBy.Value))
                     yield return summon.Position.Value;
             }

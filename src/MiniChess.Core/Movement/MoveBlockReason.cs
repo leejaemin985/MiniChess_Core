@@ -19,5 +19,8 @@ namespace MiniChess.Core.Movement
 
         /// <summary>설치 상태라 자발적 이동 불가(박격포).</summary>
         Installed,
+
+        /// <summary>봉인 상태라 어떤 이동도 불가.</summary>
+        Sealed,
     }
 }

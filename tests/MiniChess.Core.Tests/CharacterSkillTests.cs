@@ -48,7 +48,7 @@ namespace MiniChess.Core.Tests
         {
             SkillDefinition[] skills = PresetSkills();
 
-            Assert.Equal(22, skills.Length); // 슬롯 20 + 고유 기능 2(분신 교환, 해체)
+            Assert.Equal(24, skills.Length); // 슬롯 22 + 고유 기능 2(분신 교환, 해체)
             Assert.All(skills, s => Assert.Empty(s.GetConfigIssues()));
         }
 
@@ -71,7 +71,7 @@ namespace MiniChess.Core.Tests
             var ids = PresetSkills().Select(s => s.Id).ToHashSet();
             var slotted = PieceModules.CreateDefinitions().SelectMany(c => c.SkillSlots).Where(id => id != null).ToList();
 
-            Assert.Equal(20, slotted.Count);
+            Assert.Equal(22, slotted.Count);
             Assert.All(slotted, id => Assert.Contains(id, ids));
         }
 
@@ -1606,6 +1606,167 @@ namespace MiniChess.Core.Tests
 
             EndTurn(state);
             Assert.Null(u[1].FindStatus(StatusLibrary.ChargedId));
+        }
+
+        #endregion
+
+        #region Sculptor
+
+        private static UnitBaseStats Sculptor() =>
+            TestGame.Stats("sculptor", skills: new[] { SculptorPiece.SealId, SculptorPiece.CorrectionId });
+
+        private static void Seal(GameState state, Unit target, Unit source) =>
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Sealed(), target, source);
+
+        private static UseSkillAction Correction(Unit caster, Position target, Position direction) =>
+            new UseSkillAction(caster, SculptorPiece.CorrectionId, new[] { target, direction });
+
+        // 기획 확정: 봉인 중 이동/기본 공격/스킬 불가, 아군·적 모두 대상으로 지정 불가
+        [Fact]
+        public void Seal_BlocksActions_AndMakesUntargetable()
+        {
+            var (state, u) = Game()
+                .WithRules(r => { r.Ap.MaxAp = 12; r.Ap.StartAp = 12; })
+                .Place(Team.Player1, 3, 3, Sculptor())
+                .Place(Team.Player1, 2, 4, Sculptor())
+                .Place(Team.Player2, 3, 4, Sculptor())
+                .Start();
+
+            Use(state, u[0], SculptorPiece.SealId, 3, 4);
+
+            Assert.NotNull(u[2].FindStatus(StatusLibrary.SealedId));
+            Assert.Equal(AttackFailReason.InvalidTarget, new AttackAction(u[1], u[2]).Validate(state));
+            Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[1], SculptorPiece.SealId, 3, 4));
+            Assert.Equal(SkillFailReason.InvalidTarget, Correction(u[1], new Position(3, 4), new Position(4, 4)).Validate(state));
+
+            EndTurn(state);
+
+            Assert.Equal(MoveFailReason.Sealed, new MoveAction(u[2], new Position(3, 5)).Validate(state));
+            Assert.Equal(AttackFailReason.BlockedByStatus, new AttackAction(u[2], u[0]).Validate(state));
+            Assert.Equal(SkillFailReason.BlockedByStatus, Check(state, u[2], SculptorPiece.SealId, 3, 3));
+        }
+
+        // 기획 확정: 장판/지속 피해를 포함한 모든 피해 무효. 회복도 받지 않는다(사용자 확정)
+        [Fact]
+        public void Seal_BlocksAllDamageAndHealing()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 3, 3, Sculptor())
+                .Place(Team.Player2, 3, 4, TestGame.Stats(hp: 10))
+                .Start();
+            DamageSystem.Apply(state, new DamageRequest(u[0], u[1], 3, DamageType.Direct));
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Burn(damagePerTrigger: 2, triggers: 2), u[1], u[0]);
+            Seal(state, u[1], u[0]);
+
+            DamageSystem.Apply(state, new DamageRequest(u[0], u[1], 5, DamageType.Direct));
+            DamageSystem.Heal(state, u[0], u[1], 3);
+            EndTurn(state);
+            EndTurn(state); // 대상(P2) 턴 종료: 화상 발동은 무효, 봉인 해제
+
+            Assert.Equal(7, u[1].Stats.CurrentHp);
+            Assert.Null(u[1].FindStatus(StatusLibrary.SealedId));
+            Assert.NotNull(u[1].FindStatus(StatusLibrary.BurnId)); // 다른 상태의 지속시간은 정상 감소
+        }
+
+        // 기획 제안: 대상 소유자의 다음 턴 종료에 해제. 자신/아군에게 걸면 상대 턴을 지나 내 다음 턴 끝까지
+        [Fact]
+        public void Seal_ReleasesAtEndOfTargetOwnersNextTurn()
+        {
+            var (state, u) = Game()
+                .WithRules(r => { r.Ap.MaxAp = 12; r.Ap.StartAp = 12; })
+                .Place(Team.Player1, 3, 3, Sculptor())
+                .Place(Team.Player1, 0, 0, Sculptor())
+                .Place(Team.Player2, 3, 4)
+                .Start();
+            Use(state, u[0], SculptorPiece.SealId, 3, 4);
+            Use(state, u[1], SculptorPiece.SealId, 0, 0);
+
+            EndTurn(state);
+            Assert.NotNull(u[2].FindStatus(StatusLibrary.SealedId));
+            EndTurn(state);
+            Assert.Null(u[2].FindStatus(StatusLibrary.SealedId));
+            Assert.NotNull(u[1].FindStatus(StatusLibrary.SealedId));
+            EndTurn(state);
+            Assert.Null(u[1].FindStatus(StatusLibrary.SealedId));
+        }
+
+        // 사용자 확정: 봉인된 호위자는 호위하지 못한다(피해는 원래 대상이 받음)
+        [Fact]
+        public void Seal_SealedGuardianDoesNotGuard()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 3, 3, TestGame.Stats(hp: 10))
+                .Place(Team.Player1, 3, 2, TestGame.Stats(hp: 10))
+                .Place(Team.Player2, 3, 4, TestGame.Stats(attack: 3))
+                .Start();
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Guard(maxDistance: 2), u[0], u[1]);
+            Seal(state, u[1], u[2]);
+
+            DamageSystem.Apply(state, new DamageRequest(u[2], u[0], 3, DamageType.Direct));
+
+            Assert.Equal(7, u[0].Stats.CurrentHp);
+            Assert.Equal(10, u[1].Stats.CurrentHp);
+        }
+
+        // 사용자 확정: 점령 칸 위에서 봉인되면 점령하지 않은 것으로 보고 진행도가 0 이 된다
+        [Fact]
+        public void Seal_OnCaptureTile_ResetsCaptureProgress()
+        {
+            var (state, u) = Game()
+                .WithMap(".......", ".......", ".......", "...C...", ".......", ".......", ".......")
+                .Place(Team.Player1, 3, 0, Sculptor())
+                .Place(Team.Player2, 3, 3)
+                .Start();
+            EndTurn(state);
+            Assert.Equal(1, state.Capture.GetProgress(Team.Player2));
+            EndTurn(state);
+
+            Use(state, u[0], SculptorPiece.SealId, 3, 3);
+            EndTurn(state);
+
+            Assert.Equal(0, state.Capture.GetProgress(Team.Player2));
+            Assert.True(state.Capture.IsActive);
+        }
+
+        // 기획 확정: 고른 방향으로 1칸 강제 이동. 결과 예측 지원
+        [Fact]
+        public void Correction_PushesEnemyOneCellInChosenDirection_WithPreview()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 3, 3, Sculptor())
+                .Place(Team.Player2, 3, 5, TestGame.Stats(hp: 10))
+                .Start();
+            Position target = new Position(3, 5), right = new Position(4, 5);
+
+            Assert.Equal(4, SkillQueries.GetValidTargets(state, u[0], SculptorPiece.CorrectionId, new[] { target }).Count);
+            Assert.Equal(right, SkillQueries.PredictPush(state, u[0], SculptorPiece.CorrectionId, new[] { target, right }));
+
+            SkillResult result = Correction(u[0], target, right).Execute(state);
+
+            Assert.Equal(right, u[1].Position);
+            Assert.Equal(9, u[1].Stats.CurrentHp);
+            Assert.Equal(MoveKind.Knockback, result.Events.OfType<UnitMovedEvent>().Single().Kind);
+        }
+
+        // 사용자 확정: 막힌 방향도 고를 수 있다(밀기 시도). 밀리지 않고 피해만, 다른 방향으로 바꾸지 않음
+        [Fact]
+        public void Correction_TowardBlockedCell_OnlyDamages()
+        {
+            var (state, u) = Game()
+                .WithMap(".......", "..#....", ".......", ".......", ".......", ".......", ".......")
+                .Place(Team.Player1, 3, 3, Sculptor())
+                .Place(Team.Player2, 3, 5, TestGame.Stats(hp: 10))
+                .Start();
+            Position target = new Position(3, 5), wall = new Position(2, 5);
+            int apBefore = state.GetPlayer(Team.Player1).Ap.Current;
+
+            Assert.Equal(target, SkillQueries.PredictPush(state, u[0], SculptorPiece.CorrectionId, new[] { target, wall }));
+            SkillResult result = Correction(u[0], target, wall).Execute(state);
+
+            Assert.Equal(target, u[1].Position);
+            Assert.Equal(9, u[1].Stats.CurrentHp);
+            Assert.Empty(result.Events.OfType<UnitMovedEvent>());
+            Assert.True(state.GetPlayer(Team.Player1).Ap.Current < apBefore);
         }
 
         #endregion

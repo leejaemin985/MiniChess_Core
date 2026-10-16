@@ -3,6 +3,7 @@ using System.Linq;
 using MiniChess.Core.Actions;
 using MiniChess.Core.Common;
 using MiniChess.Core.Skills.Areas;
+using MiniChess.Core.Skills.Effects;
 using MiniChess.Core.State;
 
 namespace MiniChess.Core.Skills
@@ -46,6 +47,20 @@ namespace MiniChess.Core.Skills
                 return new List<Position>();
 
             return skill.Area.GetCells(state, caster, target, rotation);
+        }
+
+        /// <summary>
+        /// 방향을 골라 미는 스킬의 예상 도착 칸(밀리지 않으면 현재 칸).
+        /// 지정이 다 끝나지 않았거나 유효하지 않거나, 미는 스킬이 아니면 null.
+        /// </summary>
+        public static Position? PredictPush(GameState state, Unit caster, string skillId, IReadOnlyList<Position> targets)
+        {
+            SkillDefinition skill = state.Skills.Find(skillId);
+            if (skill == null || !skill.IsConfigured || !skill.Targeting.IsValid(state, caster, targets))
+                return null;
+
+            PushInDirectionEffect push = skill.Effects.OfType<PushInDirectionEffect>().FirstOrDefault();
+            return push?.Predict(state, caster, targets);
         }
 
         /// <summary>스킬 범위를 플레이어가 회전할 수 있는지(회전 버튼 표시 판단용).</summary>

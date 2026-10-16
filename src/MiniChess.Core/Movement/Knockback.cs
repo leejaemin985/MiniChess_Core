@@ -30,14 +30,45 @@ namespace MiniChess.Core.Movement
         /// <returns>이동 결과. 밀지 않았으면 null.</returns>
         internal static MovementResult Push(GameState state, Unit target, Unit pusher, int cells)
         {
-            if (!target.IsOnBoard || !pusher.IsPlaced || cells <= 0)
+            if (!target.IsOnBoard || !pusher.IsPlaced)
+                return null;
+
+            return PushToward(state, target, pusher, GetDirection(pusher.Position.Value, target.Position.Value), cells);
+        }
+
+        /// <summary>
+        /// PushToward 의 도착 칸 예측(미리보기용, 상태를 바꾸지 않는다). 밀리지 않으면 현재 칸.
+        /// 지나는 칸의 효과(덫의 멈춤, 피해로 인한 사망)는 반영하지 않는다.
+        /// </summary>
+        public static Position PredictDestination(GameState state, Unit target, Unit pusher, (int X, int Y) direction, int cells)
+        {
+            Position current = target.Position.Value;
+            if (MovementControl.Check(state, target, pusher, MoveKind.Knockback, cells) != MoveBlockReason.None)
+                return current;
+
+            for (int i = 0; i < cells; i++)
+            {
+                Position next = current.Offset(direction.X, direction.Y);
+                if (!state.Board.CanPlace(next))
+                    break;
+
+                current = next;
+            }
+
+            return current;
+        }
+
+        /// <summary>
+        /// target 을 정해진 방향(상하좌우 단위 벡터)으로 cells 칸 민다. 막힘 처리는 Push 와 같고, 다른 방향으로 바꾸지 않는다.
+        /// </summary>
+        /// <returns>이동 결과. 밀지 않았으면 null.</returns>
+        internal static MovementResult PushToward(GameState state, Unit target, Unit pusher, (int X, int Y) direction, int cells)
+        {
+            (int dx, int dy) = direction;
+            if (!target.IsOnBoard || cells <= 0 || (dx == 0 && dy == 0))
                 return null;
 
             Position from = target.Position.Value;
-            (int dx, int dy) = GetDirection(pusher.Position.Value, from);
-            if (dx == 0 && dy == 0)
-                return null;
-
             var path = new List<Position>();
             for (int i = 1; i <= cells; i++)
                 path.Add(from.Offset(dx * i, dy * i));

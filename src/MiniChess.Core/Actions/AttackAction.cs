@@ -29,7 +29,7 @@ namespace MiniChess.Core.Actions
             AttackFailReason attackerReason = ValidateAttacker(state, Attacker);
             if (attackerReason != AttackFailReason.None) return attackerReason;
 
-            if (!Target.IsOnBoard) return AttackFailReason.InvalidTarget;
+            if (!Target.IsOnBoard || !Target.IsTargetable) return AttackFailReason.InvalidTarget;
             if (Target.Team == Attacker.Team) return AttackFailReason.TargetNotEnemy;
 
             return ValidateRangeAndAp(state, Attacker, Target.Position.Value);

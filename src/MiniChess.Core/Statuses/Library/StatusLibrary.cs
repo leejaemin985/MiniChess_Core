@@ -15,6 +15,7 @@ namespace MiniChess.Core.Statuses.Library
         public const string InstalledId = "INSTALLED";
         public const string CurseMarkId = "CURSE_MARK";
         public const string ChargedId = "CHARGED";
+        public const string SealedId = "SEALED";
 
         // 대상 소유자의 턴 종료 단계. 걸린 그 턴은 세지 않아, 1 이면 대상의 다음 자기 턴까지 유지된다.
         private static readonly StatusTiming TargetDurationTick =
@@ -154,6 +155,20 @@ namespace MiniChess.Core.Statuses.Library
                 StatusStackPolicy.Refresh,
                 TargetDurationTick,
                 behavior: new ChargedBehavior(bonusDamage.Value));
+        }
+
+        /// <summary>
+        /// 봉인: 이동·기본 공격·스킬 불가, 대상 지정 불가, 피해와 회복 무효. 다른 상태의 지속시간은 정상 감소한다.
+        /// 걸린 턴은 세지 않아 대상 소유자의 다음 턴 종료에 풀린다. 봉인 중에는 대상 지정이 안 되므로 다시 걸 수 없다.
+        /// </summary>
+        public static StatusDefinition Sealed()
+        {
+            return new StatusDefinition(
+                SealedId,
+                duration: 1,
+                StatusStackPolicy.Refresh,
+                TargetDurationTick,
+                behavior: new SealedBehavior());
         }
     }
 }

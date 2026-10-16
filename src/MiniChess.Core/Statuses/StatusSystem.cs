@@ -156,6 +156,18 @@ namespace MiniChess.Core.Statuses
                 status.Definition.Behavior != null && status.Definition.Behavior.BlocksBasicAttack(new StatusContext(state, status)));
         }
 
+        internal static bool BlocksSkillUse(GameState state, Unit caster)
+        {
+            return caster.Statuses.Any(status =>
+                status.Definition.Behavior != null && status.Definition.Behavior.BlocksSkillUse(new StatusContext(state, status)));
+        }
+
+        internal static bool BlocksHpChange(GameState state, Unit unit)
+        {
+            return unit.Statuses.Any(status =>
+                status.Definition.Behavior != null && status.Definition.Behavior.BlocksHpChange(new StatusContext(state, status)));
+        }
+
         /// <summary>기본 공격 추가 피해를 주는 상태들의 합을 구하고, 그 상태들을 소모(Consumed)한다.</summary>
         internal static int ConsumeBasicAttackBonus(GameState state, Unit attacker)
         {

@@ -23,5 +23,6 @@ namespace MiniChess.Core.Characters
         public ScytheTuning Scythe { get; } = new ScytheTuning();
         public MortarTuning Mortar { get; } = new MortarTuning();
         public AssassinTuning Assassin { get; } = new AssassinTuning();
+        public SculptorTuning Sculptor { get; } = new SculptorTuning();
     }
 }

@@ -37,5 +37,8 @@ namespace MiniChess.Core.Actions
         InvalidTarget,
 
         NotEnoughAp,
+
+        /// <summary>상태효과가 스킬 사용을 막음(봉인 등).</summary>
+        BlockedByStatus,
     }
 }
