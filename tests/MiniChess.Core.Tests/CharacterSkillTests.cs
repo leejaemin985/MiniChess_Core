@@ -331,9 +331,9 @@ namespace MiniChess.Core.Tests
             Assert.Equal(9, u[2].Stats.CurrentHp);
         }
 
-        // 사용자 확정: 화염지대는 십자 5칸, 상태이상 없이 장판 피해만
+        // 사용자 확정: 화염지대는 십자 5칸. 설치 즉시 피해 후 장판 피해, 상태이상 없음
         [Fact]
-        public void FlameZone_DamagesEnemiesInCrossOnTheirTurnEnd_AndAllowsOneZone()
+        public void FlameZone_HitsOnPlacement_ThenDamagesEnemiesInCrossOnTheirTurnEnd()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 0, 0, With(FlamePiece.FlameZoneId))
@@ -346,11 +346,12 @@ namespace MiniChess.Core.Tests
 
             SkillResult result = Use(state, u[0], FlamePiece.FlameZoneId, 3, 3);
             Assert.Equal(5, result.AffectedCells.Count);
+            Assert.Equal(8, u[1].Stats.CurrentHp); // 설치 즉시 2
 
             EndTurn(state); // P1 종료: 적 소유자 턴 아님
-            Assert.Equal(10, u[1].Stats.CurrentHp);
-            EndTurn(state); // P2 종료
-            Assert.Equal(7, u[1].Stats.CurrentHp);
+            Assert.Equal(8, u[1].Stats.CurrentHp);
+            EndTurn(state); // P2 종료: 장판 3
+            Assert.Equal(5, u[1].Stats.CurrentHp);
             Assert.Equal(10, u[2].Stats.CurrentHp);
             Assert.Empty(u[1].Statuses);
 

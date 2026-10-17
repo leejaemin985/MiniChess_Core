@@ -143,6 +143,7 @@ namespace MiniChess.Core.Presets
                 "#@#",
                 ".#.",
             };
+            t.Flame.FlameZone.ImpactDamage = 2;
             t.Flame.FlameZone.Damage = 3;
             t.Flame.FlameZone.Lifetime = 2;
             t.Flame.FlameZone.MaxActive = 1;

@@ -34,21 +34,23 @@ namespace MiniChess.Core.Characters.Pieces
         }
 
         /// <summary>
-        /// 화염지대: 피해 장판 구역. 장판 위 적에게 그 적 소유자 Turn End 에 직접 피해(사용자 확정: 턴 종료만, 화상 없음).
+        /// 화염지대: 설치 즉시 범위 안 적에게 피해를 주고 피해 장판 구역을 깐다(사용자 확정).
+        /// 장판 위 적에게는 그 적 소유자 Turn End 에 피해(사용자 확정: 턴 종료만, 화상 없음).
         /// 다른 장판과 겹치면 교체되고, 점령 칸에도 설치할 수 있다(명세 10.2).
         /// </summary>
         public static SkillDefinition FlameZone(FlameZoneTuning t)
         {
             int? damage = t.Damage;
 
+            var effects = new List<SkillEffect>();
+            SkillBuildUtil.AddOptionalDamage(effects, t.ImpactDamage);
+            effects.Add(new PlaceZoneEffect(t.Lifetime, (zone, _) => new DamageField(zone, damage.Value)));
+
             return new SkillDefinition(
                 FlameZoneId, "화염지대", t.ApCost, SkillActionKind.Combat,
                 SkillBuildUtil.AreaTargeting(t.Area, t.Range, CellRequirement.NotWall),
                 SkillBuildUtil.Area(t.Area),
-                new SkillEffect[]
-                {
-                    new PlaceZoneEffect(t.Lifetime, (zone, _) => new DamageField(zone, damage.Value)),
-                },
+                effects,
                 new SkillCondition[]
                 {
                     new MaxActiveZonesCondition(FlameZoneId, t.MaxActive),
@@ -89,6 +91,9 @@ namespace MiniChess.Core.Characters.Pieces
         public int? Range { get; set; }
 
         public AreaTuning Area { get; } = new AreaTuning();
+
+        /// <summary>설치 즉시 범위 안 적에게 주는 피해. 0 이면 없음.</summary>
+        public int? ImpactDamage { get; set; }
 
         /// <summary>적 소유자 턴 종료마다 주는 장판 피해.</summary>
         public int? Damage { get; set; }
