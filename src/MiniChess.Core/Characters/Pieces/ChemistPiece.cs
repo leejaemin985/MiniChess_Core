@@ -64,10 +64,13 @@ namespace MiniChess.Core.Characters.Pieces
                     ("Root." + nameof(root.BlocksExternalMoves), root.BlocksExternalMoves)));
         }
 
-        /// <summary>독가스 설치: 작은 피해 장판 구역. 적 소유자 Turn End 에 피해(명세 9.3 [설계안]).</summary>
+        /// <summary>
+        /// 독가스 설치: 독 장판 구역(사용자 확정). 장판 피해는 없고, 적이 들어오면(지나가기만 해도) 중독에 걸린다.
+        /// 설치 순간 범위 안에 있던 적도 바로 중독된다. 중독은 대상 소유자 턴 종료마다 약한 지속 피해.
+        /// </summary>
         public static SkillDefinition PoisonGas(PoisonGasTuning t)
         {
-            int? damage = t.Damage;
+            StatusDefinition poison = StatusLibrary.Poison(t.PoisonDamage, t.PoisonTurns);
 
             return new SkillDefinition(
                 PoisonGasId, "독가스 설치", t.ApCost, SkillActionKind.Combat,
@@ -75,13 +78,13 @@ namespace MiniChess.Core.Characters.Pieces
                 SkillBuildUtil.Area(t.Area),
                 new SkillEffect[]
                 {
-                    new PlaceZoneEffect(t.Lifetime, (zone, _) => new DamageField(zone, damage.Value)),
+                    new PlaceZoneEffect(t.Lifetime, (zone, _) => new PoisonField(zone, poison)),
+                    new ApplyStatusEffect(poison),
                 },
                 new SkillCondition[]
                 {
                     new MaxActiveZonesCondition(PoisonGasId, t.MaxActive),
-                },
-                requiredTuning: SkillBuildUtil.Require((nameof(t.Damage), t.Damage)));
+                });
         }
     }
 
@@ -122,8 +125,11 @@ namespace MiniChess.Core.Characters.Pieces
         /// <summary>구역 범위. [설계안] 2×2.</summary>
         public AreaTuning Area { get; } = new AreaTuning();
 
-        /// <summary>적 소유자 턴 종료마다 주는 장판 피해.</summary>
-        public int? Damage { get; set; }
+        /// <summary>중독 1회 피해.</summary>
+        public int? PoisonDamage { get; set; }
+
+        /// <summary>중독 발동 횟수(대상 소유자 턴 종료 횟수).</summary>
+        public int? PoisonTurns { get; set; }
 
         /// <summary>구역 수명(설치한 쪽 소유자 턴 종료 횟수).</summary>
         public int? Lifetime { get; set; }

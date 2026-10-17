@@ -2,12 +2,12 @@ using MiniChess.Core.Combat;
 
 namespace MiniChess.Core.Statuses.Library
 {
-    /// <summary>화상: 발동 시점마다 DoT 피해를 준다. 피해 출처는 상태를 건 유닛.</summary>
-    public class BurnBehavior : StatusBehavior
+    /// <summary>지속 피해(화상, 중독 등): 발동 시점마다 피해를 준다. 피해 출처는 상태를 건 유닛.</summary>
+    public class DamageOverTimeBehavior : StatusBehavior
     {
         public int DamagePerTrigger { get; }
 
-        public BurnBehavior(int damagePerTrigger)
+        public DamageOverTimeBehavior(int damagePerTrigger)
         {
             DamagePerTrigger = damagePerTrigger;
         }

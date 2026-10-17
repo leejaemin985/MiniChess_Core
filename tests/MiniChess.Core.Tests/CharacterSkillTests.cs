@@ -274,8 +274,9 @@ namespace MiniChess.Core.Tests
 
         #region Fields
 
+        // 사용자 확정: 독 장판은 피해가 없고, 설치 순간 범위 안의 적을 중독시킨다. 중독은 화상과 같은 시점에 1 × 2턴
         [Fact]
-        public void PoisonGas_DamagesEnemyOnItsTurnEnd_ForLifetime_AndAllowsOneZone()
+        public void PoisonGas_PoisonsEnemiesInAreaOnPlacement_ZoneItselfDealsNoDamage()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 0, 0, With(ChemistPiece.PoisonGasId))
@@ -286,43 +287,72 @@ namespace MiniChess.Core.Tests
             Assert.Equal(
                 new[] { new Position(2, 2), new Position(3, 2), new Position(2, 3), new Position(3, 3) }.ToHashSet(),
                 result.AffectedCells.ToHashSet());
+            Assert.NotNull(u[1].FindStatus(StatusLibrary.PoisonId));
 
             EndTurn(state); // P1 종료: 적 소유자 턴 아님
             Assert.Equal(10, u[1].Stats.CurrentHp);
-            EndTurn(state); // P2 종료: 1
+            EndTurn(state); // P2 종료: 중독 1
             Assert.Equal(9, u[1].Stats.CurrentHp);
-
             Assert.Equal(SkillFailReason.ConditionNotMet, Check(state, u[0], ChemistPiece.PoisonGasId, 0, 2));
-
-            EndTurn(state); // P1 종료: 수명 2 → 1
-            EndTurn(state); // P2 종료: 2
+            EndTurn(state); // P1 종료: 장판 수명 2 → 1
+            EndTurn(state); // P2 종료: 중독 2(마지막). 장판 위에 머물러도 추가 효과 없음
             Assert.Equal(8, u[1].Stats.CurrentHp);
-            EndTurn(state); // P1 종료: 수명 0, 전체 제거
+            Assert.Null(u[1].FindStatus(StatusLibrary.PoisonId));
+            EndTurn(state); // P1 종료: 장판 수명 0, 전체 제거
             Assert.Null(state.Board.GetCell(new Position(2, 2)).GetEffect(CellEffectLayer.AreaEffect));
-            EndTurn(state); // P2 종료 → P1 턴
+            EndTurn(state);
+            Assert.Equal(8, u[1].Stats.CurrentHp);
             Assert.Equal(SkillFailReason.None, Check(state, u[0], ChemistPiece.PoisonGasId, 0, 2));
         }
 
+        // 사용자 확정: 독 장판을 지나가기만 해도 중독. 걸린 그 턴은 세지 않는다(화상과 동일)
         [Fact]
-        public void FlameZone_DamagesEnemiesIn3x3OnTheirTurnEnd_AndAllowsOneZone()
+        public void PoisonGas_EnemyPassingThroughGetsPoisoned_AllyDoesNot()
+        {
+            var (state, u) = Game()
+                .WithRules(r => r.Ap.StartAp = 6)
+                .Place(Team.Player1, 0, 0, With(ChemistPiece.PoisonGasId))
+                .Place(Team.Player1, 3, 4)
+                .Place(Team.Player2, 2, 1)
+                .Start();
+            Use(state, u[0], ChemistPiece.PoisonGasId, 2, 2);
+            new MoveAction(u[1], new Position(3, 1)).Execute(state);
+            EndTurn(state);
+
+            new MoveAction(u[2], new Position(2, 4)).Execute(state); // (2,2), (2,3) 통과
+            EndTurn(state); // 걸린 턴의 종료: 피해 없음
+
+            Assert.Null(u[1].FindStatus(StatusLibrary.PoisonId));
+            Assert.NotNull(u[2].FindStatus(StatusLibrary.PoisonId));
+            Assert.Equal(10, u[2].Stats.CurrentHp);
+
+            EndTurn(state);
+            EndTurn(state);
+            Assert.Equal(9, u[2].Stats.CurrentHp);
+        }
+
+        // 사용자 확정: 화염지대는 십자 5칸, 상태이상 없이 장판 피해만
+        [Fact]
+        public void FlameZone_DamagesEnemiesInCrossOnTheirTurnEnd_AndAllowsOneZone()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 0, 0, With(FlamePiece.FlameZoneId))
-                .Place(Team.Player2, 4, 4) // 범위 안 (모서리)
-                .Place(Team.Player2, 5, 5) // 범위 밖
+                .Place(Team.Player2, 3, 4) // 범위 안 (십자 끝)
+                .Place(Team.Player2, 4, 4) // 범위 밖 (대각선)
                 .WithRules(r => r.Ap.StartAp = 6)
                 .Start();
 
             Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], FlamePiece.FlameZoneId, 4, 4)); // 사거리 3 초과
 
             SkillResult result = Use(state, u[0], FlamePiece.FlameZoneId, 3, 3);
-            Assert.Equal(9, result.AffectedCells.Count);
+            Assert.Equal(5, result.AffectedCells.Count);
 
             EndTurn(state); // P1 종료: 적 소유자 턴 아님
             Assert.Equal(10, u[1].Stats.CurrentHp);
             EndTurn(state); // P2 종료
-            Assert.Equal(8, u[1].Stats.CurrentHp);
+            Assert.Equal(7, u[1].Stats.CurrentHp);
             Assert.Equal(10, u[2].Stats.CurrentHp);
+            Assert.Empty(u[1].Statuses);
 
             Assert.Equal(SkillFailReason.ConditionNotMet, Check(state, u[0], FlamePiece.FlameZoneId, 1, 1));
         }
@@ -362,7 +392,7 @@ namespace MiniChess.Core.Tests
 
             Use(state, u[1], ChemistPiece.PoisonGasId, 2, 2); // (2..3, 2..3)
 
-            Assert.IsType<DamageField>(state.Board.GetCell(new Position(2, 2)).GetEffect(CellEffectLayer.AreaEffect));
+            Assert.IsType<PoisonField>(state.Board.GetCell(new Position(2, 2)).GetEffect(CellEffectLayer.AreaEffect));
             Assert.IsType<HealField>(state.Board.GetCell(new Position(0, 0)).GetEffect(CellEffectLayer.AreaEffect));
             Assert.IsType<HealField>(state.Board.GetCell(new Position(2, 1)).GetEffect(CellEffectLayer.AreaEffect));
         }

@@ -139,11 +139,11 @@ namespace MiniChess.Core.Presets
             t.Flame.FlameZone.Range = 3;
             t.Flame.FlameZone.Area.Shape = new[]
             {
-                "###",
+                ".#.",
                 "#@#",
-                "###",
+                ".#.",
             };
-            t.Flame.FlameZone.Damage = 2;
+            t.Flame.FlameZone.Damage = 3;
             t.Flame.FlameZone.Lifetime = 2;
             t.Flame.FlameZone.MaxActive = 1;
 
@@ -168,7 +168,8 @@ namespace MiniChess.Core.Presets
                 "##",
                 "@#",
             };
-            t.Chemist.PoisonGas.Damage = 1;
+            t.Chemist.PoisonGas.PoisonDamage = 1;
+            t.Chemist.PoisonGas.PoisonTurns = 2;
             t.Chemist.PoisonGas.Lifetime = 2;
             t.Chemist.PoisonGas.MaxActive = 1;
 

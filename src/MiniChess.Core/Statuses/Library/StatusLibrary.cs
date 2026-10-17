@@ -10,6 +10,7 @@ namespace MiniChess.Core.Statuses.Library
     {
         public const string RootId = "ROOT";
         public const string BurnId = "BURN";
+        public const string PoisonId = "POISON";
         public const string DistanceLimitId = "DISTANCE_LIMIT";
         public const string GuardId = "GUARD";
         public const string InstalledId = "INSTALLED";
@@ -64,7 +65,27 @@ namespace MiniChess.Core.Statuses.Library
                 StatusStackPolicy.Refresh,
                 TargetDurationTick,
                 TargetDamageOverTime,
-                new BurnBehavior(damagePerTrigger.Value));
+                new DamageOverTimeBehavior(damagePerTrigger.Value));
+        }
+
+        /// <summary>
+        /// 중독: 화상과 같은 방식의 지속 피해(대상 소유자의 턴 종료마다, 걸린 그 턴은 세지 않음). 화상과는 별개로 함께 걸린다.
+        /// 다시 걸면 피해를 쌓지 않고 남은 횟수만 갱신한다.
+        /// </summary>
+        /// <param name="damagePerTrigger">1 회 발동 피해량.</param>
+        /// <param name="triggers">발동 횟수.</param>
+        public static StatusDefinition Poison(int? damagePerTrigger, int? triggers)
+        {
+            if (damagePerTrigger == null || triggers == null)
+                return null;
+
+            return new StatusDefinition(
+                PoisonId,
+                triggers.Value,
+                StatusStackPolicy.Refresh,
+                TargetDurationTick,
+                TargetDamageOverTime,
+                new DamageOverTimeBehavior(damagePerTrigger.Value));
         }
 
         /// <summary>

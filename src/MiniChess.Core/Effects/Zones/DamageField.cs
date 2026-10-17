@@ -5,7 +5,7 @@ using MiniChess.Core.Turns;
 namespace MiniChess.Core.Effects.Zones
 {
     /// <summary>
-    /// 피해 장판: 장판 위 적을 그 적 소유자의 Turn End(장판 단계)에 피해를 준다(독가스, 화염지대).
+    /// 피해 장판: 장판 위 적을 그 적 소유자의 Turn End(장판 단계)에 피해를 준다(화염지대).
     /// 상태이상이나 이동 제한은 추가하지 않는다.
     /// </summary>
     public class DamageField : ZoneCellEffect
