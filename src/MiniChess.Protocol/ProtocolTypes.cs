@@ -31,6 +31,7 @@ namespace MiniChess.Protocol
         {
             typeof(MatchStartedMessage),
             typeof(CommandResultMessage),
+            typeof(CommandAppliedMessage),
             typeof(EventsMessage),
             typeof(SnapshotMessage),
             typeof(ErrorMessage),

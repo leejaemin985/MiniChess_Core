@@ -15,6 +15,9 @@ namespace MiniChess.Protocol
         /// <summary>메시지 형식이 잘못됨(필수 값 누락 등).</summary>
         public const string InvalidRequest = "InvalidRequest";
 
+        /// <summary>경기가 이미 끝남.</summary>
+        public const string GameOver = "GameOver";
+
         public bool Success { get; }
 
         /// <summary>실패 사유. 코어 실패 enum 의 이름이거나 위 상수. 성공이면 null.</summary>
