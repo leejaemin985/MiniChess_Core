@@ -76,7 +76,7 @@ namespace MiniChess.Core.Characters.Pieces
         /// </summary>
         public static SkillDefinition ShadowClone(ShadowCloneTuning t)
         {
-            StatusDefinition mark = StatusLibrary.CurseMark(t.MarkTurns, t.MarkBonusDamage);
+            StatusDefinition mark = StatusLibrary.CurseMark(t.MarkBonusDamage);
 
             return new SkillDefinition(
                 ShadowCloneId, "그림자 분신", t.ApCost, SkillActionKind.Combat,
@@ -143,9 +143,6 @@ namespace MiniChess.Core.Characters.Pieces
 
         /// <summary>분신 기본 공격 사거리.</summary>
         public int? CloneAttackRange { get; set; }
-
-        /// <summary>저주 표식 지속(대상 소유자 턴 종료 횟수). [설계 의도] 2~3.</summary>
-        public int? MarkTurns { get; set; }
 
         /// <summary>본체가 표식 대상을 때릴 때 추가 피해.</summary>
         public int? MarkBonusDamage { get; set; }

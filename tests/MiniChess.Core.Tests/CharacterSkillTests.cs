@@ -1408,6 +1408,25 @@ namespace MiniChess.Core.Tests
 
         #region Curse mark
 
+        // 사용자 확정: 저주 표식은 지속 제한이 없고 발동할 때까지 남는다
+        [Fact]
+        public void CurseMark_HasNoDuration_LastsUntilTriggered()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 3, 0, Scythe(range: 2))
+                .Place(Team.Player2, 3, 2)
+                .WithRules(r => r.Ap.StartAp = 6)
+                .Start();
+            Use(state, u[0], ScythePiece.ShadowCloneId, 3, 1);
+            new AttackAction(CloneOf(state, u[0]), u[1]).Execute(state);
+
+            for (int i = 0; i < 10; i++)
+                EndTurn(state);
+
+            Assert.NotNull(u[1].FindStatus(StatusLibrary.CurseMarkId));
+            Assert.True(u[1].FindStatus(StatusLibrary.CurseMarkId).Definition.IsPermanent);
+        }
+
         // 명세 4.5 설계안 + 사용자 확정: 본체의 유효 타격 시 표식 소모, 추가 피해 1회
         [Fact]
         public void CurseMark_OwnerBasicAttack_ConsumesMarkAndAddsBonus()

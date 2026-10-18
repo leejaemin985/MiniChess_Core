@@ -143,20 +143,20 @@ namespace MiniChess.Core.Statuses.Library
 
         /// <summary>
         /// 저주 표식: 표식 소유자(건 유닛의 소환자)의 다음 직접 피해에 추가 피해 1회, 발동하면 소모.
-        /// 스택하지 않으며 다시 걸면 남은 횟수를 갱신한다. 건 유닛(분신)이 죽어도 유지된다.
+        /// 지속 시간 없이 발동할 때까지 유지된다(사용자 확정). 스택하지 않으며 다시 걸면 건 유닛을 새로 건 쪽으로 갱신한다.
+        /// 건 유닛(분신)이 죽어도 유지된다.
         /// </summary>
-        /// <param name="targetTurns">지속 횟수(대상 소유자의 턴 종료 횟수).</param>
         /// <param name="bonusDamage">발동 시 추가 피해.</param>
-        public static StatusDefinition CurseMark(int? targetTurns, int? bonusDamage)
+        public static StatusDefinition CurseMark(int? bonusDamage)
         {
-            if (targetTurns == null || bonusDamage == null)
+            if (bonusDamage == null)
                 return null;
 
             return new StatusDefinition(
                 CurseMarkId,
-                targetTurns.Value,
+                duration: 1,
                 StatusStackPolicy.Refresh,
-                TargetDurationTick,
+                decrement: null,
                 behavior: new CurseMarkBehavior(bonusDamage.Value));
         }
 

@@ -225,7 +225,6 @@ namespace MiniChess.Core.Presets
             t.Scythe.ShadowClone.ApCost = 3;
             t.Scythe.ShadowClone.CloneHp = 1;
             t.Scythe.ShadowClone.CloneAttackRange = 1;
-            t.Scythe.ShadowClone.MarkTurns = 2;
             t.Scythe.ShadowClone.MarkBonusDamage = 2;
             t.Scythe.CloneSwap.ApCost = 1;
 
