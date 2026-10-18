@@ -669,7 +669,7 @@ namespace MiniChess.Core.Tests
 
             Assert.Equal(10, u[1].Stats.CurrentHp);
             Assert.Equal(7, u[0].Stats.CurrentHp);
-            Assert.Contains(state.Events.Since(0), e => e is UnitDamagedEvent d && d.Target == u[0] && d.Type == DamageType.Redirected);
+            Assert.Contains(state.Events.Since(0), e => e is UnitDamagedEvent d && d.TargetId == u[0].Id && d.Type == DamageType.Redirected);
         }
 
         [Fact]
@@ -1022,7 +1022,7 @@ namespace MiniChess.Core.Tests
             Assert.Equal(10, u[3].Stats.CurrentHp);
             Assert.Equal(10, u[4].Stats.CurrentHp);
             Assert.Empty(state.ScheduledStrikes);
-            Assert.Contains(state.Events.Since(0), e => e is UnitDamagedEvent d && d.Target == u[1] && d.Type == DamageType.Area);
+            Assert.Contains(state.Events.Since(0), e => e is UnitDamagedEvent d && d.TargetId == u[1].Id && d.Type == DamageType.Area);
         }
 
         // 사용자 확정: 착탄한 턴에는 다시 포격 또는 해체만 남는다. 다시 포격해도 보호막은 재충전되지 않는다

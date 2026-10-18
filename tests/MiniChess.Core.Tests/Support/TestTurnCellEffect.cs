@@ -8,6 +8,7 @@ namespace MiniChess.Core.Tests.Support
     public class TestTurnCellEffect : ICellTurnEffect
     {
         public CellEffectLayer Layer { get; init; } = CellEffectLayer.AreaEffect;
+        public string Kind { get; init; } = "TEST";
         public TurnStep Step { get; init; }
         public Action<CellTurnContext> OnStep { get; init; }
 

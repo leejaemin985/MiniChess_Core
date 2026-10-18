@@ -1,0 +1,16 @@
+{
+    "name": "MiniChess.Protocol",
+    "rootNamespace": "MiniChess.Protocol",
+    "references": [
+        "MiniChess.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

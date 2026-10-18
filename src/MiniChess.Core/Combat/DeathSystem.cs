@@ -28,7 +28,7 @@ namespace MiniChess.Core.Combat
             {
                 Position position = unit.Position.Value;
                 state.Board.Remove(unit);
-                state.Events.Record(new UnitDiedEvent(unit, position));
+                state.Events.Record(new UnitDiedEvent(unit.Id, position));
                 StatusSystem.RemoveAll(state, unit, StatusRemoveReason.TargetDied);
                 StatusSystem.RemoveLinkedTo(state, unit);
                 ScheduledStrikeSystem.CancelBySource(state, unit);

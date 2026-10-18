@@ -4,6 +4,7 @@ using MiniChess.Core.Common;
 using MiniChess.Core.Events;
 using MiniChess.Core.State;
 using MiniChess.Core.Turns;
+using MiniChess.Core.Snapshots;
 
 namespace MiniChess.Core.Effects
 {
@@ -65,7 +66,7 @@ namespace MiniChess.Core.Effects
             Remove(state, position, effect.Layer, CellEffectRemoveReason.Replaced);
 
             state.Board.GetCell(position).SetEffect(effect);
-            state.Events.Record(new CellEffectPlacedEvent(position, effect));
+            state.Events.Record(new CellEffectPlacedEvent(SnapshotBuilder.CellEffect(position, effect)));
             return CellEffectPlaceFailReason.None;
         }
 
@@ -78,7 +79,7 @@ namespace MiniChess.Core.Effects
                 return false;
 
             cell.RemoveEffect(layer);
-            state.Events.Record(new CellEffectRemovedEvent(position, existing, reason));
+            state.Events.Record(new CellEffectRemovedEvent(position, existing.Layer, existing.Kind, reason));
             return true;
         }
 

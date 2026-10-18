@@ -12,6 +12,7 @@ namespace MiniChess.Core.Effects.Zones
     public class Obstacle : ZoneCellEffect
     {
         public override CellEffectLayer Layer => CellEffectLayer.Obstacle;
+        public override string Kind => CellEffectKinds.Obstacle;
 
         /// <summary>파괴까지 남은 피격 횟수.</summary>
         public int HitsRemaining { get; private set; }
@@ -25,7 +26,7 @@ namespace MiniChess.Core.Effects.Zones
         internal bool TakeHit(GameState state, Unit attacker, Position position)
         {
             HitsRemaining--;
-            state.Events.Record(new ObstacleHitEvent(attacker, position, this, HitsRemaining));
+            state.Events.Record(new ObstacleHitEvent(attacker.Id, position, HitsRemaining));
 
             if (HitsRemaining > 0)
                 return false;

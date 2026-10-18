@@ -30,5 +30,8 @@ namespace MiniChess.Core.Actions
 
         /// <summary>상태효과가 기본 공격을 막음(설치 중인 박격포 등).</summary>
         BlockedByStatus,
+
+        /// <summary>요청 형식이 잘못됨(요청 없음, 존재하지 않는 팀 등).</summary>
+        InvalidRequest,
     }
 }

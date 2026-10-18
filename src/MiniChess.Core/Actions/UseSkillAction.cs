@@ -92,7 +92,7 @@ namespace MiniChess.Core.Actions
             int eventStart = state.Events.Count;
 
             IReadOnlyList<Position> affectedCells = skill.Area.GetCells(state, Caster, Target, Rotation);
-            state.Events.Record(new SkillUsedEvent(Caster, skill, Targets, Rotation, affectedCells));
+            state.Events.Record(new SkillUsedEvent(Caster.Id, skill.Id, Targets, Rotation, affectedCells));
 
             state.GetPlayer(Caster.Team).Ap.TrySpend(skill.ApCost.Value);
             if (skill.ActionKind != SkillActionKind.Movement)

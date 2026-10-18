@@ -1,39 +1,41 @@
 using MiniChess.Core.Combat;
 using MiniChess.Core.Common;
 using MiniChess.Core.Movement;
-using MiniChess.Core.State;
+using MiniChess.Core.Snapshots;
 
 namespace MiniChess.Core.Events
 {
     /// <summary>유닛이 한 칸 이동했다. 여러 칸 이동은 칸마다 기록된다(워프는 한 번).</summary>
     public class UnitMovedEvent : GameEvent
     {
-        public Unit Unit { get; }
+        public int UnitId { get; }
         public Position From { get; }
         public Position To { get; }
         public MoveKind Kind { get; }
 
-        /// <summary>이동을 일으킨 유닛. 출처가 유닛이 아니면 null.</summary>
-        public Unit Initiator { get; }
+        /// <summary>이동을 일으킨 유닛 Id. 출처가 유닛이 아니면 null.</summary>
+        public int? InitiatorId { get; }
 
-        public bool IsVoluntary => MovementControl.IsVoluntary(Unit, Initiator);
+        /// <summary>자기 의지로 한 이동인지(일반 이동, 돌진 등). 넉백/당기기/교환당함은 false.</summary>
+        public bool IsVoluntary { get; }
 
-        public UnitMovedEvent(Unit unit, Position from, Position to, MoveKind kind, Unit initiator)
+        public UnitMovedEvent(int unitId, Position from, Position to, MoveKind kind, int? initiatorId, bool isVoluntary)
         {
-            Unit = unit;
+            UnitId = unitId;
             From = from;
             To = to;
             Kind = kind;
-            Initiator = initiator;
+            InitiatorId = initiatorId;
+            IsVoluntary = isVoluntary;
         }
     }
 
     /// <summary>유닛이 피해를 받았다.</summary>
     public class UnitDamagedEvent : GameEvent
     {
-        /// <summary>피해를 준 유닛. 출처가 유닛이 아니면 null.</summary>
-        public Unit Source { get; }
-        public Unit Target { get; }
+        /// <summary>피해를 준 유닛 Id. 출처가 유닛이 아니면 null.</summary>
+        public int? SourceId { get; }
+        public int TargetId { get; }
         public DamageType Type { get; }
 
         /// <summary>요청된 피해량(가로채기 전).</summary>
@@ -48,10 +50,10 @@ namespace MiniChess.Core.Events
         public int ShieldAbsorbed { get; }
 
         public UnitDamagedEvent(
-            Unit source, Unit target, DamageType type, int requestedAmount, int appliedAmount, int hpAfter, int shieldAbsorbed = 0)
+            int? sourceId, int targetId, DamageType type, int requestedAmount, int appliedAmount, int hpAfter, int shieldAbsorbed)
         {
-            Source = source;
-            Target = target;
+            SourceId = sourceId;
+            TargetId = targetId;
             Type = type;
             RequestedAmount = requestedAmount;
             AppliedAmount = appliedAmount;
@@ -63,15 +65,15 @@ namespace MiniChess.Core.Events
     /// <summary>유닛이 회복했다.</summary>
     public class UnitHealedEvent : GameEvent
     {
-        public Unit Source { get; }
-        public Unit Target { get; }
+        public int? SourceId { get; }
+        public int TargetId { get; }
         public int AppliedAmount { get; }
         public int HpAfter { get; }
 
-        public UnitHealedEvent(Unit source, Unit target, int appliedAmount, int hpAfter)
+        public UnitHealedEvent(int? sourceId, int targetId, int appliedAmount, int hpAfter)
         {
-            Source = source;
-            Target = target;
+            SourceId = sourceId;
+            TargetId = targetId;
             AppliedAmount = appliedAmount;
             HpAfter = hpAfter;
         }
@@ -80,29 +82,29 @@ namespace MiniChess.Core.Events
     /// <summary>소환물이 생성되어 보드에 놓였다.</summary>
     public class UnitSummonedEvent : GameEvent
     {
-        public Unit Owner { get; }
-        public Unit Summon { get; }
-        public Position Position { get; }
+        public int OwnerId { get; }
 
-        public UnitSummonedEvent(Unit owner, Unit summon, Position position)
+        /// <summary>놓인 직후의 소환물.</summary>
+        public UnitSnapshot Summon { get; }
+
+        public UnitSummonedEvent(int ownerId, UnitSnapshot summon)
         {
-            Owner = owner;
+            OwnerId = ownerId;
             Summon = summon;
-            Position = position;
         }
     }
 
     /// <summary>유닛이 사망해 보드에서 제거되었다.</summary>
     public class UnitDiedEvent : GameEvent
     {
-        public Unit Unit { get; }
+        public int UnitId { get; }
 
         /// <summary>사망한 칸.</summary>
         public Position Position { get; }
 
-        public UnitDiedEvent(Unit unit, Position position)
+        public UnitDiedEvent(int unitId, Position position)
         {
-            Unit = unit;
+            UnitId = unitId;
             Position = position;
         }
     }
@@ -110,7 +112,7 @@ namespace MiniChess.Core.Events
     /// <summary>유닛의 보호막 하나(Id 기준)의 양이 바뀌었다(부여/재충전 또는 피해 흡수). 0 이면 그 보호막은 사라졌다.</summary>
     public class UnitShieldChangedEvent : GameEvent
     {
-        public Unit Unit { get; }
+        public int UnitId { get; }
 
         /// <summary>바뀐 보호막의 Id.</summary>
         public string ShieldId { get; }
@@ -121,9 +123,9 @@ namespace MiniChess.Core.Events
         /// <summary>유닛의 모든 보호막 합(바뀐 뒤).</summary>
         public int ShieldAfter { get; }
 
-        public UnitShieldChangedEvent(Unit unit, string shieldId, int amountAfter, int shieldAfter)
+        public UnitShieldChangedEvent(int unitId, string shieldId, int amountAfter, int shieldAfter)
         {
-            Unit = unit;
+            UnitId = unitId;
             ShieldId = shieldId;
             AmountAfter = amountAfter;
             ShieldAfter = shieldAfter;

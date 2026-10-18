@@ -9,6 +9,9 @@ namespace MiniChess.Core.Effects
         /// <summary>이 효과가 차지하는 레이어. 같은 레이어의 기존 효과를 덮어쓴다.</summary>
         CellEffectLayer Layer { get; }
 
+        /// <summary>효과 종류(CellEffectKinds). 표시 계층이 구체 타입 대신 이 값으로 모양을 정한다.</summary>
+        string Kind { get; }
+
         /// <summary>
         /// 유닛이 이 칸에 들어왔을 때 호출된다. 이동 방식과 관계없이 칸을 밟으면 발동한다.
         /// 지나가는 칸이든 도착 칸이든 동일하다. Stop 을 반환하면 이 칸에서 이동이 끝난다.

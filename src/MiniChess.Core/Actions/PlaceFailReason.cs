@@ -25,5 +25,8 @@ namespace MiniChess.Core.Actions
 
         /// <summary>같은 칸에 둘 이상 배치했다.</summary>
         DuplicatePosition,
+
+        /// <summary>요청 형식이 잘못됨(요청 없음, 존재하지 않는 팀 등).</summary>
+        InvalidRequest,
     }
 }

@@ -13,6 +13,7 @@ namespace MiniChess.Core.Effects.Zones
         public int HealAmount { get; }
 
         public override CellEffectLayer Layer => CellEffectLayer.AreaEffect;
+        public override string Kind => CellEffectKinds.HealField;
 
         public HealField(FieldZone zone, int healAmount) : base(zone)
         {

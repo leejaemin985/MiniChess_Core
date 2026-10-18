@@ -1,18 +1,16 @@
 using MiniChess.Core.Common;
 using MiniChess.Core.Effects;
-using MiniChess.Core.Effects.Zones;
-using MiniChess.Core.State;
+using MiniChess.Core.Snapshots;
 
 namespace MiniChess.Core.Events
 {
+    /// <summary>칸 효과가 설치되었다. 값은 설치 직후 기준이다.</summary>
     public class CellEffectPlacedEvent : GameEvent
     {
-        public Position Position { get; }
-        public ICellEffect Effect { get; }
+        public CellEffectSnapshot Effect { get; }
 
-        public CellEffectPlacedEvent(Position position, ICellEffect effect)
+        public CellEffectPlacedEvent(CellEffectSnapshot effect)
         {
-            Position = position;
             Effect = effect;
         }
     }
@@ -37,30 +35,34 @@ namespace MiniChess.Core.Events
     /// <summary>장애물이 기본 공격을 받았다. 남은 횟수가 0 이면 이어서 파괴(제거) 이벤트가 기록된다.</summary>
     public class ObstacleHitEvent : GameEvent
     {
-        public Unit Attacker { get; }
+        public int AttackerId { get; }
         public Position Position { get; }
-        public Obstacle Obstacle { get; }
         public int HitsRemaining { get; }
 
-        public ObstacleHitEvent(Unit attacker, Position position, Obstacle obstacle, int hitsRemaining)
+        public ObstacleHitEvent(int attackerId, Position position, int hitsRemaining)
         {
-            Attacker = attacker;
+            AttackerId = attackerId;
             Position = position;
-            Obstacle = obstacle;
             HitsRemaining = hitsRemaining;
         }
     }
 
+    /// <summary>칸 효과가 제거되었다. 한 칸에는 레이어마다 효과가 하나뿐이므로 (칸, 레이어)로 가리킨다.</summary>
     public class CellEffectRemovedEvent : GameEvent
     {
         public Position Position { get; }
-        public ICellEffect Effect { get; }
+        public CellEffectLayer Layer { get; }
+
+        /// <summary>제거된 효과의 종류(CellEffectKinds).</summary>
+        public string Kind { get; }
+
         public CellEffectRemoveReason Reason { get; }
 
-        public CellEffectRemovedEvent(Position position, ICellEffect effect, CellEffectRemoveReason reason)
+        public CellEffectRemovedEvent(Position position, CellEffectLayer layer, string kind, CellEffectRemoveReason reason)
         {
             Position = position;
-            Effect = effect;
+            Layer = layer;
+            Kind = kind;
             Reason = reason;
         }
     }

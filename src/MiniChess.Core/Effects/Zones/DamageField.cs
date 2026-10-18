@@ -13,6 +13,7 @@ namespace MiniChess.Core.Effects.Zones
         public int DamageAmount { get; }
 
         public override CellEffectLayer Layer => CellEffectLayer.AreaEffect;
+        public override string Kind => CellEffectKinds.DamageField;
 
         public DamageField(FieldZone zone, int damageAmount) : base(zone)
         {

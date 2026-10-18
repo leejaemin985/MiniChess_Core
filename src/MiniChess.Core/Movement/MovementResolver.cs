@@ -47,7 +47,7 @@ namespace MiniChess.Core.Movement
 
                 Position previous = unit.Position.Value;
                 board.Relocate(unit, next);
-                state.Events.Record(new UnitMovedEvent(unit, previous, next, kind, initiator));
+                state.Events.Record(new UnitMovedEvent(unit.Id, previous, next, kind, initiator?.Id, MovementControl.IsVoluntary(unit, initiator)));
                 lastPosition = next;
                 cellsMoved++;
 
@@ -83,8 +83,8 @@ namespace MiniChess.Core.Movement
             Position positionB = b.Position.Value;
 
             state.Board.Swap(a, b);
-            state.Events.Record(new UnitMovedEvent(a, positionA, positionB, MoveKind.Swap, initiator));
-            state.Events.Record(new UnitMovedEvent(b, positionB, positionA, MoveKind.Swap, initiator));
+            state.Events.Record(new UnitMovedEvent(a.Id, positionA, positionB, MoveKind.Swap, initiator?.Id, MovementControl.IsVoluntary(a, initiator)));
+            state.Events.Record(new UnitMovedEvent(b.Id, positionB, positionA, MoveKind.Swap, initiator?.Id, MovementControl.IsVoluntary(b, initiator)));
 
             foreach (Unit unit in new[] { a, b })
             {

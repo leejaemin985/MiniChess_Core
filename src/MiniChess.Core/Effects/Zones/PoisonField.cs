@@ -11,6 +11,7 @@ namespace MiniChess.Core.Effects.Zones
         public StatusDefinition Poison { get; }
 
         public override CellEffectLayer Layer => CellEffectLayer.AreaEffect;
+        public override string Kind => CellEffectKinds.PoisonField;
 
         public PoisonField(FieldZone zone, StatusDefinition poison) : base(zone)
         {

@@ -116,10 +116,13 @@ namespace MiniChess.Core.State
             _damageInterceptors.Add(interceptor);
         }
 
+        private int _nextStrikeId;
+
         internal void AddScheduledStrike(ScheduledStrike strike)
         {
             if (strike == null) throw new ArgumentNullException(nameof(strike));
 
+            strike.Id = _nextStrikeId++;
             _scheduledStrikes.Add(strike);
         }
 

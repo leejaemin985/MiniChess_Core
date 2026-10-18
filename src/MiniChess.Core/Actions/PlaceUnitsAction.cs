@@ -6,6 +6,7 @@ using MiniChess.Core.Data;
 using MiniChess.Core.Events;
 using MiniChess.Core.State;
 using MiniChess.Core.Turns;
+using MiniChess.Core.Snapshots;
 
 namespace MiniChess.Core.Actions
 {
@@ -80,7 +81,7 @@ namespace MiniChess.Core.Actions
             }
 
             state.GetPlayer(Team).HasPlaced = true;
-            state.Events.Record(new UnitsPlacedEvent(Team, units));
+            state.Events.Record(new UnitsPlacedEvent(Team, units.Select(SnapshotBuilder.Unit).ToList()));
 
             bool battleStarted = state.GetPlayer(TurnSystem.GetOpponent(Team)).HasPlaced;
             if (battleStarted)

@@ -1,4 +1,3 @@
-using MiniChess.Core.Capture;
 using MiniChess.Core.Common;
 
 namespace MiniChess.Core.Events
@@ -23,13 +22,13 @@ namespace MiniChess.Core.Events
     {
         public Team Team { get; }
 
-        /// <summary>지급된 보상. 보상 풀이 비어 있으면 null.</summary>
-        public CaptureReward Reward { get; }
+        /// <summary>지급된 보상 Id(CaptureReward.Id). 보상 풀이 비어 있으면 null.</summary>
+        public string RewardId { get; }
 
-        public CaptureCompletedEvent(Team team, CaptureReward reward)
+        public CaptureCompletedEvent(Team team, string rewardId)
         {
             Team = team;
-            Reward = reward;
+            RewardId = rewardId;
         }
     }
 }

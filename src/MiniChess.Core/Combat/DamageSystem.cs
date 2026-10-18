@@ -45,13 +45,13 @@ namespace MiniChess.Core.Combat
             int applied = hpBefore - target.Stats.CurrentHp;
 
             state.Events.Record(new UnitDamagedEvent(
-                request.Source, target, request.Type, request.Amount, applied, target.Stats.CurrentHp, absorbed));
+                request.Source?.Id, target.Id, request.Type, request.Amount, applied, target.Stats.CurrentHp, absorbed));
 
             int shieldAfter = shieldBefore;
             foreach ((ShieldInstance shield, int used) in usedShields)
             {
                 shieldAfter -= used;
-                state.Events.Record(new UnitShieldChangedEvent(target, shield.Id, shield.Amount, shieldAfter));
+                state.Events.Record(new UnitShieldChangedEvent(target.Id, shield.Id, shield.Amount, shieldAfter));
             }
 
             bool killed = DeathSystem.HandleIfDead(state, target);
@@ -75,7 +75,7 @@ namespace MiniChess.Core.Combat
                 return;
 
             ShieldInstance shield = target.Stats.SetShield(shieldId, amount, source);
-            state.Events.Record(new UnitShieldChangedEvent(target, shield.Id, shield.Amount, target.Stats.Shield));
+            state.Events.Record(new UnitShieldChangedEvent(target.Id, shield.Id, shield.Amount, target.Stats.Shield));
         }
 
         /// <summary>해당 Id 의 보호막을 남은 양과 무관하게 제거한다(설치 해제 등). 없으면 아무것도 하지 않는다.</summary>
@@ -86,7 +86,7 @@ namespace MiniChess.Core.Combat
 
             ShieldInstance removed = target.Stats.RemoveShield(shieldId);
             if (removed != null)
-                state.Events.Record(new UnitShieldChangedEvent(target, shieldId, 0, target.Stats.Shield));
+                state.Events.Record(new UnitShieldChangedEvent(target.Id, shieldId, 0, target.Stats.Shield));
         }
 
         /// <summary>회복을 적용한다. 보드 위에 살아 있고 체력 변화를 막는 상태가 없는 대상만 처리한다.</summary>
@@ -103,7 +103,7 @@ namespace MiniChess.Core.Combat
             target.Stats.Heal(amount);
             int applied = target.Stats.CurrentHp - hpBefore;
 
-            state.Events.Record(new UnitHealedEvent(source, target, applied, target.Stats.CurrentHp));
+            state.Events.Record(new UnitHealedEvent(source?.Id, target.Id, applied, target.Stats.CurrentHp));
             return applied;
         }
     }

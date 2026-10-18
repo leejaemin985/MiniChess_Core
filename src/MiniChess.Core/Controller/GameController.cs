@@ -2,12 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MiniChess.Core.Actions;
+using MiniChess.Core.Combat;
 using MiniChess.Core.Common;
 using MiniChess.Core.Data;
+using MiniChess.Core.Events;
 using MiniChess.Core.Movement;
 using MiniChess.Core.Skills;
 using MiniChess.Core.Skills.Areas;
+using MiniChess.Core.Snapshots;
 using MiniChess.Core.State;
+using MiniChess.Core.Turns;
 
 namespace MiniChess.Core.Controller
 {
@@ -16,7 +20,7 @@ namespace MiniChess.Core.Controller
     ///   - 명령: 요청(GameRequest)을 받아 검사 후 실행하고 응답(GameResponse)을 돌려준다. 실패하면 상태는 바뀌지 않는다.
     ///   - 조회: 상태를 바꾸지 않는 표시용 정보(배치/이동/공격/스킬 가능 칸, 범위 미리보기).
     ///   - State: 읽기 전용 경기 상태(보드, 유닛, AP, 턴, 이벤트 로그). 변경은 명령으로만 한다.
-    /// PvP 에서 상대 정보를 숨기는 처리는 서버가 응답/상태를 걸러서 한다.
+    ///   - 시점(View): 팀별로 거른 스냅샷/이벤트(GetSnapshot, GetVisibleEvents). 서버는 이것만 각 클라이언트에 보낸다.
     /// </summary>
     public class GameController
     {
@@ -43,6 +47,8 @@ namespace MiniChess.Core.Controller
 
         public GameResponse<PlaceFailReason, PlaceUnitsResult> PlaceUnits(PlaceUnitsRequest request)
         {
+            if (!IsWellFormed(request)) return GameResponse<PlaceFailReason, PlaceUnitsResult>.Fail(PlaceFailReason.InvalidRequest);
+
             var action = new PlaceUnitsAction(request.Team, request.Placements);
 
             PlaceFailReason reason = action.Validate(State);
@@ -55,6 +61,8 @@ namespace MiniChess.Core.Controller
 
         public GameResponse<MoveFailReason, MovementResult> Move(MoveRequest request)
         {
+            if (!IsWellFormed(request)) return GameResponse<MoveFailReason, MovementResult>.Fail(MoveFailReason.InvalidRequest);
+
             Unit unit = State.FindUnit(request.UnitId);
             if (unit == null) return GameResponse<MoveFailReason, MovementResult>.Fail(MoveFailReason.UnknownUnit);
             if (unit.Team != request.Team) return GameResponse<MoveFailReason, MovementResult>.Fail(MoveFailReason.NotYourUnit);
@@ -71,6 +79,8 @@ namespace MiniChess.Core.Controller
 
         public GameResponse<AttackFailReason, AttackResult> Attack(AttackRequest request)
         {
+            if (!IsWellFormed(request)) return GameResponse<AttackFailReason, AttackResult>.Fail(AttackFailReason.InvalidRequest);
+
             Unit attacker = State.FindUnit(request.UnitId);
             if (attacker == null) return GameResponse<AttackFailReason, AttackResult>.Fail(AttackFailReason.UnknownUnit);
             if (attacker.Team != request.Team) return GameResponse<AttackFailReason, AttackResult>.Fail(AttackFailReason.NotYourUnit);
@@ -90,6 +100,8 @@ namespace MiniChess.Core.Controller
 
         public GameResponse<AttackFailReason, AttackObstacleResult> AttackObstacle(AttackObstacleRequest request)
         {
+            if (!IsWellFormed(request)) return GameResponse<AttackFailReason, AttackObstacleResult>.Fail(AttackFailReason.InvalidRequest);
+
             Unit attacker = State.FindUnit(request.UnitId);
             if (attacker == null) return GameResponse<AttackFailReason, AttackObstacleResult>.Fail(AttackFailReason.UnknownUnit);
             if (attacker.Team != request.Team) return GameResponse<AttackFailReason, AttackObstacleResult>.Fail(AttackFailReason.NotYourUnit);
@@ -106,6 +118,8 @@ namespace MiniChess.Core.Controller
 
         public GameResponse<SkillFailReason, SkillResult> UseSkill(UseSkillRequest request)
         {
+            if (!IsWellFormed(request)) return GameResponse<SkillFailReason, SkillResult>.Fail(SkillFailReason.InvalidRequest);
+
             Unit caster = State.FindUnit(request.UnitId);
             if (caster == null) return GameResponse<SkillFailReason, SkillResult>.Fail(SkillFailReason.UnknownUnit);
             if (caster.Team != request.Team) return GameResponse<SkillFailReason, SkillResult>.Fail(SkillFailReason.NotYourUnit);
@@ -122,6 +136,8 @@ namespace MiniChess.Core.Controller
 
         public GameResponse<EndTurnFailReason, EndTurnResult> EndTurn(EndTurnRequest request)
         {
+            if (!IsWellFormed(request)) return GameResponse<EndTurnFailReason, EndTurnResult>.Fail(EndTurnFailReason.InvalidRequest);
+
             var action = new EndTurnAction(request.Team);
 
             EndTurnFailReason reason = action.Validate(State);
@@ -130,6 +146,41 @@ namespace MiniChess.Core.Controller
 
             EndTurnResult result = action.Execute(State);
             return GameResponse<EndTurnFailReason, EndTurnResult>.Ok(result, result.Events);
+        }
+
+        /// <summary>
+        /// 한 팀의 연결이 끊겨 경기를 끝낸다(상대 승리, GameEndReason.Disconnect). 서버만 호출한다.
+        /// 배치 단계에서도 끝낼 수 있다. 이미 끝났거나 팀이 잘못되었으면 아무것도 하지 않고 빈 목록을 돌려준다.
+        /// </summary>
+        public IReadOnlyList<GameEvent> EndByDisconnect(Team disconnected)
+        {
+            if (State.IsGameOver || !IsDefined(disconnected))
+                return Array.Empty<GameEvent>();
+
+            int eventStart = State.Events.Count;
+            DeathSystem.EndGame(State, TurnSystem.GetOpponent(disconnected), GameEndReason.Disconnect);
+            return State.Events.Since(eventStart);
+        }
+
+        /// <summary>요청이 있고 팀이 실제 팀인지. 네트워크로 들어온 잘못된 요청을 예외 대신 실패로 돌려주기 위한 검사.</summary>
+        private static bool IsWellFormed(GameRequest request) => request != null && IsDefined(request.Team);
+
+        private static bool IsDefined(Team team) => team == Team.Player1 || team == Team.Player2;
+
+        #endregion
+
+        #region Views
+
+        /// <summary>viewer 팀 시점의 현재 상태(값 복사본). 접속 직후 화면 구성, 이벤트 재생 후 동기화에 쓴다.</summary>
+        public GameSnapshot GetSnapshot(Team viewer)
+        {
+            return GameProjection.Snapshot(State, viewer);
+        }
+
+        /// <summary>events 중 viewer 팀에게 보여 줄 것. 응답/로그의 이벤트를 상대에게 보내기 전에 거른다.</summary>
+        public IReadOnlyList<GameEvent> GetVisibleEvents(Team viewer, IReadOnlyList<GameEvent> events)
+        {
+            return GameProjection.FilterEvents(State, viewer, events);
         }
 
         #endregion

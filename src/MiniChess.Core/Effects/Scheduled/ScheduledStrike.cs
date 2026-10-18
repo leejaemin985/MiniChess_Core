@@ -10,6 +10,9 @@ namespace MiniChess.Core.Effects.Scheduled
     /// </summary>
     public class ScheduledStrike
     {
+        /// <summary>경기 안에서 고유한 번호. 예약될 때 정해진다.</summary>
+        public int Id { get; internal set; } = -1;
+
         public string SkillId { get; }
         public Unit Source { get; }
 

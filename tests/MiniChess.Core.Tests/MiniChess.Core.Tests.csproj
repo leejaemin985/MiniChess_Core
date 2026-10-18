@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\MiniChess.Core\MiniChess.Core.csproj" />
+    <ProjectReference Include="..\..\src\MiniChess.Protocol\MiniChess.Protocol.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

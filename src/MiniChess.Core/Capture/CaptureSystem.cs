@@ -81,7 +81,7 @@ namespace MiniChess.Core.Capture
 
             CaptureReward reward = PickReward(state);
             capture.Reward = reward;
-            state.Events.Record(new CaptureCompletedEvent(team, reward));
+            state.Events.Record(new CaptureCompletedEvent(team, reward?.Id));
 
             reward?.Grant(state, team);
         }

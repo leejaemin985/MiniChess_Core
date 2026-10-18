@@ -5,6 +5,7 @@ using MiniChess.Core.Events;
 using MiniChess.Core.Skills;
 using MiniChess.Core.State;
 using MiniChess.Core.Turns;
+using MiniChess.Core.Snapshots;
 
 namespace MiniChess.Core.Effects.Scheduled
 {
@@ -14,7 +15,7 @@ namespace MiniChess.Core.Effects.Scheduled
         internal static void Schedule(GameState state, ScheduledStrike strike)
         {
             state.AddScheduledStrike(strike);
-            state.Events.Record(new StrikeScheduledEvent(strike));
+            state.Events.Record(new StrikeScheduledEvent(SnapshotBuilder.Strike(strike)));
         }
 
         /// <summary>
@@ -46,14 +47,14 @@ namespace MiniChess.Core.Effects.Scheduled
             foreach (ScheduledStrike strike in state.ScheduledStrikes.Where(s => s.Source == source).ToList())
             {
                 state.RemoveScheduledStrike(strike);
-                state.Events.Record(new StrikeCancelledEvent(strike));
+                state.Events.Record(new StrikeCancelledEvent(SnapshotBuilder.Strike(strike)));
             }
         }
 
         private static void Fire(GameState state, ScheduledStrike strike)
         {
             state.RemoveScheduledStrike(strike);
-            state.Events.Record(new StrikeLandedEvent(strike));
+            state.Events.Record(new StrikeLandedEvent(SnapshotBuilder.Strike(strike)));
 
             // 발사는 행동이 아니다: 시전자는 발사한 턴에도 행동할 수 있다(사용자 확정).
             foreach (Unit target in TargetFilter.Enemy.GetUnits(state.Board, strike.Cells, strike.Source))

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using MiniChess.Core.Common;
-using MiniChess.Core.State;
+using MiniChess.Core.Snapshots;
 
 namespace MiniChess.Core.Events
 {
@@ -8,9 +8,10 @@ namespace MiniChess.Core.Events
     public class UnitsPlacedEvent : GameEvent
     {
         public Team Team { get; }
-        public IReadOnlyList<Unit> Units { get; }
+        /// <summary>배치된 직후의 유닛들.</summary>
+        public IReadOnlyList<UnitSnapshot> Units { get; }
 
-        public UnitsPlacedEvent(Team team, IReadOnlyList<Unit> units)
+        public UnitsPlacedEvent(Team team, IReadOnlyList<UnitSnapshot> units)
         {
             Team = team;
             Units = units;
@@ -48,6 +49,9 @@ namespace MiniChess.Core.Events
 
         /// <summary>최대 턴 도달 후 판정.</summary>
         TurnLimit,
+
+        /// <summary>한쪽 연결이 끊김. 끊긴 팀이 진다.</summary>
+        Disconnect,
     }
 
     public class GameEndedEvent : GameEvent

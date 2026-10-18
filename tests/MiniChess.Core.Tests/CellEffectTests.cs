@@ -38,7 +38,7 @@ namespace MiniChess.Core.Tests
 
             Assert.Same(gas, state.Board.GetCell(new Position(2, 2)).GetEffect(CellEffectLayer.AreaEffect));
             var removed = state.Events.All.OfType<CellEffectRemovedEvent>().Single();
-            Assert.Same(heal, removed.Effect);
+            Assert.Equal(heal.Kind, removed.Kind);
             Assert.Equal(CellEffectRemoveReason.Replaced, removed.Reason);
         }
 

@@ -25,8 +25,8 @@ namespace MiniChess.Core.Tests
             AttackResult result = new AttackAction(u[0], u[1]).Execute(state);
 
             var damaged = Assert.Single(result.Events.OfType<UnitDamagedEvent>());
-            Assert.Same(u[0], damaged.Source);
-            Assert.Same(u[1], damaged.Target);
+            Assert.Equal(u[0].Id, damaged.SourceId);
+            Assert.Equal(u[1].Id, damaged.TargetId);
             Assert.Equal(DamageType.Direct, damaged.Type);
             Assert.Equal(3, damaged.RequestedAmount);
             Assert.Equal(3, damaged.AppliedAmount);

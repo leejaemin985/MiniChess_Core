@@ -8,6 +8,7 @@ namespace MiniChess.Core.Effects.Zones
         public FieldZone Zone { get; }
 
         public abstract CellEffectLayer Layer { get; }
+        public abstract string Kind { get; }
 
         protected ZoneCellEffect(FieldZone zone)
         {

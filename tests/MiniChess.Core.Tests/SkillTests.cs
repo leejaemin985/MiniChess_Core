@@ -52,7 +52,7 @@ namespace MiniChess.Core.Tests
             Assert.Equal(1, state.GetPlayer(Team.Player1).Ap.Current);
             Assert.True(u[0].TurnState.CombatActionUsed);
             Assert.IsType<SkillUsedEvent>(result.Events[0]);
-            Assert.Contains(result.Events, e => e is UnitDamagedEvent d && d.Source == u[0]);
+            Assert.Contains(result.Events, e => e is UnitDamagedEvent d && d.SourceId == u[0].Id);
         }
 
         [Fact]

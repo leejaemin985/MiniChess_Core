@@ -18,6 +18,7 @@ namespace MiniChess.Core.Effects.Zones
         public bool SingleUse { get; }
 
         public override CellEffectLayer Layer => CellEffectLayer.Trap;
+        public override string Kind => CellEffectKinds.RootTrap;
 
         public RootTrap(FieldZone zone, int damage, StatusDefinition root, bool singleUse) : base(zone)
         {

@@ -174,7 +174,7 @@ namespace MiniChess.Core.Tests
             PassRound(state);
 
             Assert.Same(burn, state.Capture.Reward);
-            Assert.Same(burn, state.Events.All.OfType<CaptureCompletedEvent>().Single().Reward);
+            Assert.Equal(burn.Id, state.Events.All.OfType<CaptureCompletedEvent>().Single().RewardId);
         }
 
         [Fact]

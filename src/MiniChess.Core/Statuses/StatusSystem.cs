@@ -7,6 +7,7 @@ using MiniChess.Core.Events;
 using MiniChess.Core.Movement;
 using MiniChess.Core.State;
 using MiniChess.Core.Turns;
+using MiniChess.Core.Snapshots;
 
 namespace MiniChess.Core.Statuses
 {
@@ -37,7 +38,7 @@ namespace MiniChess.Core.Statuses
                     // 같은 정의면 갱신한다. 같은 Id 라도 정의가 다르면(점령 보상 화상과 스킬 화상 등) 수치가 다를 수 있어 새 정의로 교체한다.
                     case StatusStackPolicy.Refresh when ReferenceEquals(existing.Definition, definition):
                         existing.Reapply(source, sourceTeam, state.TurnNumber);
-                        state.Events.Record(new StatusAppliedEvent(existing, refreshed: true));
+                        state.Events.Record(new StatusAppliedEvent(target.Id, SnapshotBuilder.Status(existing), refreshed: true));
                         return existing;
 
                     case StatusStackPolicy.Refresh:
@@ -50,7 +51,7 @@ namespace MiniChess.Core.Statuses
 
             var status = new StatusEffect(definition, target, source, sourceTeam, state.TurnNumber);
             target.AddStatus(status);
-            state.Events.Record(new StatusAppliedEvent(status, refreshed: false));
+            state.Events.Record(new StatusAppliedEvent(target.Id, SnapshotBuilder.Status(status), refreshed: false));
             definition.Behavior?.OnApplied(new StatusContext(state, status));
             return status;
         }
@@ -67,7 +68,7 @@ namespace MiniChess.Core.Statuses
             if (!status.Target.RemoveStatus(status))
                 return;
 
-            state.Events.Record(new StatusRemovedEvent(status, reason));
+            state.Events.Record(new StatusRemovedEvent(status.Target.Id, status.Definition.Id, reason));
             status.Definition.Behavior?.OnRemoved(new StatusContext(state, status));
         }
 

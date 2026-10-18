@@ -7,6 +7,7 @@ namespace MiniChess.Core.Tests.Support
     public class TestCellEffect : ICellEffect
     {
         public CellEffectLayer Layer { get; init; } = CellEffectLayer.Trap;
+        public string Kind { get; init; } = "TEST";
         public int Damage { get; init; }
         public bool StopOnEnter { get; init; }
 

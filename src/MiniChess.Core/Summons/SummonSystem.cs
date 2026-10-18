@@ -8,6 +8,7 @@ using MiniChess.Core.Data;
 using MiniChess.Core.Events;
 using MiniChess.Core.State;
 using MiniChess.Core.Statuses;
+using MiniChess.Core.Snapshots;
 
 namespace MiniChess.Core.Summons
 {
@@ -40,7 +41,7 @@ namespace MiniChess.Core.Summons
                 summon.AddBasicAttackStatus(status);
 
             state.Board.TrySpawn(summon, position);
-            state.Events.Record(new UnitSummonedEvent(owner, summon, position));
+            state.Events.Record(new UnitSummonedEvent(owner.Id, SnapshotBuilder.Unit(summon)));
             CaptureSystem.OnOccupancyChanged(state);
             return summon;
         }
