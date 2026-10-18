@@ -14,6 +14,9 @@ namespace MiniChess.Core.Skills
         /// <summary>지정해야 하는 칸 수.</summary>
         public virtual int TargetCount => 1;
 
+        /// <summary>시전자 자신만 지정하는지. 클라는 칸을 고르지 않고 확인만 받는다.</summary>
+        public virtual bool IsSelfOnly => false;
+
         /// <summary>첫 번째로 지정할 수 있는 칸 전부.</summary>
         public abstract IEnumerable<Position> GetCandidates(GameState state, Unit caster);
 

@@ -34,10 +34,13 @@ namespace MiniChess.Core.Statuses
                     case StatusStackPolicy.Ignore:
                         return null;
 
-                    case StatusStackPolicy.Refresh:
+                    // 같은 정의면 갱신한다. 같은 Id 라도 정의가 다르면(점령 보상 화상과 스킬 화상 등) 수치가 다를 수 있어 새 정의로 교체한다.
+                    case StatusStackPolicy.Refresh when ReferenceEquals(existing.Definition, definition):
                         existing.Reapply(source, sourceTeam, state.TurnNumber);
                         state.Events.Record(new StatusAppliedEvent(existing, refreshed: true));
                         return existing;
+
+                    case StatusStackPolicy.Refresh:
 
                     case StatusStackPolicy.Replace:
                         Remove(state, existing, StatusRemoveReason.Replaced);

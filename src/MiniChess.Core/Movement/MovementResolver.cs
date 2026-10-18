@@ -56,7 +56,8 @@ namespace MiniChess.Core.Movement
                     break;
             }
 
-            if (cellsMoved > 0 && MovementControl.IsVoluntary(unit, initiator))
+            // 이동 거리 제한은 일반 경로 이동에만 걸리므로, 누적도 일반 이동만 센다(돌진/도약 등 스킬 이동은 제외).
+            if (cellsMoved > 0 && kind == MoveKind.Path && MovementControl.IsVoluntary(unit, initiator))
                 unit.TurnState.AddVoluntaryCellsMoved(cellsMoved);
 
             if (cellsMoved > 0 && unit.IsAlive)

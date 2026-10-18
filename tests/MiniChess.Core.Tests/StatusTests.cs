@@ -227,6 +227,52 @@ namespace MiniChess.Core.Tests
             Assert.Equal(MoveFailReason.DistanceLimited, new MoveAction(u[0], new Position(0, 3)).Validate(state));
         }
 
+        // 이동 거리 제한은 일반 이동에만 걸리므로, 돌진/도약/워프 같은 스킬 이동은 누적에 넣지 않는다
+        [Theory]
+        [InlineData(MoveKind.Dash)]
+        [InlineData(MoveKind.Warp)]
+        public void VoluntaryCellsMoved_CountsOnlyPathMoves(MoveKind kind)
+        {
+            var (state, u) = TwoUnits();
+
+            MovementResolver.Resolve(state, u[0], u[0], kind, new[] { new Position(0, 1), new Position(0, 2) });
+            Assert.Equal(0, u[0].TurnState.VoluntaryCellsMoved);
+
+            new MoveAction(u[0], new Position(0, 3)).Execute(state);
+            Assert.Equal(1, u[0].TurnState.VoluntaryCellsMoved);
+        }
+
+        // 같은 Id 라도 정의가 다르면(점령 보상 화상 vs 스킬 화상) 나중에 건 정의의 수치를 따른다
+        [Fact]
+        public void Refresh_WithDifferentDefinitionOfSameId_UsesNewDefinition()
+        {
+            var (state, u) = TwoUnits();
+            StatusDefinition first = Def(id: "burn", duration: 2);
+            StatusDefinition second = Def(id: "burn", duration: 3);
+
+            StatusSystem.Apply(state, first, u[1], u[0]);
+            StatusSystem.Apply(state, second, u[1], u[0]);
+
+            StatusEffect status = Assert.Single(u[1].Statuses);
+            Assert.Same(second, status.Definition);
+            Assert.Equal(3, status.Remaining);
+        }
+
+        // 가로채기(호위자가 대신 맞고 사망 등)로 경기가 끝나면, 원래 대상의 피해는 기록하지 않는다
+        [Fact]
+        public void Damage_NotAppliedAfterInterceptorEndsGame()
+        {
+            var (state, u) = TwoUnits();
+            state.AddDamageInterceptor(new EndGameInterceptor());
+
+            DamageOutcome outcome = DamageSystem.Apply(state, new DamageRequest(null, u[0], 4, DamageType.Direct));
+
+            Assert.Equal(0, outcome.AppliedAmount);
+            Assert.Equal(20, u[0].Stats.CurrentHp);
+            Assert.IsType<GameEndedEvent>(state.Events.All.Last());
+            Assert.Empty(state.Events.All.OfType<UnitDamagedEvent>());
+        }
+
         [Fact]
         public void Interceptor_RegisteredWhileStatusActive()
         {
@@ -275,6 +321,17 @@ namespace MiniChess.Core.Tests
         {
             public int Order => 0;
             public int Intercept(GameState state, DamageRequest request, int currentAmount) => currentAmount / 2;
+        }
+
+        private class EndGameInterceptor : IDamageInterceptor
+        {
+            public int Order => 0;
+
+            public int Intercept(GameState state, DamageRequest request, int currentAmount)
+            {
+                DeathSystem.EndGame(state, Team.Player2, GameEndReason.Elimination);
+                return currentAmount;
+            }
         }
     }
 }

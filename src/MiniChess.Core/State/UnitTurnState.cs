@@ -15,7 +15,7 @@ namespace MiniChess.Core.State
         /// <summary>이번 턴에 더 이상 어떤 행동도 할 수 없는지(예: 분신 소환 직후의 본체).</summary>
         public bool ActionsEnded { get; private set; }
 
-        /// <summary>이번 턴에 자발적으로 이동한 칸 수의 누적(이동 거리 제한 판정용).</summary>
+        /// <summary>이번 턴에 일반 경로 이동(Path)으로 자발적으로 이동한 칸 수의 누적(이동 거리 제한 판정용).</summary>
         public int VoluntaryCellsMoved { get; private set; }
 
         internal void MarkCombatActionUsed()

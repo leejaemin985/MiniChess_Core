@@ -23,12 +23,16 @@ namespace MiniChess.Core.Combat
             if (request == null) throw new ArgumentNullException(nameof(request));
 
             Unit target = request.Target;
-            if (!target.IsOnBoard || StatusSystem.BlocksHpChange(state, target))
+            if (state.IsGameOver || !target.IsOnBoard || StatusSystem.BlocksHpChange(state, target))
                 return DamageOutcome.None;
 
             int amount = request.Amount;
             foreach (IDamageInterceptor interceptor in state.DamageInterceptors.OrderBy(i => i.Order))
                 amount = Math.Max(0, interceptor.Intercept(state, request, amount));
+
+            // 가로채기(호위 대신 맞기 등)로 경기가 끝났으면 남은 피해는 적용하지 않는다.
+            if (state.IsGameOver)
+                return DamageOutcome.None;
 
             // [가정] 보호막은 피해 종류와 무관하게, 가로채기(호위 등)가 끝난 뒤의 피해를 흡수한다.
             int shieldBefore = target.Stats.Shield;
