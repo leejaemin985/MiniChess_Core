@@ -6,7 +6,10 @@ using MiniChess.Core.Events;
 
 namespace MiniChess.Protocol
 {
-    /// <summary>명령 하나의 결과. 실패면 상태는 바뀌지 않았고 Events 는 비어 있다.</summary>
+    /// <summary>
+    /// 명령 하나의 결과. 실패면 상태는 바뀌지 않았고 Events 는 비어 있다.
+    /// 예외: 서버 오류로 경기가 무효 처리되었으면(ServerError) 실패이지만 Events 에 경기 종료 이벤트가 담긴다.
+    /// </summary>
     public class CommandOutcome
     {
         /// <summary>요청 턴 번호가 서버의 현재 턴과 다름(오래되었거나 중복된 요청).</summary>
@@ -17,6 +20,9 @@ namespace MiniChess.Protocol
 
         /// <summary>경기가 이미 끝남.</summary>
         public const string GameOver = "GameOver";
+
+        /// <summary>처리 중 서버 오류가 나서 경기가 무효 처리됨.</summary>
+        public const string ServerError = "ServerError";
 
         public bool Success { get; }
 
@@ -34,6 +40,9 @@ namespace MiniChess.Protocol
 
         public static CommandOutcome Ok(IReadOnlyList<GameEvent> events) => new CommandOutcome(true, null, events);
         public static CommandOutcome Fail(string reason) => new CommandOutcome(false, reason, Array.Empty<GameEvent>());
+
+        /// <summary>서버 오류로 경기를 무효 처리했다. abortEvents 는 GameController.Abort 가 돌려준 종료 이벤트.</summary>
+        public static CommandOutcome Aborted(IReadOnlyList<GameEvent> abortEvents) => new CommandOutcome(false, ServerError, abortEvents);
     }
 
     /// <summary>

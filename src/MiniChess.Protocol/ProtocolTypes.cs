@@ -8,7 +8,16 @@ namespace MiniChess.Protocol
     public static class ProtocolInfo
     {
         /// <summary>메시지 형식 버전. 메시지/이벤트/스냅샷의 모양이 바뀌면 올린다.</summary>
-        public const int Version = 2;
+        public const int Version = 3;
+
+        /// <summary>클라이언트가 PingMessage 를 보내는 간격(초).</summary>
+        public const int PingIntervalSeconds = 10;
+
+        /// <summary>이 시간(초) 동안 상대에게서 아무 메시지도 받지 못하면 연결이 끊긴 것으로 본다(사용자 확정 30초).</summary>
+        public const int ConnectionTimeoutSeconds = 30;
+
+        /// <summary>메시지 하나의 최대 크기(바이트). 넘으면 연결을 끊는다.</summary>
+        public const int MaxMessageBytes = 256 * 1024;
     }
 
     /// <summary>
@@ -25,6 +34,7 @@ namespace MiniChess.Protocol
             typeof(AttackObstacleMessage),
             typeof(UseSkillMessage),
             typeof(EndTurnMessage),
+            typeof(PingMessage),
         };
 
         public static readonly IReadOnlyList<Type> Server = new[]
@@ -33,6 +43,7 @@ namespace MiniChess.Protocol
             typeof(CommandResultMessage),
             typeof(StateUpdateMessage),
             typeof(ErrorMessage),
+            typeof(PongMessage),
         };
 
         private static readonly Dictionary<string, Type> ByName = Client.Concat(Server).ToDictionary(NameOf);

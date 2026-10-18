@@ -90,6 +90,7 @@ namespace MiniChess.Core.Snapshots
                 state.CurrentTeam,
                 state.TurnNumber,
                 state.Winner,
+                state.EndReason,
                 state.Events.Count - 1,
                 state.Board.Width,
                 state.Board.Height,

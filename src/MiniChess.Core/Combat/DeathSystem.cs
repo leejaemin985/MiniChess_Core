@@ -68,6 +68,7 @@ namespace MiniChess.Core.Combat
         {
             state.Phase = GamePhase.Ended;
             state.Winner = winner;
+            state.EndReason = reason;
             state.Events.Record(new GameEndedEvent(winner, reason));
         }
     }

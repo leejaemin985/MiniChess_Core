@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MiniChess.Core\MiniChess.Core.csproj" />
+    <!-- JSON 형식(ProtocolJson). Unity 의 com.unity.nuget.newtonsoft-json 3.2.1 과 같은 버전 -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
   </ItemGroup>
 
 </Project>

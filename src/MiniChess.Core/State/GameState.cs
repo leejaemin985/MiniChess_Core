@@ -59,6 +59,9 @@ namespace MiniChess.Core.State
         /// <summary>승리한 팀. 경기가 끝나지 않았으면 null.</summary>
         public Team? Winner { get; internal set; }
 
+        /// <summary>경기가 끝난 사유. 끝나지 않았으면 null.</summary>
+        public GameEndReason? EndReason { get; internal set; }
+
         public bool IsGameOver => Phase == GamePhase.Ended;
         public PlayerState CurrentPlayer => GetPlayer(CurrentTeam);
 

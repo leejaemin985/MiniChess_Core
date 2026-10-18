@@ -52,6 +52,9 @@ namespace MiniChess.Core.Events
 
         /// <summary>한쪽 연결이 끊김. 끊긴 팀이 진다.</summary>
         Disconnect,
+
+        /// <summary>서버 오류로 경기가 무효 처리됨. 승자 없음.</summary>
+        Aborted,
     }
 
     public class GameEndedEvent : GameEvent

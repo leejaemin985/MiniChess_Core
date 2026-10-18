@@ -55,13 +55,14 @@ namespace MiniChess.Core.Controller
             if (config.Rules == null) throw new ArgumentException("Rules 가 없음", nameof(config));
             if (config.Map == null) throw new ArgumentException("Map 이 없음", nameof(config));
 
-            return new GameController(SnapshotRestorer.Restore(config, snapshot));
+            return new GameController(SnapshotRestorer.Restore(config, snapshot)) { IsReadOnly = true };
         }
 
         #region Commands
 
         public GameResponse<PlaceFailReason, PlaceUnitsResult> PlaceUnits(PlaceUnitsRequest request)
         {
+            EnsureWritable();
             if (!IsWellFormed(request)) return GameResponse<PlaceFailReason, PlaceUnitsResult>.Fail(PlaceFailReason.InvalidRequest);
 
             var action = new PlaceUnitsAction(request.Team, request.Placements);
@@ -76,6 +77,7 @@ namespace MiniChess.Core.Controller
 
         public GameResponse<MoveFailReason, MovementResult> Move(MoveRequest request)
         {
+            EnsureWritable();
             if (!IsWellFormed(request)) return GameResponse<MoveFailReason, MovementResult>.Fail(MoveFailReason.InvalidRequest);
 
             Unit unit = State.FindUnit(request.UnitId);
@@ -94,6 +96,7 @@ namespace MiniChess.Core.Controller
 
         public GameResponse<AttackFailReason, AttackResult> Attack(AttackRequest request)
         {
+            EnsureWritable();
             if (!IsWellFormed(request)) return GameResponse<AttackFailReason, AttackResult>.Fail(AttackFailReason.InvalidRequest);
 
             Unit attacker = State.FindUnit(request.UnitId);
@@ -115,6 +118,7 @@ namespace MiniChess.Core.Controller
 
         public GameResponse<AttackFailReason, AttackObstacleResult> AttackObstacle(AttackObstacleRequest request)
         {
+            EnsureWritable();
             if (!IsWellFormed(request)) return GameResponse<AttackFailReason, AttackObstacleResult>.Fail(AttackFailReason.InvalidRequest);
 
             Unit attacker = State.FindUnit(request.UnitId);
@@ -133,6 +137,7 @@ namespace MiniChess.Core.Controller
 
         public GameResponse<SkillFailReason, SkillResult> UseSkill(UseSkillRequest request)
         {
+            EnsureWritable();
             if (!IsWellFormed(request)) return GameResponse<SkillFailReason, SkillResult>.Fail(SkillFailReason.InvalidRequest);
 
             Unit caster = State.FindUnit(request.UnitId);
@@ -151,6 +156,7 @@ namespace MiniChess.Core.Controller
 
         public GameResponse<EndTurnFailReason, EndTurnResult> EndTurn(EndTurnRequest request)
         {
+            EnsureWritable();
             if (!IsWellFormed(request)) return GameResponse<EndTurnFailReason, EndTurnResult>.Fail(EndTurnFailReason.InvalidRequest);
 
             var action = new EndTurnAction(request.Team);
@@ -169,6 +175,7 @@ namespace MiniChess.Core.Controller
         /// </summary>
         public IReadOnlyList<GameEvent> EndByDisconnect(Team disconnected)
         {
+            EnsureWritable();
             if (State.IsGameOver || !IsDefined(disconnected))
                 return Array.Empty<GameEvent>();
 
@@ -177,8 +184,40 @@ namespace MiniChess.Core.Controller
             return State.Events.Since(eventStart);
         }
 
-        /// <summary>요청이 있고 팀이 실제 팀인지. 네트워크로 들어온 잘못된 요청을 예외 대신 실패로 돌려주기 위한 검사.</summary>
-        private static bool IsWellFormed(GameRequest request) => request != null && IsDefined(request.Team);
+        /// <summary>
+        /// 서버 오류(명령 처리 중 예외 등)로 경기를 무효 처리한다(승자 없음, GameEndReason.Aborted). 서버만 호출한다.
+        /// 상태가 처리 도중에 멈췄을 수 있으므로 다른 규칙을 거치지 않고 종료만 기록한다. 이미 끝났으면 빈 목록.
+        /// </summary>
+        public IReadOnlyList<GameEvent> Abort()
+        {
+            EnsureWritable();
+            if (State.IsGameOver)
+                return Array.Empty<GameEvent>();
+
+            int eventStart = State.Events.Count;
+            DeathSystem.EndGame(State, winner: null, GameEndReason.Aborted);
+            return State.Events.Since(eventStart);
+        }
+
+        /// <summary>복원한 경기(Restore)는 표시/조회 전용이라 명령을 받지 않는다. 잘못 쓰면 바로 드러나도록 예외를 던진다.</summary>
+        public bool IsReadOnly { get; private set; }
+
+        private void EnsureWritable()
+        {
+            if (IsReadOnly)
+                throw new InvalidOperationException("스냅샷으로 복원한 경기는 표시/조회 전용이다. 명령은 서버로 보낸다.");
+        }
+
+        /// <summary>
+        /// 요청이 있고 팀과 enum 값이 정의된 값인지. 네트워크로 들어온 잘못된 요청을 예외 대신 실패로 돌려주기 위한 검사.
+        /// </summary>
+        private static bool IsWellFormed(GameRequest request)
+        {
+            if (request == null || !IsDefined(request.Team))
+                return false;
+
+            return !(request is UseSkillRequest skill) || Enum.IsDefined(typeof(AreaRotation), skill.Rotation);
+        }
 
         private static bool IsDefined(Team team) => team == Team.Player1 || team == Team.Player2;
 

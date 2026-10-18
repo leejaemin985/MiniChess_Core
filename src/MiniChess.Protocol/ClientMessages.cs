@@ -17,6 +17,17 @@ namespace MiniChess.Protocol
     {
         /// <summary>클라이언트의 ProtocolInfo.Version. 서버와 다르면 거절한다.</summary>
         public int ProtocolVersion { get; set; }
+
+        /// <summary>클라이언트의 경기 설정 지문(OnlineMatch.ConfigHash). 서버와 다르면 거절한다(밸런스 수치가 다른 빌드).</summary>
+        public string ConfigHash { get; set; }
+    }
+
+    /// <summary>
+    /// 연결 확인. 클라이언트는 ProtocolInfo.PingIntervalSeconds 마다 보내고, 서버는 PongMessage 로 답한다.
+    /// 양쪽 모두 ProtocolInfo.ConnectionTimeoutSeconds 동안 아무 메시지도 받지 못하면 연결이 끊긴 것으로 본다.
+    /// </summary>
+    public class PingMessage : ClientMessage
+    {
     }
 
     /// <summary>

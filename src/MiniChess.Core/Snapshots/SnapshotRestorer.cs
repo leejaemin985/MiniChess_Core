@@ -36,6 +36,7 @@ namespace MiniChess.Core.Snapshots
             state.CurrentTeam = snapshot.CurrentTeam;
             state.TurnNumber = snapshot.TurnNumber;
             state.Winner = snapshot.Winner;
+            state.EndReason = snapshot.EndReason;
 
             foreach (PlayerSnapshot player in snapshot.Players)
             {

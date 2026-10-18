@@ -15,17 +15,21 @@ namespace MiniChess.Core.Snapshots
     ///   - 상대 덫(ROOT_TRAP): 설치 위치를 숨긴다. 밟아서 발동하면 그 칸을 알린다(발동 이벤트, 소모로 인한 제거).
     ///   - 상대 예약 포격: 조준 칸을 숨긴다. 착탄할 때만 알린다(착탄 이벤트). 시전자 사망으로 취소된 포격도 숨긴다.
     ///   - 상대가 그 스킬을 썼다는 사실(시전자, 스킬 Id)은 알린다. 지정 칸과 범위만 비운다.
-    /// [TBD] 배치 단계의 상대 배치 등 그 밖의 정보는 숨기지 않는다.
+    ///   - 배치 단계에서 상대 배치(유닛과 위치)를 숨긴다. 상대가 확정했다는 사실(HasPlaced, 빈 배치 이벤트)은 알리고,
+    ///     두 팀이 모두 확정해 전투가 시작되면 공개한다.
+    /// 그 밖의 정보는 숨기지 않는다.
     /// </summary>
     internal static class GameProjection
     {
         public static GameSnapshot Snapshot(GameState state, Team viewer)
         {
             GameSnapshot full = SnapshotBuilder.Game(state, viewer);
+            bool hidePlacement = state.Phase == GamePhase.Setup;
 
             return new GameSnapshot(
-                full.Viewer, full.Phase, full.CurrentTeam, full.TurnNumber, full.Winner, full.LastEventSequence,
-                full.BoardWidth, full.BoardHeight, full.Cells, full.Players, full.Units,
+                full.Viewer, full.Phase, full.CurrentTeam, full.TurnNumber, full.Winner, full.EndReason, full.LastEventSequence,
+                full.BoardWidth, full.BoardHeight, full.Cells, full.Players,
+                full.Units.Where(unit => !hidePlacement || unit.Team == viewer).ToList(),
                 full.CellEffects.Where(effect => !IsHiddenEffect(effect.Kind, effect.OwnerTeam, viewer)).ToList(),
                 full.Strikes.Where(strike => strike.SourceTeam == viewer).ToList(),
                 full.Capture);
@@ -44,6 +48,10 @@ namespace MiniChess.Core.Snapshots
 
                 if (gameEvent is SkillUsedEvent used && state.FindUnit(used.CasterId)?.Team != viewer && CastHasHiddenResult(events, i, viewer))
                     gameEvent = WithoutTargets(used);
+
+                // 상대 배치는 전투가 시작될 때까지 숨긴다(이 묶음에서 전투가 시작되었으면 그대로 공개).
+                if (gameEvent is UnitsPlacedEvent placed && placed.Team != viewer && state.Phase == GamePhase.Setup)
+                    gameEvent = new UnitsPlacedEvent(placed.Team, Array.Empty<UnitSnapshot>()) { Sequence = placed.Sequence };
 
                 visible.Add(gameEvent);
             }

@@ -44,6 +44,9 @@ namespace MiniChess.Protocol
 
         /// <summary>변화가 끝난 뒤의 경기 상태(받는 팀 시점으로 걸러진 것).</summary>
         public GameSnapshot Snapshot { get; set; }
+
+        /// <summary>현재 턴의 남은 시간(밀리초). 시간이 다 되면 서버가 그 팀의 턴을 끝낸다. 턴이 없으면(배치 단계, 경기 종료) null.</summary>
+        public int? TurnTimeLeftMs { get; set; }
     }
 
     /// <summary>이벤트 한 건. Payload 는 Type 이름의 이벤트 클래스(EventTypes.Find)로 읽는다.</summary>
@@ -57,6 +60,11 @@ namespace MiniChess.Protocol
 
         /// <summary>이벤트 본문. 직렬화 쪽이 Type 에 맞는 클래스로 쓰고 읽는다.</summary>
         public object Payload { get; set; }
+    }
+
+    /// <summary>PingMessage 에 대한 답.</summary>
+    public class PongMessage : ServerMessage
+    {
     }
 
     /// <summary>경기와 무관한 오류(프로토콜 버전 불일치, 해석할 수 없는 메시지 등).</summary>

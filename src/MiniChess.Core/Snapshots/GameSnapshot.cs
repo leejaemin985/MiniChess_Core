@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using MiniChess.Core.Common;
+using MiniChess.Core.Events;
 using MiniChess.Core.State;
 
 namespace MiniChess.Core.Snapshots
@@ -20,6 +21,9 @@ namespace MiniChess.Core.Snapshots
         /// <summary>승리 팀. 진행 중이거나 무승부면 null.</summary>
         public Team? Winner { get; }
 
+        /// <summary>경기가 끝난 사유. 진행 중이면 null.</summary>
+        public GameEndReason? EndReason { get; }
+
         /// <summary>이 스냅샷에 반영된 마지막 이벤트 순번. 이벤트가 없으면 -1.</summary>
         public int LastEventSequence { get; }
 
@@ -37,7 +41,7 @@ namespace MiniChess.Core.Snapshots
         public CaptureSnapshot Capture { get; }
 
         public GameSnapshot(
-            Team viewer, GamePhase phase, Team currentTeam, int turnNumber, Team? winner, int lastEventSequence,
+            Team viewer, GamePhase phase, Team currentTeam, int turnNumber, Team? winner, GameEndReason? endReason, int lastEventSequence,
             int boardWidth, int boardHeight, IReadOnlyList<CellSnapshot> cells, IReadOnlyList<PlayerSnapshot> players,
             IReadOnlyList<UnitSnapshot> units, IReadOnlyList<CellEffectSnapshot> cellEffects, IReadOnlyList<StrikeSnapshot> strikes,
             CaptureSnapshot capture)
@@ -47,6 +51,7 @@ namespace MiniChess.Core.Snapshots
             CurrentTeam = currentTeam;
             TurnNumber = turnNumber;
             Winner = winner;
+            EndReason = endReason;
             LastEventSequence = lastEventSequence;
             BoardWidth = boardWidth;
             BoardHeight = boardHeight;
