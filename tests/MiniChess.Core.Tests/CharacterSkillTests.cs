@@ -48,7 +48,7 @@ namespace MiniChess.Core.Tests
         {
             SkillDefinition[] skills = PresetSkills();
 
-            Assert.Equal(24, skills.Length); // 슬롯 22 + 고유 기능 2(분신 교환, 해체)
+            Assert.Equal(26, skills.Length); // 슬롯 24 + 고유 기능 2(분신 교환, 해체)
             Assert.All(skills, s => Assert.Empty(s.GetConfigIssues()));
         }
 
@@ -71,7 +71,7 @@ namespace MiniChess.Core.Tests
             var ids = PresetSkills().Select(s => s.Id).ToHashSet();
             var slotted = PieceModules.CreateDefinitions().SelectMany(c => c.SkillSlots).Where(id => id != null).ToList();
 
-            Assert.Equal(22, slotted.Count);
+            Assert.Equal(24, slotted.Count);
             Assert.All(slotted, id => Assert.Contains(id, ids));
         }
 
@@ -1897,6 +1897,102 @@ namespace MiniChess.Core.Tests
             Assert.Equal(9, u[1].Stats.CurrentHp);
             Assert.Empty(result.Events.OfType<UnitMovedEvent>());
             Assert.True(state.GetPlayer(Team.Player1).Ap.Current < apBefore);
+        }
+
+        #endregion
+
+        #region Inquisitor
+
+        private static UnitBaseStats Inquisitor() =>
+            TestGame.Stats("inquisitor", skills: new[] { InquisitorPiece.PurifyId, InquisitorPiece.JudgmentId });
+
+        // 사용자 확정: 정화는 상대 팀이 건 상태를 모두 지운다. 우리 팀이 건 상태는 종류와 상관없이 남는다
+        [Fact]
+        public void Purify_RemovesEveryStatusAppliedByEnemyTeam_AndKeepsOwnTeams()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 3, 3, Inquisitor())
+                .Place(Team.Player1, 3, 4)
+                .Place(Team.Player2, 6, 6)
+                .Start();
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Root(1, blocksExternalMoves: false), u[1], u[2]);
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Burn(damagePerTrigger: 1, triggers: 2), u[1], u[2]);
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Stunned(1), u[1], u[2]);
+            Statuses.StatusSystem.Apply(state, StatusLibrary.DistanceLimit(maxCells: 1, targetTurns: 1), u[1], u[0]);
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Charged(2), u[1], u[1]);
+
+            SkillResult result = Use(state, u[0], InquisitorPiece.PurifyId, 3, 4);
+
+            Assert.Equal(new[] { StatusLibrary.DistanceLimitId, StatusLibrary.ChargedId }, u[1].Statuses.Select(s => s.Definition.Id));
+            Assert.Equal(3, result.Events.OfType<StatusRemovedEvent>().Count(e => e.Reason == StatusRemoveReason.Removed));
+        }
+
+        // [가정] 대상은 자신을 포함한 아군. 적은 지정할 수 없다
+        [Fact]
+        public void Purify_TargetsSelfOrAlly_NotEnemy()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 3, 3, Inquisitor())
+                .Place(Team.Player2, 3, 4)
+                .Start();
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Poison(damagePerTrigger: 1, triggers: 2), u[0], u[1]);
+
+            Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], InquisitorPiece.PurifyId, 3, 4));
+            Use(state, u[0], InquisitorPiece.PurifyId, 3, 3);
+            Assert.Empty(u[0].Statuses);
+        }
+
+        // 사용자 기획: 가까운 적 하나를 뒤로 밀어낸 뒤 한 턴 기절
+        [Fact]
+        public void Judgment_PushesEnemyBack_ThenStunsForOneTurn()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 3, 3, Inquisitor())
+                .Place(Team.Player2, 3, 4)
+                .Start();
+
+            Use(state, u[0], InquisitorPiece.JudgmentId, 3, 4);
+
+            Assert.Equal(new Position(3, 6), u[1].Position); // 2칸
+            Assert.NotNull(u[1].FindStatus(StatusLibrary.StunnedId));
+
+            EndTurn(state);
+            Assert.Equal(MoveFailReason.Stunned, new MoveAction(u[1], new Position(3, 5)).Validate(state));
+            EndTurn(state); // 대상의 턴 종료: 기절 해제
+            Assert.Null(u[1].FindStatus(StatusLibrary.StunnedId));
+        }
+
+        // [가정] 막혀서 밀리지 않아도 기절은 걸린다
+        [Fact]
+        public void Judgment_StunsEvenWhenPushIsBlocked()
+        {
+            var (state, u) = Game()
+                .WithMap(".......", "...#...", ".......", ".......", ".......", ".......", ".......")
+                .Place(Team.Player1, 3, 3, Inquisitor())
+                .Place(Team.Player2, 3, 4)
+                .Start();
+
+            Use(state, u[0], InquisitorPiece.JudgmentId, 3, 4);
+
+            Assert.Equal(new Position(3, 4), u[1].Position);
+            Assert.NotNull(u[1].FindStatus(StatusLibrary.StunnedId));
+        }
+
+        // [가정] "가까운 적" = 사거리 1(대각선 포함)
+        [Fact]
+        public void Judgment_OnlyReachesNearbyEnemy()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 3, 3, Inquisitor())
+                .Place(Team.Player2, 3, 5)
+                .Place(Team.Player2, 4, 4)
+                .Start();
+
+            Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], InquisitorPiece.JudgmentId, 3, 5));
+            Use(state, u[0], InquisitorPiece.JudgmentId, 4, 4);
+
+            Assert.Equal(new Position(4, 6), u[2].Position); // 대각선은 세로 차이 >= 가로 차이 규칙으로 위쪽
+            Assert.NotNull(u[2].FindStatus(StatusLibrary.StunnedId));
         }
 
         #endregion

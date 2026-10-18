@@ -36,8 +36,13 @@ namespace MiniChess.Core.Skills
         /// <summary>지정 칸과 범위를 시전자 칸으로 바꾼 정보. 시전자 자신에게 거는 부가 효과(설치 보호막 등)에 쓴다.</summary>
         public SkillContext ForCaster()
         {
-            Position self = Caster.Position.Value;
-            return new SkillContext(State, Caster, Skill, new[] { self }, new[] { self });
+            return AtCell(Caster.Position.Value);
+        }
+
+        /// <summary>지정 칸과 범위를 cell 한 칸으로 바꾼 정보. 옮겨진 대상에게 이어서 거는 효과(넉백 후 기절 등)에 쓴다.</summary>
+        public SkillContext AtCell(Position cell)
+        {
+            return new SkillContext(State, Caster, Skill, new[] { cell }, new[] { cell });
         }
     }
 }

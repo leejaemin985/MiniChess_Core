@@ -97,6 +97,7 @@ namespace MiniChess.Core.Presets
                 { ChainGuardPiece.PieceId, (15, 2, 1) },
                 { AssassinPiece.PieceId,   (9,  4, 1) },
                 { SculptorPiece.PieceId,   (9,  2, 2) },
+                { InquisitorPiece.PieceId, (14, 2, 1) },
             };
 
             return PieceModules.CreateDefinitions()
@@ -248,6 +249,12 @@ namespace MiniChess.Core.Presets
             t.Sculptor.Correction.Range = 3;
             t.Sculptor.Correction.Damage = 1;
             t.Sculptor.Correction.PushCells = 1;
+
+            t.Inquisitor.Purify.ApCost = 3;
+            t.Inquisitor.Purify.Range = 2;
+            t.Inquisitor.Judgment.ApCost = 3;
+            t.Inquisitor.Judgment.Range = 1;
+            t.Inquisitor.Judgment.PushCells = 2;
 
             t.Archer.Bola.ApCost = 3;
             t.Archer.Bola.Range = 3;

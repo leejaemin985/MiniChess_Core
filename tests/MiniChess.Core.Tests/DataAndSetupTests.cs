@@ -19,13 +19,13 @@ namespace MiniChess.Core.Tests
         #region Roster / preset
 
         [Fact]
-        public void Roster_HasElevenCharacters_WithRoles_AndNoStats()
+        public void Roster_HasTwelveCharacters_WithRoles_AndNoStats()
         {
             List<CharacterDefinition> roster = PieceModules.CreateDefinitions();
 
-            Assert.Equal(11, roster.Select(c => c.Id).Distinct().Count());
+            Assert.Equal(12, roster.Select(c => c.Id).Distinct().Count());
             Assert.Equal(5, roster.Count(c => c.Role == CharacterRole.Combat));
-            Assert.Equal(2, roster.Count(c => c.Role == CharacterRole.Guardian));
+            Assert.Equal(3, roster.Count(c => c.Role == CharacterRole.Guardian));
             Assert.Equal(4, roster.Count(c => c.Role == CharacterRole.Control));
             Assert.All(roster, c => Assert.Equal(3, c.GetMissingFields().Count));
         }
