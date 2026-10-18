@@ -14,9 +14,12 @@ namespace MiniChess.Core.Effects.Zones
     {
         private readonly List<(Position Position, ZoneCellEffect Effect)> _cells = new List<(Position, ZoneCellEffect)>();
 
+        /// <summary>경기 안에서 고유한 구역 번호. 설치될 때 정해진다.</summary>
+        public int Id { get; internal set; } = -1;
+
         public string SkillId { get; }
 
-        /// <summary>설치한 유닛. 설치 후 사망해도 구역은 남는다.</summary>
+        /// <summary>설치한 유닛. 설치 후 사망해도 구역은 남는다(스냅샷으로 복원한 경기에서는 사망한 설치자면 null).</summary>
         public Unit Source { get; }
 
         public Team OwnerTeam { get; }
@@ -29,10 +32,16 @@ namespace MiniChess.Core.Effects.Zones
         private int _lastTickTurnNumber = -1;
 
         public FieldZone(string skillId, Unit source, int lifetime, int placedTurnNumber)
+            : this(skillId, source, source.Team, lifetime, placedTurnNumber)
+        {
+        }
+
+        /// <summary>스냅샷 복원용: 설치자가 이미 죽었으면 source 가 null 이다.</summary>
+        internal FieldZone(string skillId, Unit source, Team ownerTeam, int lifetime, int placedTurnNumber)
         {
             SkillId = skillId;
             Source = source;
-            OwnerTeam = source.Team;
+            OwnerTeam = ownerTeam;
             Remaining = lifetime;
             PlacedTurnNumber = placedTurnNumber;
         }

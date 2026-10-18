@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using MiniChess.Core.Common;
+using MiniChess.Core.Effects.Zones;
 using MiniChess.Core.Events;
 using MiniChess.Core.State;
 using MiniChess.Core.Turns;
@@ -79,7 +80,7 @@ namespace MiniChess.Core.Effects
                 return false;
 
             cell.RemoveEffect(layer);
-            state.Events.Record(new CellEffectRemovedEvent(position, existing.Layer, existing.Kind, reason));
+            state.Events.Record(new CellEffectRemovedEvent(position, existing.Layer, existing.Kind, (existing as ZoneCellEffect)?.Zone.OwnerTeam, reason));
             return true;
         }
 

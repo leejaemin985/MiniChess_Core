@@ -9,6 +9,9 @@ namespace MiniChess.Core.Statuses.Library
     /// </summary>
     public class DistanceLimitBehavior : StatusBehavior
     {
+        public override System.Collections.Generic.IReadOnlyDictionary<string, int> Parameters =>
+            new System.Collections.Generic.Dictionary<string, int> { [nameof(MaxCells)] = MaxCells };
+
         public int MaxCells { get; }
 
         public DistanceLimitBehavior(int maxCells)

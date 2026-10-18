@@ -34,6 +34,15 @@ namespace MiniChess.Core.State
             VoluntaryCellsMoved += cells;
         }
 
+        /// <summary>스냅샷 복원용.</summary>
+        internal void Restore(bool combatActionUsed, bool voluntaryMoveLocked, bool actionsEnded, int voluntaryCellsMoved)
+        {
+            CombatActionUsed = combatActionUsed;
+            VoluntaryMoveLocked = voluntaryMoveLocked;
+            ActionsEnded = actionsEnded;
+            VoluntaryCellsMoved = voluntaryCellsMoved;
+        }
+
         internal void Reset()
         {
             CombatActionUsed = false;

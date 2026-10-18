@@ -45,6 +45,12 @@ namespace MiniChess.Core.State
             CurrentHp = Math.Max(0, CurrentHp - amount);
         }
 
+        /// <summary>스냅샷 복원용: 현재 HP 를 그대로 맞춘다.</summary>
+        internal void RestoreHp(int hp)
+        {
+            CurrentHp = Math.Max(0, Math.Min(MaxHp, hp));
+        }
+
         public ShieldInstance FindShield(string shieldId)
         {
             return _shields.FirstOrDefault(shield => shield.Id == shieldId);

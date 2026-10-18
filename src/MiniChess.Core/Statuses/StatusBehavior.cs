@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using MiniChess.Core.Combat;
 using MiniChess.Core.Movement;
 using MiniChess.Core.State;
@@ -26,6 +27,14 @@ namespace MiniChess.Core.Statuses
     /// </summary>
     public abstract class StatusBehavior
     {
+        private static readonly IReadOnlyDictionary<string, int> NoParameters = new Dictionary<string, int>();
+
+        /// <summary>
+        /// 이 동작을 만든 수치(이름 → 값). 스냅샷에 실려 StatusLibrary.Restore 로 같은 동작을 다시 만드는 데 쓴다.
+        /// 생성자 인자가 있는 동작은 모두 재정의한다.
+        /// </summary>
+        public virtual IReadOnlyDictionary<string, int> Parameters => NoParameters;
+
         public virtual void OnApplied(StatusContext context) { }
 
         public virtual void OnRemoved(StatusContext context) { }

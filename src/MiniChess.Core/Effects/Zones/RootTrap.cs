@@ -32,6 +32,8 @@ namespace MiniChess.Core.Effects.Zones
             if (context.Unit.Team == Zone.OwnerTeam)
                 return CellEnterResult.Continue;
 
+            context.State.Events.Record(new CellEffectTriggeredEvent(context.Cell.Position, Layer, Kind, Zone.OwnerTeam, context.Unit.Id));
+
             if (Damage > 0)
                 DamageSystem.Apply(context.State, new DamageRequest(Zone.Source, context.Unit, Damage, DamageType.Area));
 

@@ -32,7 +32,10 @@ namespace MiniChess.Core.Skills.Effects
 
         public override void Apply(SkillContext context)
         {
-            var zone = new FieldZone(context.Skill.Id, context.Caster, Lifetime.Value, context.State.TurnNumber);
+            var zone = new FieldZone(context.Skill.Id, context.Caster, Lifetime.Value, context.State.TurnNumber)
+            {
+                Id = context.State.NextZoneId(),
+            };
 
             foreach (Position position in context.AffectedCells)
             {

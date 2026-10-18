@@ -12,6 +12,9 @@ namespace MiniChess.Core.Statuses.Library
     /// </summary>
     public class GuardBehavior : StatusBehavior
     {
+        public override System.Collections.Generic.IReadOnlyDictionary<string, int> Parameters =>
+            new System.Collections.Generic.Dictionary<string, int> { [nameof(MaxDistance)] = MaxDistance };
+
         /// <summary>피해 시점에 호위자와 보호 대상 사이 최대 거리(체비셰프).</summary>
         public int MaxDistance { get; }
 

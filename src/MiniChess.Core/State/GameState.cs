@@ -117,6 +117,7 @@ namespace MiniChess.Core.State
         }
 
         private int _nextStrikeId;
+        private int _nextZoneId;
 
         internal void AddScheduledStrike(ScheduledStrike strike)
         {
@@ -124,6 +125,32 @@ namespace MiniChess.Core.State
 
             strike.Id = _nextStrikeId++;
             _scheduledStrikes.Add(strike);
+        }
+
+        /// <summary>새 구역(FieldZone)에 붙일 번호.</summary>
+        internal int NextZoneId()
+        {
+            return _nextZoneId++;
+        }
+
+        /// <summary>스냅샷 복원용: Id 가 이미 정해진 유닛을 그대로 넣는다.</summary>
+        internal void RestoreUnit(Unit unit)
+        {
+            GetPlayer(unit.Team).AddUnit(unit);
+            _nextUnitId = Math.Max(_nextUnitId, unit.Id + 1);
+        }
+
+        /// <summary>스냅샷 복원용: Id 가 이미 정해진 예약 포격을 그대로 넣는다.</summary>
+        internal void RestoreScheduledStrike(ScheduledStrike strike)
+        {
+            _scheduledStrikes.Add(strike);
+            _nextStrikeId = Math.Max(_nextStrikeId, strike.Id + 1);
+        }
+
+        /// <summary>스냅샷 복원용: 다음 구역 번호가 이미 쓴 번호와 겹치지 않게 한다.</summary>
+        internal void ReserveZoneId(int zoneId)
+        {
+            _nextZoneId = Math.Max(_nextZoneId, zoneId + 1);
         }
 
         internal bool RemoveScheduledStrike(ScheduledStrike strike)

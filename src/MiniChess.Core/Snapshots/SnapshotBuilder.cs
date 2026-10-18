@@ -30,13 +30,17 @@ namespace MiniChess.Core.Snapshots
                 unit.Stats.Shields.Select(shield => new ShieldSnapshot(shield.Id, shield.Amount)).ToList(),
                 unit.Statuses.Select(Status).ToList(),
                 unit.TurnState.CombatActionUsed,
-                unit.TurnState.ActionsEnded);
+                unit.TurnState.ActionsEnded,
+                unit.TurnState.VoluntaryMoveLocked,
+                unit.TurnState.VoluntaryCellsMoved);
         }
 
         public static StatusSnapshot Status(StatusEffect status)
         {
+            StatusDefinition definition = status.Definition;
             return new StatusSnapshot(
-                status.Definition.Id, status.Remaining, status.Definition.IsPermanent, status.Source?.Id, status.SourceTeam);
+                definition.Id, status.Remaining, definition.IsPermanent, status.Source?.Id, status.SourceTeam,
+                definition.Duration, new Dictionary<string, int>(definition.Behavior?.Parameters ?? new Dictionary<string, int>()));
         }
 
         public static CellEffectSnapshot CellEffect(Position position, ICellEffect effect)
@@ -48,6 +52,8 @@ namespace MiniChess.Core.Snapshots
                 effect.Kind,
                 zone?.OwnerTeam,
                 zone?.SkillId,
+                zone?.Id,
+                zone?.Source?.Id,
                 zone?.Remaining,
                 (effect as Obstacle)?.HitsRemaining);
         }

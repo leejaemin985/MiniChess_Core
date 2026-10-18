@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using MiniChess.Core.Turns;
 
 namespace MiniChess.Core.Statuses.Library
@@ -176,6 +177,29 @@ namespace MiniChess.Core.Statuses.Library
                 StatusStackPolicy.Refresh,
                 TargetDurationTick,
                 behavior: new ChargedBehavior(bonusDamage.Value));
+        }
+
+        /// <summary>
+        /// 스냅샷의 값(Id, 지속 횟수, StatusBehavior.Parameters)으로 같은 정의를 다시 만든다. 이 라이브러리에 없는 Id 면 null.
+        /// 새 상태를 이 라이브러리에 추가하면 여기에도 추가한다.
+        /// </summary>
+        public static StatusDefinition Restore(string id, int duration, IReadOnlyDictionary<string, int> parameters)
+        {
+            int? Get(string name) => parameters != null && parameters.TryGetValue(name, out int value) ? value : (int?)null;
+
+            switch (id)
+            {
+                case RootId: return Root(duration, Get(nameof(RootBehavior.BlocksExternalMoves)) is int blocks ? blocks != 0 : (bool?)null);
+                case BurnId: return Burn(Get(nameof(DamageOverTimeBehavior.DamagePerTrigger)), duration);
+                case PoisonId: return Poison(Get(nameof(DamageOverTimeBehavior.DamagePerTrigger)), duration);
+                case DistanceLimitId: return DistanceLimit(Get(nameof(DistanceLimitBehavior.MaxCells)), duration);
+                case GuardId: return Guard(Get(nameof(GuardBehavior.MaxDistance)));
+                case InstalledId: return Installed();
+                case CurseMarkId: return CurseMark(Get(nameof(CurseMarkBehavior.BonusDamage)));
+                case ChargedId: return Charged(Get(nameof(ChargedBehavior.BonusDamage)));
+                case SealedId: return Sealed();
+                default: return null;
+            }
         }
 
         /// <summary>

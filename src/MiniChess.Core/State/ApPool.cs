@@ -43,6 +43,12 @@ namespace MiniChess.Core.State
             Current = Math.Min(Max, Current + amount);
         }
 
+        /// <summary>스냅샷 복원용: 보유 AP 를 그대로 맞춘다.</summary>
+        internal void Restore(int current)
+        {
+            Current = Math.Max(0, Math.Min(Max, current));
+        }
+
         /// <summary>보유 AP 를 0 으로 만든다. 이월을 허용하지 않는 규칙에서 사용.</summary>
         internal void Clear()
         {

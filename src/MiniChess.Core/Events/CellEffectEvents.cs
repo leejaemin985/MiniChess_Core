@@ -56,14 +56,43 @@ namespace MiniChess.Core.Events
         /// <summary>제거된 효과의 종류(CellEffectKinds).</summary>
         public string Kind { get; }
 
+        /// <summary>제거된 효과를 설치한 팀. 팀이 없는 효과면 null.</summary>
+        public Team? OwnerTeam { get; }
+
         public CellEffectRemoveReason Reason { get; }
 
-        public CellEffectRemovedEvent(Position position, CellEffectLayer layer, string kind, CellEffectRemoveReason reason)
+        public CellEffectRemovedEvent(Position position, CellEffectLayer layer, string kind, Team? ownerTeam, CellEffectRemoveReason reason)
         {
             Position = position;
             Layer = layer;
             Kind = kind;
+            OwnerTeam = ownerTeam;
             Reason = reason;
+        }
+    }
+
+    /// <summary>칸 효과가 들어온 유닛에게 발동했다(덫 등). 이어서 발동 결과(피해, 상태, 소모로 인한 제거)가 기록된다.</summary>
+    public class CellEffectTriggeredEvent : GameEvent
+    {
+        public Position Position { get; }
+        public CellEffectLayer Layer { get; }
+
+        /// <summary>발동한 효과의 종류(CellEffectKinds).</summary>
+        public string Kind { get; }
+
+        /// <summary>효과를 설치한 팀. 팀이 없는 효과면 null.</summary>
+        public Team? OwnerTeam { get; }
+
+        /// <summary>발동시킨 유닛.</summary>
+        public int UnitId { get; }
+
+        public CellEffectTriggeredEvent(Position position, CellEffectLayer layer, string kind, Team? ownerTeam, int unitId)
+        {
+            Position = position;
+            Layer = layer;
+            Kind = kind;
+            OwnerTeam = ownerTeam;
+            UnitId = unitId;
         }
     }
 }

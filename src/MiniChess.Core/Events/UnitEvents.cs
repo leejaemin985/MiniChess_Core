@@ -30,6 +30,19 @@ namespace MiniChess.Core.Events
         }
     }
 
+    /// <summary>유닛이 다른 유닛을 기본 공격했다. 이어서 피해 이벤트가 기록된다(장애물 공격은 ObstacleHitEvent).</summary>
+    public class UnitAttackedEvent : GameEvent
+    {
+        public int AttackerId { get; }
+        public int TargetId { get; }
+
+        public UnitAttackedEvent(int attackerId, int targetId)
+        {
+            AttackerId = attackerId;
+            TargetId = targetId;
+        }
+    }
+
     /// <summary>유닛이 피해를 받았다.</summary>
     public class UnitDamagedEvent : GameEvent
     {

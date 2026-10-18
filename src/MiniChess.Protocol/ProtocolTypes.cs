@@ -8,7 +8,7 @@ namespace MiniChess.Protocol
     public static class ProtocolInfo
     {
         /// <summary>메시지 형식 버전. 메시지/이벤트/스냅샷의 모양이 바뀌면 올린다.</summary>
-        public const int Version = 1;
+        public const int Version = 2;
     }
 
     /// <summary>
@@ -31,9 +31,7 @@ namespace MiniChess.Protocol
         {
             typeof(MatchStartedMessage),
             typeof(CommandResultMessage),
-            typeof(CommandAppliedMessage),
-            typeof(EventsMessage),
-            typeof(SnapshotMessage),
+            typeof(StateUpdateMessage),
             typeof(ErrorMessage),
         };
 

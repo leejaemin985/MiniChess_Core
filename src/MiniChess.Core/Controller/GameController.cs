@@ -43,6 +43,21 @@ namespace MiniChess.Core.Controller
             return new GameController(new GameState(config.Rules, config.Map, config.Skills, characters, seed));
         }
 
+        /// <summary>
+        /// 한 팀 시점의 스냅샷(GetSnapshot)으로 경기를 다시 만든다. 온라인 클라이언트가 서버 상태를 화면에 옮길 때 쓴다.
+        /// config 는 서버 경기와 같은 규칙/맵/캐릭터/스킬이어야 한다(Seed 는 쓰지 않는다).
+        /// 만든 경기는 표시와 조회(Get*) 전용이다. 숨겨진 정보가 빠져 있고 효과의 발동 동작과 이벤트 기록은 복원하지 않으므로,
+        /// 이 경기에 명령을 실행하면 서버와 결과가 다를 수 있다. 명령은 서버로 보낸다.
+        /// </summary>
+        public static GameController Restore(GameConfig config, GameSnapshot snapshot)
+        {
+            if (config == null) throw new ArgumentNullException(nameof(config));
+            if (config.Rules == null) throw new ArgumentException("Rules 가 없음", nameof(config));
+            if (config.Map == null) throw new ArgumentException("Map 이 없음", nameof(config));
+
+            return new GameController(SnapshotRestorer.Restore(config, snapshot));
+        }
+
         #region Commands
 
         public GameResponse<PlaceFailReason, PlaceUnitsResult> PlaceUnits(PlaceUnitsRequest request)

@@ -35,6 +35,12 @@ namespace MiniChess.Core.Snapshots
         /// <summary>설치한 스킬 Id. 스킬로 설치하지 않았으면 null.</summary>
         public string SkillId { get; }
 
+        /// <summary>한 번의 시전으로 설치된 칸들이 공유하는 구역 번호. 구역이 없는 효과면 null.</summary>
+        public int? ZoneId { get; }
+
+        /// <summary>설치한 유닛 Id. 설치자가 없으면 null.</summary>
+        public int? SourceId { get; }
+
         /// <summary>남은 수명(설치한 쪽 소유자의 턴 종료 횟수). 수명이 없으면 null.</summary>
         public int? Remaining { get; }
 
@@ -42,8 +48,11 @@ namespace MiniChess.Core.Snapshots
         public int? HitsRemaining { get; }
 
         public CellEffectSnapshot(
-            Position position, CellEffectLayer layer, string kind, Team? ownerTeam, string skillId, int? remaining, int? hitsRemaining)
+            Position position, CellEffectLayer layer, string kind, Team? ownerTeam, string skillId,
+            int? zoneId, int? sourceId, int? remaining, int? hitsRemaining)
         {
+            ZoneId = zoneId;
+            SourceId = sourceId;
             Position = position;
             Layer = layer;
             Kind = kind;

@@ -11,6 +11,9 @@ namespace MiniChess.Core.Statuses.Library
     /// </summary>
     public class CurseMarkBehavior : StatusBehavior
     {
+        public override System.Collections.Generic.IReadOnlyDictionary<string, int> Parameters =>
+            new System.Collections.Generic.Dictionary<string, int> { [nameof(BonusDamage)] = BonusDamage };
+
         public int BonusDamage { get; }
 
         public CurseMarkBehavior(int bonusDamage)

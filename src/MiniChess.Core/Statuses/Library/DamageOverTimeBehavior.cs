@@ -5,6 +5,9 @@ namespace MiniChess.Core.Statuses.Library
     /// <summary>지속 피해(화상, 중독 등): 발동 시점마다 피해를 준다. 피해 출처는 상태를 건 유닛.</summary>
     public class DamageOverTimeBehavior : StatusBehavior
     {
+        public override System.Collections.Generic.IReadOnlyDictionary<string, int> Parameters =>
+            new System.Collections.Generic.Dictionary<string, int> { [nameof(DamagePerTrigger)] = DamagePerTrigger };
+
         public int DamagePerTrigger { get; }
 
         public DamageOverTimeBehavior(int damagePerTrigger)

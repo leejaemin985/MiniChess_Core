@@ -51,7 +51,7 @@ namespace MiniChess.Core.Tests
         }
 
         [Fact]
-        public void Kill_RecordsDamageThenDeathThenGameEnd()
+        public void Kill_RecordsAttackThenDamageThenDeathThenGameEnd()
         {
             var (state, u) = new TestGame()
                 .Place(Team.Player1, 0, 0, TestGame.Stats(attack: 5))
@@ -61,6 +61,7 @@ namespace MiniChess.Core.Tests
             AttackResult result = new AttackAction(u[0], u[1]).Execute(state);
 
             Assert.Collection(result.Events,
+                e => Assert.Equal(u[1].Id, Assert.IsType<UnitAttackedEvent>(e).TargetId),
                 e => Assert.IsType<UnitDamagedEvent>(e),
                 e => Assert.Equal(new Position(0, 1), Assert.IsType<UnitDiedEvent>(e).Position),
                 e => Assert.Equal(Team.Player1, Assert.IsType<GameEndedEvent>(e).Winner));

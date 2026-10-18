@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MiniChess.Core.Combat;
 using MiniChess.Core.Common;
+using MiniChess.Core.Events;
 using MiniChess.Core.Skills;
 using MiniChess.Core.State;
 using MiniChess.Core.Statuses;
@@ -44,6 +45,7 @@ namespace MiniChess.Core.Actions
             int eventStart = state.Events.Count;
 
             PayCost(state, Attacker);
+            state.Events.Record(new UnitAttackedEvent(Attacker.Id, Target.Id));
 
             int damage = Attacker.Stats.Attack + StatusSystem.ConsumeBasicAttackBonus(state, Attacker);
             var request = new DamageRequest(Attacker, Target, damage, DamageType.Direct);
