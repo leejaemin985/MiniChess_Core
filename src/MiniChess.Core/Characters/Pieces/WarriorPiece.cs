@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using MiniChess.Core.Data;
-using MiniChess.Core.Movement;
 using MiniChess.Core.Skills;
 using MiniChess.Core.Skills.Areas;
-using MiniChess.Core.Skills.Conditions;
 using MiniChess.Core.Skills.Effects;
 using MiniChess.Core.Skills.Targeting;
 
@@ -46,7 +44,8 @@ namespace MiniChess.Core.Characters.Pieces
 
         /// <summary>
         /// 돌진: 제어기의 멈춤을 무시하는 직선 이동 후, 전방 1칸의 적을 공격(명세 7.3, 사용자 확정).
-        /// 속박처럼 이동을 막는 상태면 시전 불가. 이동 거리 제한은 받지 않는다.
+        /// 이동 제약 상태(속박, 이동 거리 제한 등)는 무시하고 쓸 수 있다(사용자 확정). 행동 자체를 막는 상태(봉인, 기절)에서만
+        /// 쓸 수 없으며, 이는 스킬 공통 검사(StatusBehavior.BlocksSkillUse)가 막는다.
         /// 전투 행동이므로 기본 공격과 같은 턴에 함께 쓸 수 없다.
         /// </summary>
         public static SkillDefinition Dash(DashTuning t)
@@ -59,8 +58,7 @@ namespace MiniChess.Core.Characters.Pieces
                 {
                     new DashEffect(),
                     new FrontStrikeEffect(t.Damage),
-                },
-                new SkillCondition[] { new CanMoveCondition(MoveKind.Dash) });
+                });
         }
     }
 

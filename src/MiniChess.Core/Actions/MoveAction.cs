@@ -37,6 +37,7 @@ namespace MiniChess.Core.Actions
                 case MoveBlockReason.DistanceLimited: return MoveFailReason.DistanceLimited;
                 case MoveBlockReason.Installed: return MoveFailReason.Installed;
                 case MoveBlockReason.Sealed: return MoveFailReason.Sealed;
+                case MoveBlockReason.Stunned: return MoveFailReason.Stunned;
             }
 
             if (path.Count == 0) return MoveFailReason.NotStraightLine;

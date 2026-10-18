@@ -22,5 +22,8 @@ namespace MiniChess.Core.Movement
 
         /// <summary>봉인 상태라 어떤 이동도 불가.</summary>
         Sealed,
+
+        /// <summary>기절 상태라 자발적 이동 불가(외부 이동은 허용).</summary>
+        Stunned,
     }
 }

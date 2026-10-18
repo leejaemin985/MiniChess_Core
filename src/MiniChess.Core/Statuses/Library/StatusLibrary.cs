@@ -18,6 +18,7 @@ namespace MiniChess.Core.Statuses.Library
         public const string CurseMarkId = "CURSE_MARK";
         public const string ChargedId = "CHARGED";
         public const string SealedId = "SEALED";
+        public const string StunnedId = "STUNNED";
 
         // 대상 소유자의 턴 종료 단계. 걸린 그 턴은 세지 않아, 1 이면 대상의 다음 자기 턴까지 유지된다.
         private static readonly StatusTiming TargetDurationTick =
@@ -198,8 +199,28 @@ namespace MiniChess.Core.Statuses.Library
                 case CurseMarkId: return CurseMark(Get(nameof(CurseMarkBehavior.BonusDamage)));
                 case ChargedId: return Charged(Get(nameof(ChargedBehavior.BonusDamage)));
                 case SealedId: return Sealed();
+                case StunnedId: return Stunned(duration);
                 default: return null;
             }
+        }
+
+        /// <summary>
+        /// 기절(사용자 확정): 스스로 하는 행동을 모두 막는다(자발적 이동, 기본 공격, 모든 스킬). 외부 강제 이동, 피해/회복, 상태 부여,
+        /// 대상 지정은 그대로 받는다. 다시 걸면 남은 횟수를 갱신한다.
+        /// 지속은 상태이상 공통 규칙(사용자 확정)대로 대상 소유자의 턴 종료 횟수로 세고, 걸린 그 턴은 세지 않는다.
+        /// </summary>
+        /// <param name="targetTurns">지속 횟수(대상 소유자의 턴 종료 횟수).</param>
+        public static StatusDefinition Stunned(int? targetTurns)
+        {
+            if (targetTurns == null)
+                return null;
+
+            return new StatusDefinition(
+                StunnedId,
+                targetTurns.Value,
+                StatusStackPolicy.Refresh,
+                TargetDurationTick,
+                behavior: new StunnedBehavior());
         }
 
         /// <summary>

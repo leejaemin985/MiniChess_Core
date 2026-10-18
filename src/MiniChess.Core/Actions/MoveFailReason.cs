@@ -39,6 +39,9 @@ namespace MiniChess.Core.Actions
         /// <summary>봉인 상태라 이동 불가.</summary>
         Sealed,
 
+        /// <summary>기절 상태라 이동 불가.</summary>
+        Stunned,
+
         /// <summary>요청 형식이 잘못됨(요청 없음, 존재하지 않는 팀 등).</summary>
         InvalidRequest,
     }

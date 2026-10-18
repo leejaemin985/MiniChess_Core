@@ -628,9 +628,9 @@ namespace MiniChess.Core.Tests
             Assert.Equal(10, u[3].Stats.CurrentHp);
         }
 
-        // 사용자 확정: 이동 불가 상태면 시전 불가, 이동 거리 제한은 넘어서 사용 가능
+        // 사용자 확정: 돌진은 이동 제약(속박, 이동 거리 제한)을 무시하고 이동한다. 걸린 속박은 그대로 남는다.
         [Fact]
-        public void Dash_BlockedByRoot_ButIgnoresDistanceLimit()
+        public void Dash_IgnoresRootAndDistanceLimit()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 0, 0, With(WarriorPiece.DashId))
@@ -638,10 +638,90 @@ namespace MiniChess.Core.Tests
                 .Start();
 
             Statuses.StatusSystem.Apply(state, StatusLibrary.DistanceLimit(maxCells: 1, targetTurns: 1), u[0], u[1]);
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Root(targetTurns: 1, blocksExternalMoves: true), u[0], u[1]);
             Assert.Equal(SkillFailReason.None, Check(state, u[0], WarriorPiece.DashId, 0, 3));
 
-            Statuses.StatusSystem.Apply(state, StatusLibrary.Root(targetTurns: 1, blocksExternalMoves: false), u[0], u[1]);
-            Assert.Equal(SkillFailReason.ConditionNotMet, Check(state, u[0], WarriorPiece.DashId, 0, 3));
+            Use(state, u[0], WarriorPiece.DashId, 0, 3);
+
+            Assert.Equal(new Position(0, 3), u[0].Position);
+            Assert.NotNull(u[0].FindStatus(StatusLibrary.RootId));
+        }
+
+        // 사용자 확정: 행동 자체를 막는 상태(봉인, 기절)에서는 돌진도 쓸 수 없다
+        [Fact]
+        public void Dash_BlockedBySealOrStun()
+        {
+            foreach (Statuses.StatusDefinition blocker in new[] { StatusLibrary.Sealed(), StatusLibrary.Stunned(1) })
+            {
+                var (state, u) = Game()
+                    .Place(Team.Player1, 0, 0, With(WarriorPiece.DashId))
+                    .Place(Team.Player2, 6, 6)
+                    .Start();
+
+                Statuses.StatusSystem.Apply(state, blocker, u[0], u[1]);
+
+                Assert.Equal(SkillFailReason.BlockedByStatus, Check(state, u[0], WarriorPiece.DashId, 0, 3));
+            }
+        }
+
+        #endregion
+
+        #region Stun
+
+        // 사용자 확정: 기절 중에는 스스로 하는 행동(이동, 기본 공격, 스킬)을 아무것도 할 수 없다
+        [Fact]
+        public void Stunned_BlocksEveryOwnAction()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0, With(WarriorPiece.SmashId))
+                .Place(Team.Player2, 0, 1)
+                .Start();
+
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Stunned(1), u[0], u[1]);
+
+            Assert.Equal(MoveFailReason.Stunned, new MoveAction(u[0], new Position(1, 0)).Validate(state));
+            Assert.Equal(AttackFailReason.BlockedByStatus, new AttackAction(u[0], u[1]).Validate(state));
+            Assert.Equal(SkillFailReason.BlockedByStatus, Check(state, u[0], WarriorPiece.SmashId, 0, 1));
+        }
+
+        // 사용자 확정: 다른 유닛이 일으키는 일(강제 이동, 피해, 대상 지정)은 그대로 받는다
+        [Fact]
+        public void Stunned_StillReceivesExternalMovesDamageAndTargeting()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0)
+                .Place(Team.Player2, 0, 1)
+                .Start();
+
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Stunned(1), u[0], u[1]);
+
+            foreach (MoveKind kind in new[] { MoveKind.Knockback, MoveKind.Pull, MoveKind.Swap, MoveKind.Warp })
+                Assert.Equal(MoveBlockReason.None, MovementControl.Check(state, u[0], u[1], kind, 1));
+            Assert.Equal(MoveBlockReason.Stunned, MovementControl.Check(state, u[0], u[0], MoveKind.Warp, 1));
+            Assert.True(u[0].IsTargetable);
+
+            int hp = u[0].Stats.CurrentHp;
+            DamageSystem.Apply(state, new DamageRequest(u[1], u[0], 2, DamageType.Direct));
+            Assert.Equal(hp - 2, u[0].Stats.CurrentHp);
+        }
+
+        // 사용자 확정: 모든 상태이상의 지속은 걸린 유닛의 턴 종료로 센다(걸린 그 턴은 세지 않음)
+        [Fact]
+        public void Stunned_LastsUntilTheEndOfTheTargetsNextTurn()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0)
+                .Place(Team.Player2, 6, 6)
+                .Start();
+
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Stunned(1), u[0], u[1]);
+
+            EndTurn(state); // Player1 의 걸린 턴: 세지 않음
+            EndTurn(state);
+            Assert.NotNull(u[0].FindStatus(StatusLibrary.StunnedId));
+
+            EndTurn(state); // Player1 의 다음 턴 종료
+            Assert.Null(u[0].FindStatus(StatusLibrary.StunnedId));
         }
 
         #endregion
