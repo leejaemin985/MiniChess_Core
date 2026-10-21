@@ -11,7 +11,7 @@ namespace MiniChess.Core.Snapshots
 {
     /// <summary>
     /// 한 팀 시점의 투영: 상대에게 숨겨야 할 정보를 스냅샷과 이벤트에서 거른다. 서버는 이 결과만 각 클라이언트에 보낸다.
-    /// 숨김 규칙은 이 클래스에만 둔다. 지금 규칙(사용자 확정):
+    /// 무엇을 숨기는지(덫/포격)는 GameVisibility 에 두고(봇도 같은 규칙을 씀), 스냅샷/이벤트에 적용하는 방법은 이 클래스에 둔다. 지금 규칙(사용자 확정):
     ///   - 상대 덫(ROOT_TRAP): 설치 위치를 숨긴다. 밟아서 발동하면 그 칸을 알린다(발동 이벤트, 소모로 인한 제거).
     ///   - 상대 예약 포격: 조준 칸을 숨긴다. 착탄할 때만 알린다(착탄 이벤트). 시전자 사망으로 취소된 포격도 숨긴다.
     ///   - 상대가 그 스킬을 썼다는 사실(시전자, 스킬 Id)은 알린다. 지정 칸과 범위만 비운다.
@@ -31,7 +31,7 @@ namespace MiniChess.Core.Snapshots
                 full.BoardWidth, full.BoardHeight, full.Cells, full.Players,
                 full.Units.Where(unit => !hidePlacement || unit.Team == viewer).ToList(),
                 full.CellEffects.Where(effect => !IsHiddenEffect(effect.Kind, effect.OwnerTeam, viewer)).ToList(),
-                full.Strikes.Where(strike => strike.SourceTeam == viewer).ToList(),
+                full.Strikes.Where(strike => !GameVisibility.IsHiddenStrike(strike.SourceTeam, viewer)).ToList(),
                 full.Capture);
         }
 
@@ -59,10 +59,10 @@ namespace MiniChess.Core.Snapshots
             return visible;
         }
 
-        /// <summary>viewer 에게 숨기는 칸 효과인지: 상대가 설치한 덫.</summary>
+        /// <summary>viewer 에게 숨기는 칸 효과인지(규칙은 GameVisibility).</summary>
         private static bool IsHiddenEffect(string kind, Team? ownerTeam, Team viewer)
         {
-            return kind == CellEffectKinds.RootTrap && ownerTeam.HasValue && ownerTeam.Value != viewer;
+            return GameVisibility.IsHiddenEffect(kind, ownerTeam, viewer);
         }
 
         private static bool IsHidden(GameEvent gameEvent, Team viewer)
@@ -75,9 +75,9 @@ namespace MiniChess.Core.Snapshots
                     // 밟아서 소모된 덫은 발동 이벤트로 이미 알렸다. 수명 종료/덮어쓰기는 위치가 드러나므로 숨긴다.
                     return removed.Reason != CellEffectRemoveReason.Consumed && IsHiddenEffect(removed.Kind, removed.OwnerTeam, viewer);
                 case StrikeScheduledEvent scheduled:
-                    return scheduled.Strike.SourceTeam != viewer;
+                    return GameVisibility.IsHiddenStrike(scheduled.Strike.SourceTeam, viewer);
                 case StrikeCancelledEvent cancelled:
-                    return cancelled.Strike.SourceTeam != viewer;
+                    return GameVisibility.IsHiddenStrike(cancelled.Strike.SourceTeam, viewer);
                 default:
                     return false;
             }
