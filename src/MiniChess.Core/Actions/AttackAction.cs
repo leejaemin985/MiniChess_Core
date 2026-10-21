@@ -69,7 +69,7 @@ namespace MiniChess.Core.Actions
                 if (state.IsGameOver || !Target.IsOnBoard)
                     return;
 
-                StatusSystem.Apply(state, status, Target, Attacker);
+                StatusSystem.Apply(state, status, Target, Attacker, StatusOrigins.BasicAttack);
             }
         }
 

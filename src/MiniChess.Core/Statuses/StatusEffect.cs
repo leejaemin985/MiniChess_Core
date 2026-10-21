@@ -16,6 +16,12 @@ namespace MiniChess.Core.Statuses
         /// <summary>건 쪽의 팀. Source 가 없어도 SourceOwner 시점 판정에 쓴다.</summary>
         public Team SourceTeam { get; private set; }
 
+        /// <summary>
+        /// 이 상태를 건 원인(스킬 Id, 기본 공격이면 StatusOrigins.BasicAttack). 모르면 null.
+        /// 출처별(StatusStackScope.PerSource) 상태는 건 유닛 + 원인이 같을 때만 같은 건으로 본다.
+        /// </summary>
+        public string OriginId { get; }
+
         public int Remaining { get; internal set; }
 
         /// <summary>걸리거나 갱신된 경기 턴 번호.</summary>
@@ -27,11 +33,27 @@ namespace MiniChess.Core.Statuses
         /// </summary>
         public object BehaviorData { get; set; }
 
-        internal StatusEffect(StatusDefinition definition, Unit target, Unit source, Team sourceTeam, int turnNumber)
+        internal StatusEffect(StatusDefinition definition, Unit target, Unit source, Team sourceTeam, string originId, int turnNumber)
         {
             Definition = definition;
             Target = target;
+            OriginId = originId;
             Reapply(source, sourceTeam, turnNumber);
+        }
+
+        /// <summary>같은 건인지(StackScope 기준). 대상당 하나면 Id 만, 출처별이면 건 유닛(없으면 팀) + 원인까지 같아야 한다.</summary>
+        internal bool IsSameInstance(StatusDefinition definition, Unit source, Team sourceTeam, string originId)
+        {
+            if (Definition.Id != definition.Id)
+                return false;
+
+            if (definition.StackScope == StatusStackScope.PerTarget)
+                return true;
+
+            bool sameSource = Source != null || source != null
+                ? Source?.Id == source?.Id
+                : SourceTeam == sourceTeam;
+            return sameSource && OriginId == originId;
         }
 
         /// <summary>처음 걸린 상태로 되돌린다(Refresh).</summary>

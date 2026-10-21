@@ -15,6 +15,9 @@ namespace MiniChess.Core.Statuses
 
         public StatusStackPolicy StackPolicy { get; }
 
+        /// <summary>같은 Id 를 같은 건으로 보는 범위(대상당 하나 / 출처별). StackPolicy 는 같은 건끼리만 적용된다.</summary>
+        public StatusStackScope StackScope { get; }
+
         /// <summary>Remaining 이 1 줄어드는 시점. null 이면 영구 상태(직접 제거하거나 대상이 죽을 때까지 유지).</summary>
         public StatusTiming Decrement { get; }
 
@@ -36,7 +39,8 @@ namespace MiniChess.Core.Statuses
             StatusTiming decrement,
             StatusTiming trigger = null,
             StatusBehavior behavior = null,
-            bool removeOnSourceDeath = false)
+            bool removeOnSourceDeath = false,
+            StatusStackScope stackScope = StatusStackScope.PerTarget)
         {
             if (string.IsNullOrEmpty(id)) throw new ArgumentException("상태 Id 가 비어 있음", nameof(id));
             if (duration <= 0) throw new ArgumentOutOfRangeException(nameof(duration), $"상태 '{id}': Duration 은 1 이상");
@@ -48,6 +52,7 @@ namespace MiniChess.Core.Statuses
             Trigger = trigger;
             Behavior = behavior;
             RemoveOnSourceDeath = removeOnSourceDeath;
+            StackScope = stackScope;
         }
     }
 }

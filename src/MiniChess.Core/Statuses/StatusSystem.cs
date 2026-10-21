@@ -15,10 +15,12 @@ namespace MiniChess.Core.Statuses
     public static class StatusSystem
     {
         /// <summary>
-        /// 대상에게 상태를 건다. 같은 Id 가 이미 있으면 정의의 StackPolicy 를 따른다.
+        /// 대상에게 상태를 건다. 같은 건(정의의 StackScope 기준: 대상당 하나면 같은 Id, 출처별이면 같은 Id + 건 유닛 + 원인)이
+        /// 이미 있으면 정의의 StackPolicy 를 따르고, 없으면 따로 건다.
         /// 적용(또는 갱신)된 효과를 반환한다. 무시되었거나 대상이 보드 위에 없으면 null.
         /// </summary>
-        internal static StatusEffect Apply(GameState state, StatusDefinition definition, Unit target, Unit source, Team sourceTeam)
+        /// <param name="originId">건 원인(스킬 Id, 기본 공격이면 StatusOrigins.BasicAttack). 모르면 null.</param>
+        internal static StatusEffect Apply(GameState state, StatusDefinition definition, Unit target, Unit source, Team sourceTeam, string originId = null)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
             if (definition == null) throw new ArgumentNullException(nameof(definition));
@@ -27,7 +29,7 @@ namespace MiniChess.Core.Statuses
             if (!target.IsOnBoard)
                 return null;
 
-            StatusEffect existing = target.FindStatus(definition.Id);
+            StatusEffect existing = target.Statuses.FirstOrDefault(status => status.IsSameInstance(definition, source, sourceTeam, originId));
             if (existing != null)
             {
                 switch (definition.StackPolicy)
@@ -49,18 +51,18 @@ namespace MiniChess.Core.Statuses
                 }
             }
 
-            var status = new StatusEffect(definition, target, source, sourceTeam, state.TurnNumber);
+            var status = new StatusEffect(definition, target, source, sourceTeam, originId, state.TurnNumber);
             target.AddStatus(status);
             state.Events.Record(new StatusAppliedEvent(target.Id, SnapshotBuilder.Status(status), refreshed: false));
             definition.Behavior?.OnApplied(new StatusContext(state, status));
             return status;
         }
 
-        internal static StatusEffect Apply(GameState state, StatusDefinition definition, Unit target, Unit source)
+        internal static StatusEffect Apply(GameState state, StatusDefinition definition, Unit target, Unit source, string originId = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source), "출처 유닛이 없으면 sourceTeam 을 직접 지정");
 
-            return Apply(state, definition, target, source, source.Team);
+            return Apply(state, definition, target, source, source.Team, originId);
         }
 
         internal static void Remove(GameState state, StatusEffect status, StatusRemoveReason reason)
@@ -68,7 +70,7 @@ namespace MiniChess.Core.Statuses
             if (!status.Target.RemoveStatus(status))
                 return;
 
-            state.Events.Record(new StatusRemovedEvent(status.Target.Id, status.Definition.Id, reason));
+            state.Events.Record(new StatusRemovedEvent(status.Target.Id, status.Definition.Id, reason, status.Source?.Id, status.OriginId));
             status.Definition.Behavior?.OnRemoved(new StatusContext(state, status));
         }
 

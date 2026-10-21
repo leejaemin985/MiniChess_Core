@@ -30,7 +30,7 @@ namespace MiniChess.Core.Skills.Effects
                 if (context.State.IsGameOver)
                     return;
 
-                StatusSystem.Apply(context.State, Status, target, context.Caster);
+                StatusSystem.Apply(context.State, Status, target, context.Caster, context.Skill.Id);
             }
         }
     }

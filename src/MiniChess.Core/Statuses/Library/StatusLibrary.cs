@@ -6,6 +6,8 @@ namespace MiniChess.Core.Statuses.Library
     /// <summary>
     /// 공용 상태효과 정의 모음. 스킬, 덫, 보상 등 어디서든 같은 상태를 이 정의로 건다.
     /// 수치가 하나라도 null 이면 null 을 반환한다(그 상태를 쓰는 기능은 설정 누락으로 사용 불가).
+    /// 쌓임 범위(사용자 확정): 중독/화상/속박/기절/이동 제한은 출처별(건 유닛 + 원인 스킬마다 따로),
+    /// 호위/설치/저주 표식/차징/봉인은 대상당 하나. "다시 걸면 갱신" 설명은 같은 건끼리의 규칙이다.
     /// </summary>
     public static class StatusLibrary
     {
@@ -47,7 +49,8 @@ namespace MiniChess.Core.Statuses.Library
                 targetTurns.Value,
                 StatusStackPolicy.Refresh,
                 TargetDurationTick,
-                behavior: new RootBehavior(blocksExternalMoves.Value));
+                behavior: new RootBehavior(blocksExternalMoves.Value),
+                stackScope: StatusStackScope.PerSource);
         }
 
         /// <summary>
@@ -67,7 +70,8 @@ namespace MiniChess.Core.Statuses.Library
                 StatusStackPolicy.Refresh,
                 TargetDurationTick,
                 TargetDamageOverTime,
-                new DamageOverTimeBehavior(damagePerTrigger.Value));
+                new DamageOverTimeBehavior(damagePerTrigger.Value),
+                stackScope: StatusStackScope.PerSource);
         }
 
         /// <summary>
@@ -87,7 +91,8 @@ namespace MiniChess.Core.Statuses.Library
                 StatusStackPolicy.Refresh,
                 TargetDurationTick,
                 TargetDamageOverTime,
-                new DamageOverTimeBehavior(damagePerTrigger.Value));
+                new DamageOverTimeBehavior(damagePerTrigger.Value),
+                stackScope: StatusStackScope.PerSource);
         }
 
         /// <summary>
@@ -106,7 +111,8 @@ namespace MiniChess.Core.Statuses.Library
                 targetTurns.Value,
                 StatusStackPolicy.Refresh,
                 TargetDurationTick,
-                behavior: new DistanceLimitBehavior(maxCells.Value));
+                behavior: new DistanceLimitBehavior(maxCells.Value),
+                stackScope: StatusStackScope.PerSource);
         }
 
         /// <summary>
@@ -220,7 +226,8 @@ namespace MiniChess.Core.Statuses.Library
                 targetTurns.Value,
                 StatusStackPolicy.Refresh,
                 TargetDurationTick,
-                behavior: new StunnedBehavior());
+                behavior: new StunnedBehavior(),
+                stackScope: StatusStackScope.PerSource);
         }
 
         /// <summary>

@@ -34,18 +34,29 @@ namespace MiniChess.Core.Events
         Removed,
     }
 
-    /// <summary>상태효과가 제거되었다. 한 유닛에는 같은 Id 의 상태가 하나뿐이므로 (대상, 상태 Id)로 가리킨다.</summary>
+    /// <summary>
+    /// 상태효과가 제거되었다. 출처별 상태는 한 유닛에 같은 Id 가 여러 건일 수 있으므로 (대상, 상태 Id, 건 유닛, 원인)으로 가리킨다.
+    /// 대상당 하나인 상태는 (대상, 상태 Id)만으로 충분하다.
+    /// </summary>
     public class StatusRemovedEvent : GameEvent
     {
         public int TargetId { get; }
         public string StatusId { get; }
         public StatusRemoveReason Reason { get; }
 
-        public StatusRemovedEvent(int targetId, string statusId, StatusRemoveReason reason)
+        /// <summary>제거된 건을 건 유닛 Id. 유닛이 아닌 출처면 null.</summary>
+        public int? SourceId { get; }
+
+        /// <summary>제거된 건의 원인(StatusEffect.OriginId). 모르면 null.</summary>
+        public string OriginId { get; }
+
+        public StatusRemovedEvent(int targetId, string statusId, StatusRemoveReason reason, int? sourceId = null, string originId = null)
         {
             TargetId = targetId;
             StatusId = statusId;
             Reason = reason;
+            SourceId = sourceId;
+            OriginId = originId;
         }
     }
 }

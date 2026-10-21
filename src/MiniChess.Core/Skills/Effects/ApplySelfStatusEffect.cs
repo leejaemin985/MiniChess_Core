@@ -33,7 +33,7 @@ namespace MiniChess.Core.Skills.Effects
             if (context.Caster.FindStatus(Status.Id) != null)
                 return;
 
-            StatusSystem.Apply(context.State, Status, context.Caster, context.Caster);
+            StatusSystem.Apply(context.State, Status, context.Caster, context.Caster, context.Skill.Id);
             ApplyAll(OnApplied, context.ForCaster());
         }
     }

@@ -40,7 +40,8 @@ namespace MiniChess.Core.Snapshots
             StatusDefinition definition = status.Definition;
             return new StatusSnapshot(
                 definition.Id, status.Remaining, definition.IsPermanent, status.Source?.Id, status.SourceTeam,
-                definition.Duration, new Dictionary<string, int>(definition.Behavior?.Parameters ?? new Dictionary<string, int>()));
+                definition.Duration, new Dictionary<string, int>(definition.Behavior?.Parameters ?? new Dictionary<string, int>()),
+                status.OriginId);
         }
 
         public static CellEffectSnapshot CellEffect(Position position, ICellEffect effect)

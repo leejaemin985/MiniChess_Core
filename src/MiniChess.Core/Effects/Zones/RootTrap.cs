@@ -38,7 +38,7 @@ namespace MiniChess.Core.Effects.Zones
                 DamageSystem.Apply(context.State, new DamageRequest(Zone.Source, context.Unit, Damage, DamageType.Area));
 
             if (context.Unit.IsAlive)
-                StatusSystem.Apply(context.State, Root, context.Unit, Zone.Source, Zone.OwnerTeam);
+                StatusSystem.Apply(context.State, Root, context.Unit, Zone.Source, Zone.OwnerTeam, Zone.SkillId);
 
             if (SingleUse && context.Cell.Contains(this))
                 CellEffectSystem.Remove(context.State, context.Cell.Position, Layer, CellEffectRemoveReason.Consumed);

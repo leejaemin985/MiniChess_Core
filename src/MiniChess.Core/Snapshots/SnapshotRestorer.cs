@@ -88,7 +88,7 @@ namespace MiniChess.Core.Snapshots
 
                 foreach (StatusSnapshot status in value.Statuses)
                 {
-                    var effect = new StatusEffect(Definition(status), unit, Find(state, status.SourceId), status.SourceTeam, state.TurnNumber)
+                    var effect = new StatusEffect(Definition(status), unit, Find(state, status.SourceId), status.SourceTeam, status.OriginId, state.TurnNumber)
                     {
                         Remaining = status.Remaining,
                     };

@@ -136,7 +136,8 @@ namespace MiniChess.Core.Tests
         }
 
         [Fact]
-        public void FlameCompressedShell_ReapplyRefreshesInsteadOfStacking()
+        // 사용자 확정: 화상은 출처별. 다른 유닛이 건 화상은 따로 걸리고, 같은 유닛이 같은 스킬로 다시 걸면 갱신
+        public void FlameCompressedShell_OtherCasterStacksSeparately_SameCasterRefreshes()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 0, 0, With(FlamePiece.CompressedShellId))
@@ -148,10 +149,13 @@ namespace MiniChess.Core.Tests
             Use(state, u[0], FlamePiece.CompressedShellId, 2, 2);
             Use(state, u[1], FlamePiece.CompressedShellId, 2, 2);
 
-            Assert.Single(u[2].Statuses);
+            Assert.Equal(2, u[2].Statuses.Count);
             EndTurn(state);
             EndTurn(state);
-            Assert.Equal(17, u[2].Stats.CurrentHp); // 즉시 1 + 1, 화상 1 (중첩 없음)
+            Assert.Equal(16, u[2].Stats.CurrentHp); // 즉시 1 × 2, 화상 1 × 2건
+
+            Use(state, u[0], FlamePiece.CompressedShellId, 2, 2); // 같은 유닛·스킬: 갱신
+            Assert.Equal(new[] { 2, 1 }, u[2].Statuses.Select(s => s.Remaining));
         }
 
         [Fact]
@@ -295,13 +299,16 @@ namespace MiniChess.Core.Tests
             Assert.Equal(9, u[1].Stats.CurrentHp);
             Assert.Equal(SkillFailReason.ConditionNotMet, Check(state, u[0], ChemistPiece.PoisonGasId, 0, 2));
             EndTurn(state); // P1 종료: 장판 수명 2 → 1
-            EndTurn(state); // P2 종료: 중독 2(마지막). 장판 위에 머물러도 추가 효과 없음
+            EndTurn(state); // P2 종료: 중독 2. 장판 위에 머물러 다시 걸림(남은 횟수 갱신)
             Assert.Equal(8, u[1].Stats.CurrentHp);
-            Assert.Null(u[1].FindStatus(StatusLibrary.PoisonId));
+            Assert.Equal(2, u[1].FindStatus(StatusLibrary.PoisonId).Remaining);
             EndTurn(state); // P1 종료: 장판 수명 0, 전체 제거
             Assert.Null(state.Board.GetCell(new Position(2, 2)).GetEffect(CellEffectLayer.AreaEffect));
+            EndTurn(state); // P2 종료: 마지막 갱신분 1회째
             EndTurn(state);
-            Assert.Equal(8, u[1].Stats.CurrentHp);
+            EndTurn(state); // P2 종료: 2회째, 만료
+            Assert.Equal(6, u[1].Stats.CurrentHp);
+            Assert.Null(u[1].FindStatus(StatusLibrary.PoisonId));
             Assert.Equal(SkillFailReason.None, Check(state, u[0], ChemistPiece.PoisonGasId, 0, 2));
         }
 
@@ -329,6 +336,69 @@ namespace MiniChess.Core.Tests
             EndTurn(state);
             EndTurn(state);
             Assert.Equal(9, u[2].Stats.CurrentHp);
+        }
+
+        // 사용자 확정: 독 장판 위에 머무는 적은 자기 턴 종료(장판 단계)마다 다시 중독된다. 정화로 지워져도 계속 서 있으면 다시 걸린다
+        [Fact]
+        public void PoisonGas_EnemyStayingAfterPurify_GetsPoisonedAgainAtTurnEnd()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0, With(ChemistPiece.PoisonGasId))
+                .Place(Team.Player2, 3, 3, Inquisitor())
+                .Start();
+            Use(state, u[0], ChemistPiece.PoisonGasId, 2, 2);
+            EndTurn(state);
+
+            Use(state, u[1], InquisitorPiece.PurifyId, 3, 3); // 자기 정화
+            Assert.Null(u[1].FindStatus(StatusLibrary.PoisonId));
+
+            EndTurn(state); // P2 종료: DoT 단계엔 중독 없음 → 장판 단계에 다시 걸림
+            Assert.Equal(10, u[1].Stats.CurrentHp);
+            Assert.Equal(2, u[1].FindStatus(StatusLibrary.PoisonId).Remaining);
+
+            EndTurn(state);
+            EndTurn(state); // P2 종료: 다시 걸린 중독 1회
+            Assert.Equal(9, u[1].Stats.CurrentHp);
+        }
+
+        // 사용자 확정: 중독 상태로 독 장판 위에 머물면 매 턴 남은 횟수가 갱신되고, 떠나면 갱신이 멈춘다
+        [Fact]
+        public void PoisonGas_PoisonedEnemyStaying_RefreshesEachTurn_StopsAfterLeaving()
+        {
+            var (state, u) = Game()
+                .WithRules(r => r.Ap.StartAp = 6)
+                .Place(Team.Player1, 0, 0, With(ChemistPiece.PoisonGasId))
+                .Place(Team.Player2, 3, 3)
+                .Start();
+            Use(state, u[0], ChemistPiece.PoisonGasId, 2, 2);
+            EndTurn(state);
+
+            EndTurn(state); // P2 종료: 중독 1 → 장판 단계 갱신(그 턴 감소 없음)
+            Assert.Equal(9, u[1].Stats.CurrentHp);
+            Assert.Equal(2, u[1].FindStatus(StatusLibrary.PoisonId).Remaining);
+
+            EndTurn(state);
+            new MoveAction(u[1], new Position(4, 3)).Execute(state); // 장판 밖으로
+            EndTurn(state); // P2 종료: 중독 1, 갱신 없이 감소
+            Assert.Equal(8, u[1].Stats.CurrentHp);
+            Assert.Equal(1, u[1].FindStatus(StatusLibrary.PoisonId).Remaining);
+        }
+
+        // 아군은 독 장판 위에 머물러도 중독되지 않는다
+        [Fact]
+        public void PoisonGas_AllyStaying_NeverPoisoned()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0, With(ChemistPiece.PoisonGasId))
+                .Place(Team.Player1, 2, 2)
+                .Place(Team.Player2, 6, 6)
+                .Start();
+            Use(state, u[0], ChemistPiece.PoisonGasId, 2, 2);
+            EndTurn(state);
+            EndTurn(state);
+            EndTurn(state);
+
+            Assert.Null(u[1].FindStatus(StatusLibrary.PoisonId));
         }
 
         // 사용자 확정: 화염지대는 십자 5칸. 설치 즉시 피해 후 장판 피해, 상태이상 없음
@@ -522,7 +592,8 @@ namespace MiniChess.Core.Tests
         }
 
         [Fact]
-        public void Bola_Reapply_RefreshesInsteadOfStacking()
+        // 사용자 확정: 이동 제한은 출처별. 다른 궁수의 볼라는 따로 걸린다(효과는 겹쳐도 한 번)
+        public void Bola_FromOtherCaster_StacksSeparately()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 0, 0, With(ArcherPiece.BolaId))
@@ -534,8 +605,9 @@ namespace MiniChess.Core.Tests
             Use(state, u[0], ArcherPiece.BolaId, 2, 2);
             Use(state, u[1], ArcherPiece.BolaId, 2, 2);
 
-            Assert.Single(u[2].Statuses, s => s.Definition.Id == StatusLibrary.DistanceLimitId);
-            Assert.Same(u[1], u[2].FindStatus(StatusLibrary.DistanceLimitId).Source);
+            Assert.Equal(
+                new[] { u[0], u[1] },
+                u[2].Statuses.Where(s => s.Definition.Id == StatusLibrary.DistanceLimitId).Select(s => s.Source));
         }
 
         #endregion

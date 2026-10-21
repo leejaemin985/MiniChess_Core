@@ -73,10 +73,15 @@ namespace MiniChess.Core.Snapshots
         }
     }
 
-    /// <summary>유닛에 걸린 상태 한 건의 값. 한 유닛에는 같은 Id 의 상태가 하나만 있으므로 (유닛 Id, 상태 Id)로 가리킨다.</summary>
+    /// <summary>
+    /// 유닛에 걸린 상태 한 건의 값. 출처별 상태는 한 유닛에 같은 Id 가 여러 건일 수 있으므로 (유닛 Id, 상태 Id, 건 유닛 Id, 원인)으로 가리킨다.
+    /// </summary>
     public class StatusSnapshot
     {
         public string StatusId { get; }
+
+        /// <summary>건 원인(스킬 Id 등, StatusEffect.OriginId). 모르면 null.</summary>
+        public string OriginId { get; }
 
         /// <summary>남은 횟수. 영구 상태면 의미 없음.</summary>
         public int Remaining { get; }
@@ -93,8 +98,10 @@ namespace MiniChess.Core.Snapshots
         public IReadOnlyDictionary<string, int> Parameters { get; }
 
         public StatusSnapshot(
-            string statusId, int remaining, bool isPermanent, int? sourceId, Team sourceTeam, int duration, IReadOnlyDictionary<string, int> parameters)
+            string statusId, int remaining, bool isPermanent, int? sourceId, Team sourceTeam, int duration, IReadOnlyDictionary<string, int> parameters,
+            string originId = null)
         {
+            OriginId = originId;
             Duration = duration;
             Parameters = parameters;
             StatusId = statusId;
