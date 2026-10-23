@@ -552,10 +552,10 @@ namespace MiniChess.Core.Tests
             Assert.Equal(9, u[1].Stats.CurrentHp);
             EndTurn(state);
 
-            Assert.Equal(MoveFailReason.DistanceLimited, new MoveAction(u[1], new Position(2, 5)).Validate(state));
+            // 프리셋 누적 1칸: 2칸 이동은 막히고, 1칸 이동 뒤 추가 1칸도 막힌다.
+            Assert.Equal(MoveFailReason.DistanceLimited, new MoveAction(u[1], new Position(2, 4)).Validate(state));
             new MoveAction(u[1], new Position(2, 3)).Execute(state);
-            new MoveAction(u[1], new Position(2, 4)).Execute(state);
-            Assert.Equal(MoveFailReason.DistanceLimited, new MoveAction(u[1], new Position(2, 5)).Validate(state));
+            Assert.Equal(MoveFailReason.DistanceLimited, new MoveAction(u[1], new Position(2, 4)).Validate(state));
         }
 
         [Fact]

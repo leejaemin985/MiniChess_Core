@@ -63,7 +63,7 @@
 | CHAIN_GUARD_CHAIN_BIND 사슬 속박 | 3 | 2 | 피해 없음, 속박 1(확정 "한 턴") |
 | GARDENER_HEALING_MEADOW 회복 초원 | 4 | 2 | 3×3(선택 칸 중심), 회복 1, 수명 2 |
 | GARDENER_SINGLE_SHIELD 단일 보호막 | 3 | 2 | 보호막 3 |
-| ARCHER_BOLA 볼라 투척 | 3 | 3 | 피해 1, 이동 제한 누적 2칸, 대상 턴 1회 |
+| ARCHER_BOLA 볼라 투척 | 3 | 3 | 피해 1, 이동 제한 누적 1칸, 대상 턴 1회 |
 | SEAMSTRESS_WARP 워프/위치 교환 | 3 | 3 | 아군 둘(자신 포함) 교환 |
 | SEAMSTRESS_OBSTACLE 장애물 생성 | 3 | 3 | 1칸, 피격 1회 파괴, 수명 2, 동시 1개 |
 | SCYTHE_SLASH 일자 베기 | 3 | 2(대각선 포함) | 선택 칸 기준 가로 4칸("#@##", 플레이어 회전), 범위 안 적 각 3 |
