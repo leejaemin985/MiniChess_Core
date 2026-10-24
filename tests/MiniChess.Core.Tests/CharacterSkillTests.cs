@@ -1,3 +1,4 @@
+using System.Linq;
 using MiniChess.Core.Actions;
 using MiniChess.Core.Capture;
 using MiniChess.Core.Characters;
@@ -1486,6 +1487,49 @@ namespace MiniChess.Core.Tests
             EndTurn(state);
             EndTurn(state); // P1 종료: 수명 0, 제거
             Assert.False(state.Board.GetCell(new Position(0, 2)).HasObstacle);
+            Assert.False(state.Board.GetCell(new Position(1, 2)).HasObstacle);
+        }
+
+        // 사용자 확정: 기준 칸 + 옆 1칸, 일자 베기처럼 회전
+        [Theory]
+        [InlineData(AreaRotation.R0, 3, 2)]
+        [InlineData(AreaRotation.R90, 2, 1)]
+        [InlineData(AreaRotation.R180, 1, 2)]
+        [InlineData(AreaRotation.R270, 2, 3)]
+        public void Obstacle_PlacesTwoCells_Rotated(AreaRotation rotation, int x, int y)
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0, With(SeamstressPiece.ObstacleId))
+                .Place(Team.Player2, 6, 6)
+                .Start();
+
+            var action = new UseSkillAction(u[0], SeamstressPiece.ObstacleId, new Position(2, 2), rotation);
+            Assert.Equal(SkillFailReason.None, action.Validate(state));
+            action.Execute(state);
+
+            var obstacles = state.Board.AllCells().Where(c => c.HasObstacle).Select(c => c.Position).ToList();
+            Assert.Equal(new[] { new Position(2, 2), new Position(x, y) }.OrderBy(p => p.Y).ThenBy(p => p.X), obstacles.OrderBy(p => p.Y).ThenBy(p => p.X));
+        }
+
+        // 사용자 확정: 옆 칸이 벽/점령 칸/유닛/보드 밖이면 그 칸만 건너뛰고 기준 칸에는 세운다
+        [Theory]
+        [InlineData(2, 2, AreaRotation.R0)]   // (3,2) 벽
+        [InlineData(2, 2, AreaRotation.R180)] // (1,2) 점령 칸
+        [InlineData(2, 2, AreaRotation.R270)] // (2,3) 유닛
+        [InlineData(6, 1, AreaRotation.R0)]   // (7,1) 보드 밖
+        public void Obstacle_SkipsUnplaceableSecondCell(int x, int y, AreaRotation rotation)
+        {
+            var (state, u) = Game()
+                .WithMap(".......", ".......", ".......", ".......", ".C.#...", ".......", ".......")
+                .Place(Team.Player1, 4, 0, With(SeamstressPiece.ObstacleId))
+                .Place(Team.Player2, 2, 3)
+                .Start();
+
+            var action = new UseSkillAction(u[0], SeamstressPiece.ObstacleId, new Position(x, y), rotation);
+            Assert.Equal(SkillFailReason.None, action.Validate(state));
+            action.Execute(state);
+
+            Assert.Equal(new[] { new Position(x, y) }, state.Board.AllCells().Where(c => c.HasObstacle).Select(c => c.Position));
         }
 
         #endregion

@@ -35,9 +35,11 @@ namespace MiniChess.Core.Characters.Pieces
         }
 
         /// <summary>
-        /// 장애물 생성: 사거리 안의 빈 칸 1개에 장애물을 세운다(명세 11.3, 사용자 확정).
+        /// 장애물 생성: 사거리 안의 빈 칸을 기준으로 범위(Area, 사용자 확정: 기준 칸 + 옆 1칸, 일자 베기처럼 회전) 칸마다 장애물을 세운다(명세 11.3).
+        /// 기준 칸은 장애물을 세울 수 있는 빈 칸이어야 하고, 나머지 칸 중 세울 수 없는 칸(벽, 유닛, 점령 칸, 이미 장애물, 보드 밖)은 건너뛴다(사용자 확정).
+        /// 한 번에 세운 장애물은 한 구역이라 수명/동시 수를 함께 쓰고, 피격 횟수는 칸마다 따로다.
         /// 이동만 막고 사거리는 막지 않는다. 양 팀 모두 기본 공격(AttackObstacleAction) Hits 회로 부술 수 있고,
-        /// 스킬 피해로는 부서지지 않는다. 점령 칸에는 세울 수 없다.
+        /// 스킬 피해로는 부서지지 않는다.
         /// </summary>
         public static SkillDefinition CreateObstacle(ObstacleTuning t)
         {
@@ -46,10 +48,10 @@ namespace MiniChess.Core.Characters.Pieces
             return new SkillDefinition(
                 ObstacleId, "장애물 생성", t.ApCost, SkillActionKind.Combat,
                 new CellTargeting(t.Range, CellRequirement.Empty, placeableLayer: CellEffectLayer.Obstacle),
-                PatternArea.SingleCell,
+                SkillBuildUtil.Area(t.Area),
                 new SkillEffect[]
                 {
-                    new PlaceZoneEffect(t.Lifetime, (zone, _) => new Obstacle(zone, hits.Value)),
+                    new PlaceZoneEffect(t.Lifetime, (zone, _) => new Obstacle(zone, hits.Value), (state, position) => state.Board.CanPlace(position)),
                 },
                 new SkillCondition[]
                 {
@@ -84,6 +86,9 @@ namespace MiniChess.Core.Characters.Pieces
     {
         public int? ApCost { get; set; }
         public int? Range { get; set; }
+
+        /// <summary>장애물을 세우는 범위(기준 칸 기준). 기준 칸 밖의 칸은 세울 수 없으면 건너뛴다.</summary>
+        public AreaTuning Area { get; } = new AreaTuning();
 
         /// <summary>파괴까지 필요한 기본 공격 피격 횟수(피해량 무관).</summary>
         public int? Hits { get; set; }
