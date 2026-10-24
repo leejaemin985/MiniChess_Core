@@ -11,6 +11,7 @@ namespace MiniChess.Core.Capture
     ///   - 점령 칸에서 그 팀의 유닛이 사라지는 순간 그 팀의 진행도는 0 으로 돌아간다(연속으로 올라가 있어야 함).
     ///   - 진행도는 팀별로 따로 센다. Required 에 도달하면 점령 완료.
     ///   - 점령 완료 시 보상 풀에서 하나를 무작위로 지급하고, 점령 칸은 소멸한다(이 경기에서 더 이상 점령 없음).
+    ///   - 점령 뒤에는 점령한 팀의 턴 시작마다 보상의 지속 효과(재생 보호막 등)를 처리한다.
     /// </summary>
     public static class CaptureSystem
     {
@@ -19,7 +20,11 @@ namespace MiniChess.Core.Capture
         {
             CaptureState capture = state.Capture;
             if (!capture.IsActive)
+            {
+                if (capture.CapturedBy == team)
+                    capture.Reward?.OnOwnerTurnStart(state, team);
                 return;
+            }
 
             if (!IsHeldBy(state, team))
             {

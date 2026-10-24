@@ -14,5 +14,8 @@ namespace MiniChess.Core.Capture
 
         /// <summary>점령한 팀에 보상을 적용한다.</summary>
         internal abstract void Grant(GameState state, Team team);
+
+        /// <summary>점령한 팀의 턴 시작마다(점령을 완료한 턴 다음부터) 호출된다. 지속 보상(재생 보호막 등)이 쓴다.</summary>
+        internal virtual void OnOwnerTurnStart(GameState state, Team team) { }
     }
 }

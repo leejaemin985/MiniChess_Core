@@ -52,7 +52,7 @@ namespace MiniChess.Core.Presets
                     ActiveFromStart = true,
                     RewardPool = new List<CaptureReward>
                     {
-                        new ShieldReward(amount: 3),
+                        new ShieldReward(amount: 3, regenerate: true),
                         new BasicAttackStatusReward(StatusLibrary.Burn(damagePerTrigger: 1, triggers: 2)),
                     },
                 },

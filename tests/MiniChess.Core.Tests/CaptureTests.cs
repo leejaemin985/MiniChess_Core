@@ -205,6 +205,36 @@ namespace MiniChess.Core.Tests
             Assert.Equal(2, damaged.AppliedAmount);
         }
 
+        // 사용자 확정: 재생 보호막은 점령한 팀의 턴 시작마다 다시 Amount 로 채운다(쌓이지 않음). 상대 팀 턴에는 채우지 않는다
+        [Fact]
+        public void RegeneratingShieldReward_RefillsOnOwnerTurnStart_WithoutStacking()
+        {
+            var (state, u) = new TestGame()
+                .WithMap(CaptureMap)
+                .WithRules(r => r.Capture.RewardPool = new() { new ShieldReward(3, regenerate: true) })
+                .Place(Team.Player1, 3, 2)
+                .Place(Team.Player1, 0, 0)
+                .Place(Team.Player2, 4, 4, TestGame.Stats(attack: 2))
+                .Start();
+            new MoveAction(u[0], Tile).Execute(state);
+            PassRound(state);
+            PassRound(state);
+            Assert.Equal(3, u[0].Stats.Shield);
+
+            new EndTurnAction(Team.Player1).Execute(state);
+            new AttackAction(u[2], u[0]).Execute(state);
+            Assert.Equal(1, u[0].Stats.Shield);
+            Assert.Equal(0, u[2].Stats.Shield);
+
+            new EndTurnAction(Team.Player2).Execute(state); // P1 턴 시작: 재생
+            Assert.Equal(3, u[0].Stats.Shield);
+            Assert.Equal(3, u[1].Stats.Shield);
+            Assert.Equal(0, u[2].Stats.Shield);
+
+            PassRound(state);
+            Assert.Equal(3, u[0].Stats.Shield); // 쌓이지 않음
+        }
+
         [Fact]
         public void BasicAttackStatusReward_AppliesStatusOnBasicAttack()
         {
