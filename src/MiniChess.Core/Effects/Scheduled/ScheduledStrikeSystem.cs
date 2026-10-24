@@ -9,7 +9,7 @@ using MiniChess.Core.Snapshots;
 
 namespace MiniChess.Core.Effects.Scheduled
 {
-    /// <summary>예약 포격의 등록/발사/취소.</summary>
+    /// <summary>예약 포격의 등록/발사. 시전자가 죽어도 취소하지 않는다.</summary>
     public static class ScheduledStrikeSystem
     {
         internal static void Schedule(GameState state, ScheduledStrike strike)
@@ -21,6 +21,7 @@ namespace MiniChess.Core.Effects.Scheduled
         /// <summary>
         /// 예약 효과 단계에서 현재 팀 시전자의 예약을 발사한다(조준한 턴 제외).
         /// 발사: 예약 제거 → 범위 안 적에게 장판 피해. 시전자의 행동은 소모하지 않는다.
+        /// 시전자가 착탄 전에 죽어도 예약은 남아 그 팀의 다음 턴 시작에 그대로 발사된다(사용자 확정).
         /// </summary>
         internal static void RunStep(TurnContext context)
         {
@@ -38,16 +39,6 @@ namespace MiniChess.Core.Effects.Scheduled
                     return;
 
                 Fire(state, strike);
-            }
-        }
-
-        /// <summary>시전자가 사망하면 그 시전자의 예약을 모두 취소한다.</summary>
-        internal static void CancelBySource(GameState state, Unit source)
-        {
-            foreach (ScheduledStrike strike in state.ScheduledStrikes.Where(s => s.Source == source).ToList())
-            {
-                state.RemoveScheduledStrike(strike);
-                state.Events.Record(new StrikeCancelledEvent(SnapshotBuilder.Strike(strike)));
             }
         }
 

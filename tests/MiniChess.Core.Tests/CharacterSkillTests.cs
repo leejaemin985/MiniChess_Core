@@ -1186,8 +1186,8 @@ namespace MiniChess.Core.Tests
             Assert.Equal(10, u[1].Stats.CurrentHp);
 
             EndTurn(state); // P1 턴 시작: 착탄
-            Assert.Equal(4, u[1].Stats.CurrentHp);
-            Assert.Equal(4, u[2].Stats.CurrentHp);
+            Assert.Equal(5, u[1].Stats.CurrentHp);
+            Assert.Equal(5, u[2].Stats.CurrentHp);
             Assert.Equal(10, u[3].Stats.CurrentHp);
             Assert.Equal(10, u[4].Stats.CurrentHp);
             Assert.Empty(state.ScheduledStrikes);
@@ -1235,9 +1235,9 @@ namespace MiniChess.Core.Tests
             Assert.Equal(10, u[1].Stats.CurrentHp);
         }
 
-        // 사용자 확정: 착탄 전에 시전자가 죽으면 예약 취소
+        // 사용자 확정: 착탄 전에 시전자가 죽어도 예약은 취소되지 않고 그대로 착탄한다
         [Fact]
-        public void Bombard_IsCancelledWhenCasterDies()
+        public void Bombard_StillLandsWhenCasterDiesBeforeImpact()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 0, 0, Mortar())
@@ -1249,11 +1249,12 @@ namespace MiniChess.Core.Tests
             EndTurn(state);
             DamageSystem.Apply(state, new DamageRequest(u[2], u[0], 99, DamageType.Direct));
 
-            Assert.Empty(state.ScheduledStrikes);
-            Assert.Contains(state.Events.Since(0), e => e is StrikeCancelledEvent);
+            Assert.False(u[0].IsAlive);
+            Assert.Single(state.ScheduledStrikes);
 
             EndTurn(state);
-            Assert.Equal(10, u[2].Stats.CurrentHp);
+            Assert.Empty(state.ScheduledStrikes);
+            Assert.Equal(5, u[2].Stats.CurrentHp);
         }
 
         [Fact]
@@ -1345,6 +1346,26 @@ namespace MiniChess.Core.Tests
             Assert.Equal(9, u[1].Stats.CurrentHp);
             Assert.Equal(new Position(4, 4), u[1].Position); // 가로 1 = 세로 1 → 위로 2칸
             Assert.All(result.Events.OfType<UnitMovedEvent>(), e => Assert.Equal(MoveKind.Knockback, e.Kind));
+        }
+
+        // 사용자 확정: 밀어낸 뒤 이동 거리 제한(누적 1칸)을 건다. [가정] 지속은 대상의 다음 턴(볼라와 같음)
+        [Fact]
+        public void ShockShell_LimitsTargetMoveDistanceAfterPush()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 3, 1, Mortar())
+                .Place(Team.Player2, 4, 2)
+                .Start();
+
+            Use(state, u[0], MortarPiece.ShockShellId, 4, 2);
+            Assert.NotNull(u[1].FindStatus(StatusLibrary.DistanceLimitId));
+
+            EndTurn(state); // 대상의 턴
+            Assert.Equal(MoveFailReason.DistanceLimited, new MoveAction(u[1], new Position(2, 4)).Validate(state)); // 2칸
+            Assert.Equal(MoveFailReason.None, new MoveAction(u[1], new Position(3, 4)).Validate(state));            // 1칸
+
+            EndTurn(state); // 대상의 턴 종료: 해제
+            Assert.Null(u[1].FindStatus(StatusLibrary.DistanceLimitId));
         }
 
         // 사용자 확정: 벽/유닛/장애물/보드 끝에 막히면 그 앞에서 멈추고 추가 피해 없음

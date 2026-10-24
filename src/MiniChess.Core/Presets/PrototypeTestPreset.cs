@@ -206,16 +206,18 @@ namespace MiniChess.Core.Presets
                 "#@#",
                 ".#.",
             };
-            t.Mortar.Bombard.Damage = 6;
+            t.Mortar.Bombard.Damage = 5;
             t.Mortar.Bombard.MaxActive = 1;
             t.Mortar.Bombard.InstallShieldAmount = 2;
 
             t.Mortar.Uninstall.ApCost = 2;
 
             t.Mortar.ShockShell.ApCost = 3;
-            t.Mortar.ShockShell.Range = 2;
+            t.Mortar.ShockShell.Range = 3;
             t.Mortar.ShockShell.Damage = 1;
             t.Mortar.ShockShell.PushCells = 2;
+            t.Mortar.ShockShell.LimitCells = 1;
+            t.Mortar.ShockShell.LimitTurns = 1;
 
             t.Scythe.Slash.ApCost = 3;
             t.Scythe.Slash.Range = 2;

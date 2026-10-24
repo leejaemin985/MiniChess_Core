@@ -23,15 +23,4 @@ namespace MiniChess.Core.Events
             Strike = strike;
         }
     }
-
-    /// <summary>시전자 사망으로 예약 포격이 취소되었다.</summary>
-    public class StrikeCancelledEvent : GameEvent
-    {
-        public StrikeSnapshot Strike { get; }
-
-        public StrikeCancelledEvent(StrikeSnapshot strike)
-        {
-            Strike = strike;
-        }
-    }
 }

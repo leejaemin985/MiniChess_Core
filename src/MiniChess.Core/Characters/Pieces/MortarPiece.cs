@@ -81,7 +81,8 @@ namespace MiniChess.Core.Characters.Pieces
         }
 
         /// <summary>
-        /// 충격탄: 사거리 안의 적 1명에게 피해를 주고 밀어낸다(코어 밀어내기 규칙). 설치 중에는 쓸 수 없다.
+        /// 충격탄: 사거리 안의 적 1명에게 피해를 주고 밀어낸 뒤(코어 밀어내기 규칙) 이동 거리 제한을 건다(사용자 확정). 설치 중에는 쓸 수 없다.
+        /// 막혀서 덜 밀리거나 못 밀려도 제한은 걸린다. 피해로 죽거나 밀리는 도중 죽으면 제한은 걸리지 않는다.
         /// </summary>
         public static SkillDefinition ShockShell(ShockShellTuning t)
         {
@@ -92,9 +93,15 @@ namespace MiniChess.Core.Characters.Pieces
                 new SkillEffect[]
                 {
                     new DamageEffect(t.Damage),
-                    new KnockbackEffect(t.PushCells),
+                    new KnockbackEffect(t.PushCells, afterPush: new SkillEffect[]
+                    {
+                        new ApplyStatusEffect(StatusLibrary.DistanceLimit(t.LimitCells, t.LimitTurns)),
+                    }),
                 },
-                new SkillCondition[] { new LacksStatusCondition(StatusLibrary.InstalledId) });
+                new SkillCondition[] { new LacksStatusCondition(StatusLibrary.InstalledId) },
+                requiredTuning: SkillBuildUtil.Require(
+                    (nameof(t.LimitCells), t.LimitCells),
+                    (nameof(t.LimitTurns), t.LimitTurns)));
         }
     }
 
@@ -144,5 +151,11 @@ namespace MiniChess.Core.Characters.Pieces
 
         /// <summary>밀어내는 칸 수.</summary>
         public int? PushCells { get; set; }
+
+        /// <summary>밀어낸 뒤 거는 이동 거리 제한의 누적 최대 칸 수.</summary>
+        public int? LimitCells { get; set; }
+
+        /// <summary>이동 거리 제한 지속(대상 소유자 턴 종료 횟수).</summary>
+        public int? LimitTurns { get; set; }
     }
 }
