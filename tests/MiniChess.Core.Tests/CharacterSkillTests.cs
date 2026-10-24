@@ -2034,6 +2034,39 @@ namespace MiniChess.Core.Tests
             Assert.Null(u[1].FindStatus(StatusLibrary.StunnedId));
         }
 
+        // 사용자 확정: 심판은 피해 3 을 준 뒤 밀어낸다
+        [Fact]
+        public void Judgment_DealsDamage_ThenPushes()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 3, 3, Inquisitor())
+                .Place(Team.Player2, 3, 4)
+                .Start();
+
+            SkillResult result = Use(state, u[0], InquisitorPiece.JudgmentId, 3, 4);
+
+            Assert.Equal(7, u[1].Stats.CurrentHp);
+            Assert.Equal(new Position(3, 6), u[1].Position);
+            List<GameEvent> events = result.Events.ToList();
+            Assert.True(events.FindIndex(e => e is UnitDamagedEvent) < events.FindIndex(e => e is UnitMovedEvent));
+        }
+
+        // [가정] 피해로 죽으면 밀기/기절은 일어나지 않는다
+        [Fact]
+        public void Judgment_KillingBlow_NoPushNoStun()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 3, 3, Inquisitor())
+                .Place(Team.Player2, 3, 4, TestGame.Stats(hp: 3))
+                .Start();
+
+            SkillResult result = Use(state, u[0], InquisitorPiece.JudgmentId, 3, 4);
+
+            Assert.False(u[1].IsAlive);
+            Assert.DoesNotContain(result.Events, e => e is UnitMovedEvent);
+            Assert.DoesNotContain(result.Events, e => e is StatusAppliedEvent);
+        }
+
         // [가정] 막혀서 밀리지 않아도 기절은 걸린다
         [Fact]
         public void Judgment_StunsEvenWhenPushIsBlocked()

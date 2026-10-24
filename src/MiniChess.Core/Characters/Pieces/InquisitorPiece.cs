@@ -44,8 +44,8 @@ namespace MiniChess.Core.Characters.Pieces
         }
 
         /// <summary>
-        /// 심판: 사거리 안의 적 하나를 시전자 반대쪽으로 밀어낸 뒤(코어 밀어내기 규칙) 한 턴 기절시킨다.
-        /// 막혀서 덜 밀리거나 못 밀려도 기절은 걸린다. 밀리는 도중 죽으면 기절은 걸리지 않는다.
+        /// 심판: 사거리 안의 적 하나에게 피해를 주고, 시전자 반대쪽으로 밀어낸 뒤(코어 밀어내기 규칙) 한 턴 기절시킨다.
+        /// 막혀서 덜 밀리거나 못 밀려도 기절은 걸린다. 피해로 죽거나 밀리는 도중 죽으면 밀기/기절은 일어나지 않는다.
         /// </summary>
         public static SkillDefinition Judgment(JudgmentTuning t)
         {
@@ -55,6 +55,7 @@ namespace MiniChess.Core.Characters.Pieces
                 PatternArea.SingleCell,
                 new SkillEffect[]
                 {
+                    new DamageEffect(t.Damage),
                     new KnockbackEffect(t.PushCells, afterPush: new SkillEffect[] { new ApplyStatusEffect(StatusLibrary.Stunned(1)) }),
                 });
         }
@@ -82,6 +83,9 @@ namespace MiniChess.Core.Characters.Pieces
 
         /// <summary>대상 적을 고를 수 있는 거리(대각선 포함).</summary>
         public int? Range { get; set; }
+
+        /// <summary>피해량.</summary>
+        public int? Damage { get; set; }
 
         /// <summary>밀어내는 칸 수.</summary>
         public int? PushCells { get; set; }

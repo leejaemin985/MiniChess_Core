@@ -254,6 +254,7 @@ namespace MiniChess.Core.Presets
             t.Inquisitor.Purify.Range = 2;
             t.Inquisitor.Judgment.ApCost = 3;
             t.Inquisitor.Judgment.Range = 1;
+            t.Inquisitor.Judgment.Damage = 3;
             t.Inquisitor.Judgment.PushCells = 2;
 
             t.Archer.Bola.ApCost = 3;
