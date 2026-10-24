@@ -2011,24 +2011,44 @@ namespace MiniChess.Core.Tests
             Assert.True(state.Capture.IsActive);
         }
 
-        // 기획 확정: 고른 방향으로 1칸 강제 이동. 결과 예측 지원
-        [Fact]
-        public void Correction_PushesEnemyOneCellInChosenDirection_WithPreview()
+        // 사용자 확정: 상하좌우로 2칸 안의 칸을 골라 그 칸까지(1칸 또는 2칸) 강제 이동. 결과 예측 지원
+        [Theory]
+        [InlineData(4, 5)] // 1칸
+        [InlineData(5, 5)] // 2칸
+        public void Correction_PushesEnemyToChosenCell_OneOrTwoCells_WithPreview(int x, int y)
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 3, 3, Sculptor())
                 .Place(Team.Player2, 3, 5, TestGame.Stats(hp: 10))
                 .Start();
-            Position target = new Position(3, 5), right = new Position(4, 5);
+            Position target = new Position(3, 5), chosen = new Position(x, y);
 
-            Assert.Equal(4, SkillQueries.GetValidTargets(state, u[0], SculptorPiece.CorrectionId, new[] { target }).Count);
-            Assert.Equal(right, SkillQueries.PredictPush(state, u[0], SculptorPiece.CorrectionId, new[] { target, right }));
+            // 위 1칸(보드 끝), 오른쪽/아래/왼쪽 각 2칸
+            Assert.Equal(7, SkillQueries.GetValidTargets(state, u[0], SculptorPiece.CorrectionId, new[] { target }).Count);
+            Assert.Equal(chosen, SkillQueries.PredictPush(state, u[0], SculptorPiece.CorrectionId, new[] { target, chosen }));
 
-            SkillResult result = Correction(u[0], target, right).Execute(state);
+            SkillResult result = Correction(u[0], target, chosen).Execute(state);
 
-            Assert.Equal(right, u[1].Position);
+            Assert.Equal(chosen, u[1].Position);
             Assert.Equal(9, u[1].Stats.CurrentHp);
-            Assert.Equal(MoveKind.Knockback, result.Events.OfType<UnitMovedEvent>().Single().Kind);
+            Assert.All(result.Events.OfType<UnitMovedEvent>(), moved => Assert.Equal(MoveKind.Knockback, moved.Kind));
+        }
+
+        // 사용자 확정: 2칸을 골라도 도중에 막히면 그 앞에서 멈춘다
+        [Fact]
+        public void Correction_TwoCells_StopsBeforeBlocker()
+        {
+            var (state, u) = Game()
+                .WithMap(".......", ".....#.", ".......", ".......", ".......", ".......", ".......")
+                .Place(Team.Player1, 3, 3, Sculptor())
+                .Place(Team.Player2, 3, 5, TestGame.Stats(hp: 10))
+                .Start();
+            Position target = new Position(3, 5), wall = new Position(5, 5), stop = new Position(4, 5);
+
+            Assert.Equal(stop, SkillQueries.PredictPush(state, u[0], SculptorPiece.CorrectionId, new[] { target, wall }));
+            Correction(u[0], target, wall).Execute(state);
+
+            Assert.Equal(stop, u[1].Position);
         }
 
         // 사용자 확정: 막힌 방향도 고를 수 있다(밀기 시도). 밀리지 않고 피해만, 다른 방향으로 바꾸지 않음

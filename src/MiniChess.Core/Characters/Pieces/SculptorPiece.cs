@@ -44,14 +44,14 @@ namespace MiniChess.Core.Characters.Pieces
         }
 
         /// <summary>
-        /// 자리 교정: 사거리 안의 적 하나를 지정하고, 상하좌우 중 고른 방향으로 민다(강제 이동).
-        /// 막힌 방향도 고를 수 있으며(밀기 시도) 그때는 밀리지 않고 피해만 받는다.
+        /// 자리 교정: 사거리 안의 적 하나를 지정하고, 상하좌우로 PushCells 칸 안의 칸 하나를 골라 그쪽으로 그 거리만큼 민다(강제 이동, 사용자 확정: 1~2칸 선택).
+        /// 도중에 막히면 그 앞에서 멈춘다. 막힌 방향도 고를 수 있으며(밀기 시도) 그때는 밀리지 않고 피해만 받는다.
         /// </summary>
         public static SkillDefinition Correction(CorrectionTuning t)
         {
             return new SkillDefinition(
                 CorrectionId, "자리 교정", t.ApCost, SkillActionKind.Combat,
-                new PushDirectionTargeting(TargetFilter.Enemy, t.Range),
+                new PushDirectionTargeting(TargetFilter.Enemy, t.Range, t.PushCells),
                 PatternArea.SingleCell,
                 new SkillEffect[]
                 {
@@ -86,7 +86,7 @@ namespace MiniChess.Core.Characters.Pieces
 
         public int? Damage { get; set; }
 
-        /// <summary>밀어내는 칸 수.</summary>
+        /// <summary>고를 수 있는 최대 밀기 칸 수(1 ~ PushCells 중 선택).</summary>
         public int? PushCells { get; set; }
     }
 }

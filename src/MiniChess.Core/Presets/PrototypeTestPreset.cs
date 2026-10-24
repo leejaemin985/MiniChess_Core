@@ -252,7 +252,7 @@ namespace MiniChess.Core.Presets
             t.Sculptor.Correction.ApCost = 2;
             t.Sculptor.Correction.Range = 3;
             t.Sculptor.Correction.Damage = 1;
-            t.Sculptor.Correction.PushCells = 1;
+            t.Sculptor.Correction.PushCells = 2;
 
             t.Inquisitor.Purify.ApCost = 3;
             t.Inquisitor.Purify.Range = 2;
