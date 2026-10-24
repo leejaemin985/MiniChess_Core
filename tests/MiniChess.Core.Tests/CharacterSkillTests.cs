@@ -957,27 +957,27 @@ namespace MiniChess.Core.Tests
 
         #endregion
 
-        #region Warp
+        #region Warp (실 관문)
 
         private static UseSkillAction Warp(Unit caster, params (int X, int Y)[] targets) =>
             new UseSkillAction(caster, SeamstressPiece.WarpId, targets.Select(t => new Position(t.X, t.Y)).ToList());
 
+        // 사용자 확정: 사거리 안의 아군 하나를 사거리 안의 빈 칸으로 순간이동시킨다
         [Fact]
-        public void Warp_SwapsTwoAlliesInRange()
+        public void Warp_MovesAllyToEmptyCellInRange()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 0, 0, With(SeamstressPiece.WarpId))
                 .Place(Team.Player1, 1, 1)
-                .Place(Team.Player1, 3, 0)
                 .Place(Team.Player2, 6, 6)
                 .Start();
 
             SkillResult result = Warp(u[0], (1, 1), (3, 0)).Execute(state);
 
             Assert.Equal(new Position(3, 0), u[1].Position);
-            Assert.Equal(new Position(1, 1), u[2].Position);
             Assert.Equal(new Position(0, 0), u[0].Position);
-            Assert.Equal(2, result.Events.OfType<UnitMovedEvent>().Count(e => e.Kind == MoveKind.Swap));
+            UnitMovedEvent moved = result.Events.OfType<UnitMovedEvent>().Single();
+            Assert.Equal((MoveKind.Warp, u[0].Id, false), (moved.Kind, moved.InitiatorId.Value, moved.IsVoluntary));
 
             // 지정 칸 전부가 결과와 시전 이벤트에 남는다
             var targets = new[] { new Position(1, 1), new Position(3, 0) };
@@ -985,23 +985,38 @@ namespace MiniChess.Core.Tests
             Assert.Equal(targets, result.Events.OfType<SkillUsedEvent>().Single().Targets);
         }
 
+        // 사용자 확정: 재봉사 자신도 옮길 수 있다(자발적 이동)
         [Fact]
-        public void Warp_CanSwapCasterItself()
+        public void Warp_CanMoveCasterItself()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 0, 0, With(SeamstressPiece.WarpId))
-                .Place(Team.Player1, 2, 2)
                 .Place(Team.Player2, 6, 6)
                 .Start();
 
-            Warp(u[0], (0, 0), (2, 2)).Execute(state);
+            SkillResult result = Warp(u[0], (0, 0), (2, 2)).Execute(state);
 
             Assert.Equal(new Position(2, 2), u[0].Position);
-            Assert.Equal(new Position(0, 0), u[1].Position);
+            Assert.True(result.Events.OfType<UnitMovedEvent>().Single().IsVoluntary);
+        }
+
+        // 경로 없이 옮기므로 사이의 벽/유닛을 넘는다
+        [Fact]
+        public void Warp_JumpsOverWallsAndUnits()
+        {
+            var (state, u) = Game()
+                .WithMap(".#.....", ".......", ".......", ".......", ".......", ".......", ".......")
+                .Place(Team.Player1, 0, 0, With(SeamstressPiece.WarpId))
+                .Place(Team.Player2, 2, 1)
+                .Start();
+
+            Warp(u[0], (0, 0), (2, 0)).Execute(state);
+
+            Assert.Equal(new Position(2, 0), u[0].Position);
         }
 
         [Fact]
-        public void Warp_RejectsEnemyOutOfRangeDuplicateOrWrongCount()
+        public void Warp_RejectsEnemyOccupiedOrOutOfRangeCellOrWrongCount()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 0, 0, With(SeamstressPiece.WarpId))
@@ -1010,28 +1025,34 @@ namespace MiniChess.Core.Tests
                 .Place(Team.Player2, 2, 0)
                 .Start();
 
-            Assert.Equal(SkillFailReason.InvalidTarget, Warp(u[0], (1, 0), (2, 0)).Validate(state)); // 적
-            Assert.Equal(SkillFailReason.InvalidTarget, Warp(u[0], (1, 0), (4, 0)).Validate(state)); // 사거리 밖
-            Assert.Equal(SkillFailReason.InvalidTarget, Warp(u[0], (1, 0), (1, 0)).Validate(state)); // 같은 유닛
+            Assert.Equal(SkillFailReason.InvalidTarget, Warp(u[0], (2, 0), (0, 1)).Validate(state)); // 적
+            Assert.Equal(SkillFailReason.InvalidTarget, Warp(u[0], (4, 0), (0, 1)).Validate(state)); // 사거리 밖 아군
+            Assert.Equal(SkillFailReason.InvalidTarget, Warp(u[0], (1, 0), (4, 1)).Validate(state)); // 사거리 밖 칸
+            Assert.Equal(SkillFailReason.InvalidTarget, Warp(u[0], (1, 0), (2, 0)).Validate(state)); // 유닛이 있는 칸
             Assert.Equal(SkillFailReason.InvalidTarget, Warp(u[0], (1, 0)).Validate(state));         // 하나만
-            Assert.Equal(SkillFailReason.None, Warp(u[0], (1, 0), (0, 0)).Validate(state));
+            Assert.Equal(SkillFailReason.None, Warp(u[0], (1, 0), (0, 1)).Validate(state));
         }
 
         [Fact]
-        public void Warp_StepwiseCandidates_ExcludeAlreadyChosen()
+        public void Warp_StepwiseCandidates_UnitsThenEmptyCellsInRange()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 0, 0, With(SeamstressPiece.WarpId))
                 .Place(Team.Player1, 1, 0)
-                .Place(Team.Player2, 6, 6)
+                .Place(Team.Player2, 2, 0)
                 .Start();
 
             var first = SkillQueries.GetValidTargets(state, u[0], SeamstressPiece.WarpId);
             var second = SkillQueries.GetValidTargets(state, u[0], SeamstressPiece.WarpId, new[] { new Position(1, 0) });
-            var done = SkillQueries.GetValidTargets(state, u[0], SeamstressPiece.WarpId, new[] { new Position(1, 0), new Position(0, 0) });
+            var done = SkillQueries.GetValidTargets(state, u[0], SeamstressPiece.WarpId, new[] { new Position(1, 0), new Position(0, 1) });
 
             Assert.Equal(new[] { new Position(0, 0), new Position(1, 0) }.ToHashSet(), first.ToHashSet());
-            Assert.Equal(new[] { new Position(0, 0) }, second);
+            Assert.Contains(new Position(0, 1), second);
+            Assert.Contains(new Position(3, 3), second);
+            Assert.DoesNotContain(new Position(0, 0), second);
+            Assert.DoesNotContain(new Position(1, 0), second);
+            Assert.DoesNotContain(new Position(2, 0), second);
+            Assert.DoesNotContain(new Position(4, 0), second);
             Assert.Empty(done);
         }
 
@@ -1047,43 +1068,39 @@ namespace MiniChess.Core.Tests
                 .Start();
             new AttackAction(u[1], u[2]).Execute(state);
 
-            Warp(u[0], (1, 1), (0, 0)).Execute(state);
+            Warp(u[0], (1, 1), (1, 2)).Execute(state);
 
-            Assert.Equal(new Position(0, 0), u[1].Position);
+            Assert.Equal(new Position(1, 2), u[1].Position);
             Assert.Equal(AttackFailReason.AlreadyActed, new AttackAction(u[1], u[2]).Validate(state));
         }
 
         [Fact]
-        public void Warp_TriggersCellEffectsAtBothDestinations()
-        {
-            var (state, u) = Game()
-                .Place(Team.Player1, 0, 0, With(SeamstressPiece.WarpId))
-                .Place(Team.Player1, 2, 0)
-                .Place(Team.Player2, 6, 6)
-                .Start();
-            var atCaster = new TestCellEffect();
-            var atAlly = new TestCellEffect();
-            CellEffectSystem.Place(state, new Position(0, 0), atCaster);
-            CellEffectSystem.Place(state, new Position(2, 0), atAlly);
-
-            Warp(u[0], (0, 0), (2, 0)).Execute(state);
-
-            Assert.Equal((1, 1), (atCaster.EnterCount, atCaster.StopCount));
-            Assert.Equal((1, 1), (atAlly.EnterCount, atAlly.StopCount));
-        }
-
-        [Fact]
-        public void Warp_RootedCasterCannotSwapItself_ButRootedAllyCanBeMoved()
+        public void Warp_TriggersCellEffectAtDestination()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 0, 0, With(SeamstressPiece.WarpId))
                 .Place(Team.Player1, 1, 0)
-                .Place(Team.Player1, 2, 0)
+                .Place(Team.Player2, 6, 6)
+                .Start();
+            var atDestination = new TestCellEffect();
+            CellEffectSystem.Place(state, new Position(3, 0), atDestination);
+
+            Warp(u[0], (1, 0), (3, 0)).Execute(state);
+
+            Assert.Equal((1, 1), (atDestination.EnterCount, atDestination.StopCount));
+        }
+
+        [Fact]
+        public void Warp_RootedCasterCannotMoveItself_ButRootedAllyCanBeMoved()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0, With(SeamstressPiece.WarpId))
+                .Place(Team.Player1, 1, 0)
                 .Place(Team.Player2, 6, 6)
                 .Start();
             Statuses.StatusDefinition root = StatusLibrary.Root(targetTurns: 1, blocksExternalMoves: false);
-            Statuses.StatusSystem.Apply(state, root, u[0], u[3]);
-            Statuses.StatusSystem.Apply(state, root, u[1], u[3]);
+            Statuses.StatusSystem.Apply(state, root, u[0], u[2]);
+            Statuses.StatusSystem.Apply(state, root, u[1], u[2]);
 
             Assert.Equal(SkillFailReason.InvalidTarget, Warp(u[0], (0, 0), (2, 0)).Validate(state));
             Assert.Equal(SkillFailReason.None, Warp(u[0], (1, 0), (2, 0)).Validate(state));
@@ -1283,14 +1300,13 @@ namespace MiniChess.Core.Tests
             Assert.Equal(MoveFailReason.None, new MoveAction(u[0], new Position(0, 1)).Validate(state));
         }
 
-        // 사용자 확정: 설치 중에도 외부 강제 이동(워프 교환 등)은 허용
+        // 사용자 확정: 설치 중에도 외부 강제 이동(실 관문 등)은 허용
         [Fact]
-        public void Installed_MortarCanStillBeSwappedByAlly()
+        public void Installed_MortarCanStillBeWarpedByAlly()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 0, 0, With(SeamstressPiece.WarpId))
                 .Place(Team.Player1, 1, 0, Mortar())
-                .Place(Team.Player1, 2, 0)
                 .Place(Team.Player2, 6, 6)
                 .Start();
             InstallMortar(state, u[1]);
