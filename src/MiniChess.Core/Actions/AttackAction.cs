@@ -7,6 +7,7 @@ using MiniChess.Core.Events;
 using MiniChess.Core.Skills;
 using MiniChess.Core.State;
 using MiniChess.Core.Statuses;
+using MiniChess.Core.Turns;
 
 namespace MiniChess.Core.Actions
 {
@@ -80,7 +81,8 @@ namespace MiniChess.Core.Actions
             if (attacker.Team != state.CurrentTeam) return AttackFailReason.NotYourTurn;
             if (!attacker.IsOnBoard) return AttackFailReason.AttackerNotOnBoard;
             if (attacker.TurnState.ActionsEnded) return AttackFailReason.ActionsEnded;
-            if (attacker.TurnState.CombatActionUsed) return AttackFailReason.AlreadyActed;
+            if (TurnActionRules.IsCombatLocked(state, attacker)) return AttackFailReason.AlreadyActed;
+            if (TurnActionRules.IsBasicAttackUsedUp(state, attacker)) return AttackFailReason.AlreadyUsedThisTurn;
             if (StatusSystem.BlocksBasicAttack(state, attacker)) return AttackFailReason.BlockedByStatus;
 
             return AttackFailReason.None;
@@ -103,6 +105,7 @@ namespace MiniChess.Core.Actions
         {
             state.GetPlayer(attacker.Team).Ap.TrySpend(state.Rules.ActionCost.BasicAttackCost);
             attacker.TurnState.MarkCombatActionUsed();
+            attacker.TurnState.MarkBasicAttackUsed();
         }
 
         /// <summary>

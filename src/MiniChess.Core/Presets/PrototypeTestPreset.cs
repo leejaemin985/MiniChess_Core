@@ -56,6 +56,14 @@ namespace MiniChess.Core.Presets
                         new BasicAttackStatusReward(StatusLibrary.Burn(damagePerTrigger: 1, triggers: 2)),
                     },
                 },
+                // [테스트] 행동 제한 변경: 기본 공격과 각 스킬을 유닛당 턴에 한 번씩(스킬1 + 스킬2 + 기본 공격 가능), 이동은 순서 상관없이 AP 만큼.
+                // 명세는 전투 행동 턴당 1회, 전투 후 이동 금지
+                TurnAction = new TurnActionRuleData
+                {
+                    CombatOncePerTurn = false,
+                    LockMoveAfterCombat = false,
+                    EachActionOncePerTurn = true,
+                },
             };
         }
 

@@ -32,7 +32,9 @@ namespace MiniChess.Core.Snapshots
                 unit.TurnState.CombatActionUsed,
                 unit.TurnState.ActionsEnded,
                 unit.TurnState.VoluntaryMoveLocked,
-                unit.TurnState.VoluntaryCellsMoved);
+                unit.TurnState.VoluntaryCellsMoved,
+                unit.TurnState.BasicAttackUsed,
+                unit.TurnState.UsedSkillIds.ToList());
         }
 
         public static StatusSnapshot Status(StatusEffect status)

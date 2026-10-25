@@ -43,5 +43,8 @@ namespace MiniChess.Core.Actions
 
         /// <summary>요청 형식이 잘못됨(요청 없음, 존재하지 않는 팀 등).</summary>
         InvalidRequest,
+
+        /// <summary>이번 턴에 이미 이 스킬을 씀(TurnActionRuleData.EachActionOncePerTurn).</summary>
+        AlreadyUsedThisTurn,
     }
 }

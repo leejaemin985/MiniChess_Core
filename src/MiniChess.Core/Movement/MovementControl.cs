@@ -1,6 +1,7 @@
 using System;
 using MiniChess.Core.State;
 using MiniChess.Core.Statuses;
+using MiniChess.Core.Turns;
 
 namespace MiniChess.Core.Movement
 {
@@ -29,9 +30,8 @@ namespace MiniChess.Core.Movement
 
             if (IsVoluntary(mover, initiator))
             {
-                UnitTurnState turn = mover.TurnState;
-                if (turn.ActionsEnded) return MoveBlockReason.ActionsEnded;
-                if (turn.VoluntaryMoveLocked) return MoveBlockReason.VoluntaryMoveLocked;
+                if (mover.TurnState.ActionsEnded) return MoveBlockReason.ActionsEnded;
+                if (TurnActionRules.IsVoluntaryMoveLocked(state, mover)) return MoveBlockReason.VoluntaryMoveLocked;
             }
 
             return StatusSystem.CheckMove(state, mover, initiator, kind, cells);

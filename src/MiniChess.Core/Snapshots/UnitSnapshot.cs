@@ -46,12 +46,21 @@ namespace MiniChess.Core.Snapshots
         /// <summary>이번 턴에 일반 이동으로 움직인 칸 수의 누적(이동 거리 제한 판정용).</summary>
         public int VoluntaryCellsMoved { get; }
 
+        /// <summary>이번 턴에 기본 공격을 했는지.</summary>
+        public bool BasicAttackUsed { get; }
+
+        /// <summary>이번 턴에 사용한 스킬 Id.</summary>
+        public IReadOnlyList<string> UsedSkillIds { get; }
+
         public UnitSnapshot(
             int id, Team team, string characterId, string name, Position? position,
             int hp, int maxHp, int attack, int attackRange, bool isSummon, int? summonOwnerId,
             IReadOnlyList<string> skillIds, IReadOnlyList<ShieldSnapshot> shields, IReadOnlyList<StatusSnapshot> statuses,
-            bool combatActionUsed, bool actionsEnded, bool voluntaryMoveLocked, int voluntaryCellsMoved)
+            bool combatActionUsed, bool actionsEnded, bool voluntaryMoveLocked, int voluntaryCellsMoved,
+            bool basicAttackUsed = false, IReadOnlyList<string> usedSkillIds = null)
         {
+            BasicAttackUsed = basicAttackUsed;
+            UsedSkillIds = usedSkillIds ?? new List<string>();
             VoluntaryMoveLocked = voluntaryMoveLocked;
             VoluntaryCellsMoved = voluntaryCellsMoved;
             Id = id;
