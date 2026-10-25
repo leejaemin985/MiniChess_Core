@@ -22,6 +22,8 @@ namespace MiniChess.Core.Effects.Zones
             HitsRemaining = hits;
         }
 
+        internal override ZoneCellEffect Fork(FieldZone zone) => new Obstacle(zone, HitsRemaining);
+
         /// <summary>기본 공격 1회를 받는다. 남은 횟수가 0 이 되면 파괴된다. 파괴되었으면 true.</summary>
         internal bool TakeHit(GameState state, Unit attacker, Position position)
         {

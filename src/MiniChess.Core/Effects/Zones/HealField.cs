@@ -20,6 +20,8 @@ namespace MiniChess.Core.Effects.Zones
             HealAmount = healAmount;
         }
 
+        internal override ZoneCellEffect Fork(FieldZone zone) => new HealField(zone, HealAmount);
+
         protected override void OnZoneTurnStep(CellTurnContext context)
         {
             Unit occupant = context.Cell.Occupant;

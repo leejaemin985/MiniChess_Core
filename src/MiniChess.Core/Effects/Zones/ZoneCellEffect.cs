@@ -15,6 +15,9 @@ namespace MiniChess.Core.Effects.Zones
             Zone = zone;
         }
 
+        /// <summary>경기 복사(GameState.Fork)용: 같은 값의 효과를 복사한 구역에 만든다.</summary>
+        internal abstract ZoneCellEffect Fork(FieldZone zone);
+
         public virtual CellEnterResult OnEnter(CellEffectContext context)
         {
             return CellEnterResult.Continue;

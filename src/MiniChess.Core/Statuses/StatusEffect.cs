@@ -41,6 +41,28 @@ namespace MiniChess.Core.Statuses
             Reapply(source, sourceTeam, turnNumber);
         }
 
+        /// <summary>
+        /// 경기 복사(GameState.Fork)용: 같은 진행 값의 상태를 복사본 유닛들에 만든다.
+        /// BehaviorData(호위 가로채기 등)는 GameState 가 가로채기를 복사하면서 다시 잇는다.
+        /// </summary>
+        internal StatusEffect Fork(ForkMap map)
+        {
+            return new StatusEffect(Definition, map.Unit(Target), OriginId)
+            {
+                Source = map.Unit(Source),
+                SourceTeam = SourceTeam,
+                Remaining = Remaining,
+                AppliedTurnNumber = AppliedTurnNumber,
+            };
+        }
+
+        private StatusEffect(StatusDefinition definition, Unit target, string originId)
+        {
+            Definition = definition;
+            Target = target;
+            OriginId = originId;
+        }
+
         /// <summary>같은 건인지(StackScope 기준). 대상당 하나면 Id 만, 출처별이면 건 유닛(없으면 팀) + 원인까지 같아야 한다.</summary>
         internal bool IsSameInstance(StatusDefinition definition, Unit source, Team sourceTeam, string originId)
         {

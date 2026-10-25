@@ -4,9 +4,14 @@ using System.Linq;
 using MiniChess.Core.Combat;
 using MiniChess.Core.Common;
 using MiniChess.Core.Data;
+using MiniChess.Core.Effects;
 using MiniChess.Core.Effects.Scheduled;
+using MiniChess.Core.Effects.Zones;
 using MiniChess.Core.Events;
 using MiniChess.Core.Skills;
+using MiniChess.Core.Snapshots;
+using MiniChess.Core.Statuses;
+using MiniChess.Core.Statuses.Library;
 
 namespace MiniChess.Core.State
 {
@@ -85,6 +90,100 @@ namespace MiniChess.Core.State
             Phase = GamePhase.Setup;
             CurrentTeam = rules.Match.FirstTeam;
             TurnNumber = 0;
+        }
+
+        /// <summary>
+        /// 명령을 실행해 볼 수 있는 깊은 복사본(GameController.Fork). 원본과 객체를 공유하지 않는다(규칙/스킬/캐릭터 정의 같은 불변 데이터만 공유).
+        /// viewer 를 주면 그 팀에게 숨기는 정보(GameVisibility)를 뺀다. 이벤트 기록은 비어 있고, 무작위 값은 원본과 다른 흐름이다.
+        /// </summary>
+        internal GameState Fork(Team? viewer)
+        {
+            return new GameState(this, viewer);
+        }
+
+        private GameState(GameState source, Team? viewer)
+        {
+            Seed = source.Seed;
+            // 원본의 무작위 흐름을 이어 쓰면 복사본에서 앞으로 나올 결과(점령 보상 등)를 미리 알 수 있어 따로 둔다.
+            Random = new SystemRandomSource(unchecked(source.Seed * 397 ^ source.TurnNumber));
+            Rules = source.Rules;
+            Skills = source.Skills;
+            Characters = source.Characters;
+            Phase = source.Phase;
+            CurrentTeam = source.CurrentTeam;
+            TurnNumber = source.TurnNumber;
+            Winner = source.Winner;
+            EndReason = source.EndReason;
+            _nextUnitId = source._nextUnitId;
+            _nextStrikeId = source._nextStrikeId;
+            _nextZoneId = source._nextZoneId;
+            Capture = source.Capture.Fork();
+
+            var map = new ForkMap();
+            _players = new Dictionary<Team, PlayerState>();
+            foreach (KeyValuePair<Team, PlayerState> player in source._players)
+            {
+                PlayerState copy = player.Value.ForkWithoutUnits();
+                foreach (Unit unit in player.Value.Units)
+                {
+                    Unit unitCopy = unit.Fork();
+                    map.Add(unit, unitCopy);
+                    copy.AddUnit(unitCopy);
+                }
+
+                _players.Add(player.Key, copy);
+            }
+
+            foreach (Unit unit in source.AllUnits())
+                map.Unit(unit).ForkLinks(unit, map);
+
+            Board = source.Board.ForkLayout();
+            foreach (BoardCell cell in source.Board.AllCells())
+            {
+                BoardCell copy = Board.GetCell(cell.Position);
+                copy.Occupant = map.Unit(cell.Occupant);
+
+                foreach (ICellEffect effect in cell.GetEffectsInOrder())
+                {
+                    if (!(effect is ZoneCellEffect zoneEffect))
+                        throw new NotSupportedException($"{cell.Position} 의 칸 효과 {effect.GetType().Name} 는 복사할 수 없음");
+                    if (viewer.HasValue && GameVisibility.IsHidden(effect, viewer.Value))
+                        continue;
+
+                    copy.SetEffect(map.Effect(zoneEffect));
+                }
+            }
+
+            foreach (ScheduledStrike strike in source._scheduledStrikes)
+            {
+                if (viewer.HasValue && GameVisibility.IsHidden(strike, viewer.Value))
+                    continue;
+
+                _scheduledStrikes.Add(new ScheduledStrike(strike.SkillId, map.Unit(strike.Source), strike.SourceId, strike.SourceTeam, strike.Cells, strike.Damage, strike.ScheduledTurnNumber)
+                {
+                    Id = strike.Id,
+                });
+            }
+
+            foreach (IDamageInterceptor interceptor in source._damageInterceptors)
+            {
+                if (!(interceptor is GuardInterceptor guard))
+                    throw new NotSupportedException($"피해 가로채기 {interceptor.GetType().Name} 는 복사할 수 없음");
+
+                StatusEffect status = map.Status(guard.Status);
+                var copy = new GuardInterceptor(status, guard.MaxDistance);
+                status.BehaviorData = copy;
+                _damageInterceptors.Add(copy);
+            }
+
+            foreach (Unit unit in source.AllUnits())
+            {
+                foreach (StatusEffect status in unit.Statuses)
+                {
+                    if (status.BehaviorData != null && !(status.BehaviorData is GuardInterceptor))
+                        throw new NotSupportedException($"상태 {status.Definition.Id} 의 동작 값 {status.BehaviorData.GetType().Name} 은 복사할 수 없음");
+                }
+            }
         }
 
         public PlayerState GetPlayer(Team team)

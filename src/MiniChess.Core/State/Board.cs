@@ -39,6 +39,25 @@ namespace MiniChess.Core.State
             }
         }
 
+        /// <summary>경기 복사(GameState.Fork)용: 지형, 점령 칸, 시작 위치만 같은 빈 보드(유닛/칸 효과는 GameState 가 채운다).</summary>
+        internal Board ForkLayout()
+        {
+            return new Board(this);
+        }
+
+        private Board(Board source)
+        {
+            Width = source.Width;
+            Height = source.Height;
+            _cells = new BoardCell[Width, Height];
+
+            foreach (BoardCell cell in source.AllCells())
+                _cells[cell.Position.X, cell.Position.Y] = new BoardCell(cell.Position, cell.Terrain, cell.IsCaptureTile);
+
+            foreach (KeyValuePair<Team, List<Position>> spawn in source._spawnPositions)
+                _spawnPositions[spawn.Key].AddRange(spawn.Value);
+        }
+
         #region Construction
 
         private static BoardCell CreateCell(Position position, MapTileType tile)

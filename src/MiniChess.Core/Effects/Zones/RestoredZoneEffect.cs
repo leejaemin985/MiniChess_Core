@@ -14,5 +14,7 @@ namespace MiniChess.Core.Effects.Zones
             Layer = layer;
             Kind = kind;
         }
+
+        internal override ZoneCellEffect Fork(FieldZone zone) => new RestoredZoneEffect(zone, Layer, Kind);
     }
 }

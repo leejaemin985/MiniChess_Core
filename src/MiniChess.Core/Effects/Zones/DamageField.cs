@@ -20,6 +20,8 @@ namespace MiniChess.Core.Effects.Zones
             DamageAmount = damageAmount;
         }
 
+        internal override ZoneCellEffect Fork(FieldZone zone) => new DamageField(zone, DamageAmount);
+
         protected override void OnZoneTurnStep(CellTurnContext context)
         {
             Unit occupant = context.Cell.Occupant;

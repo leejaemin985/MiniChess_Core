@@ -85,6 +85,42 @@ namespace MiniChess.Core.State
             _basicAttackStatuses.Add(status);
         }
 
+        /// <summary>
+        /// 경기 복사(GameState.Fork) 1단계: 다른 객체를 가리키지 않는 값(HP, 위치, 턴 행동 기록 등)만 복사한 유닛.
+        /// 소환자, 보호막, 상태는 모든 유닛을 만든 뒤 ForkLinks 로 잇는다.
+        /// </summary>
+        internal Unit Fork()
+        {
+            var copy = new Unit(Id, Team, Stats.Base)
+            {
+                IsSummon = IsSummon,
+                Position = Position,
+            };
+            copy.Stats.RestoreHp(Stats.CurrentHp);
+            copy.TurnState.Restore(TurnState.ActionsEnded, TurnState.VoluntaryCellsMoved, TurnState.BasicAttackUsed, TurnState.UsedSkillIds);
+            copy._basicAttackStatuses.AddRange(_basicAttackStatuses);
+            return copy;
+        }
+
+        /// <summary>경기 복사 2단계: 원본(original)이 가리키는 유닛/상태를 복사본으로 바꿔 잇는다.</summary>
+        internal void ForkLinks(Unit original, ForkMap map)
+        {
+            SummonOwner = map.Unit(original.SummonOwner);
+
+            foreach (ShieldInstance shield in original.Stats.Shields)
+            {
+                if (shield.Amount > 0)
+                    Stats.SetShield(shield.Id, shield.Amount, map.Unit(shield.Source));
+            }
+
+            foreach (StatusEffect status in original._statuses)
+            {
+                StatusEffect copy = status.Fork(map);
+                map.Add(status, copy);
+                _statuses.Add(copy);
+            }
+        }
+
         /// <summary>소유 플레이어의 턴 시작 시 호출한다.</summary>
         internal void ResetTurnState()
         {

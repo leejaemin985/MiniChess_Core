@@ -67,6 +67,18 @@ namespace MiniChess.Core.State
             Ap = ap ?? throw new ArgumentNullException(nameof(ap));
         }
 
+        /// <summary>경기 복사(GameState.Fork)용: 유닛 목록을 비운 채 나머지 값(AP, 턴 수, 팀 버프)을 복사한 플레이어.</summary>
+        internal PlayerState ForkWithoutUnits()
+        {
+            var copy = new PlayerState(Team, new ApPool(Ap.Max, Ap.Current))
+            {
+                TurnsStarted = TurnsStarted,
+                HasPlaced = HasPlaced,
+            };
+            copy._basicAttackStatuses.AddRange(_basicAttackStatuses);
+            return copy;
+        }
+
         internal void AddUnit(Unit unit)
         {
             if (unit == null) throw new ArgumentNullException(nameof(unit));

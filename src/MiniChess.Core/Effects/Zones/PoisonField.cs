@@ -16,5 +16,7 @@ namespace MiniChess.Core.Effects.Zones
         public PoisonField(FieldZone zone, StatusDefinition poison) : base(zone, poison)
         {
         }
+
+        internal override ZoneCellEffect Fork(FieldZone zone) => new PoisonField(zone, Poison);
     }
 }

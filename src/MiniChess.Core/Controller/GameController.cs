@@ -58,6 +58,20 @@ namespace MiniChess.Core.Controller
             return new GameController(SnapshotRestorer.Restore(config, snapshot)) { IsReadOnly = true };
         }
 
+        /// <summary>
+        /// 명령을 실행해 볼 수 있는 깊은 복사본(봇의 수 읽기 등). 복사본에 무엇을 해도 이 경기는 바뀌지 않는다.
+        /// viewer 를 주면 그 팀에게 숨기는 정보(GameVisibility: 상대 덫, 상대 예약 포격)를 뺀 복사본이라, 그 팀이 알 수 있는 것만으로 결과를 본다.
+        /// 복사본의 이벤트 기록은 비어 있고 무작위 값(점령 보상 선택 등)은 이 경기와 다르게 나온다.
+        /// 스냅샷으로 복원한 경기(Restore)는 효과 동작이 없어 복사할 수 없다.
+        /// </summary>
+        public GameController Fork(Team? viewer = null)
+        {
+            if (IsReadOnly)
+                throw new InvalidOperationException("스냅샷으로 복원한 경기는 효과 동작이 없어 복사해 실행할 수 없다.");
+
+            return new GameController(State.Fork(viewer));
+        }
+
         #region Commands
 
         public GameResponse<PlaceFailReason, PlaceUnitsResult> PlaceUnits(PlaceUnitsRequest request)

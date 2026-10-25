@@ -48,5 +48,19 @@ namespace MiniChess.Core.State
         {
             _progress[team] = value;
         }
+
+        /// <summary>경기 복사(GameState.Fork)용.</summary>
+        internal CaptureState Fork()
+        {
+            var copy = new CaptureState(Tile, Required, active: false)
+            {
+                IsActive = IsActive,
+                CapturedBy = CapturedBy,
+                Reward = Reward,
+            };
+            foreach (KeyValuePair<Team, int> progress in _progress)
+                copy._progress[progress.Key] = progress.Value;
+            return copy;
+        }
     }
 }

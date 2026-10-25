@@ -27,6 +27,8 @@ namespace MiniChess.Core.Effects.Zones
             SingleUse = singleUse;
         }
 
+        internal override ZoneCellEffect Fork(FieldZone zone) => new RootTrap(zone, Damage, Root, SingleUse);
+
         public override CellEnterResult OnEnter(CellEffectContext context)
         {
             if (context.Unit.Team == Zone.OwnerTeam)
