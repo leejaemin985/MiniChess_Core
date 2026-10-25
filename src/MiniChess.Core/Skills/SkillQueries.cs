@@ -36,6 +36,16 @@ namespace MiniChess.Core.Skills
             return state.Skills.Find(skillId).Targeting.GetCandidates(state, caster, chosen).Distinct().ToList();
         }
 
+        /// <summary>사용 가능 여부와 상관없이 스킬의 첫 지정이 닿는 칸(사거리 미리보기). 스킬이 없으면 빈 목록.</summary>
+        public static List<Position> GetReach(GameState state, Unit caster, string skillId)
+        {
+            SkillDefinition skill = state.Skills.Find(skillId);
+            if (skill == null || !skill.IsConfigured)
+                return new List<Position>();
+
+            return skill.Targeting.GetReach(state, caster).Distinct().ToList();
+        }
+
         /// <summary>
         /// 해당 칸을 지정했을 때 효과가 적용될 칸(범위 미리보기). 설정 오류가 있으면 빈 목록.
         /// 회전하는 범위는 회전 버튼을 누를 때마다 rotation 을 바꿔 다시 조회한다.

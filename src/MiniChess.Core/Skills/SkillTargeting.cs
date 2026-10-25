@@ -26,6 +26,28 @@ namespace MiniChess.Core.Skills
             return chosen.Count == 0 ? GetCandidates(state, caster) : Enumerable.Empty<Position>();
         }
 
+        /// <summary>
+        /// 지금 지정할 수 있는지(대상 유무, 사용 가능 여부)와 상관없이 첫 지정이 닿는 칸(사거리 미리보기용).
+        /// 기본은 첫 지정 후보와 같고, 사거리로 지정하는 부품은 사거리 안의 벽 아닌 칸 전부를 돌려준다.
+        /// </summary>
+        public virtual IEnumerable<Position> GetReach(GameState state, Unit caster)
+        {
+            return GetCandidates(state, caster);
+        }
+
+        /// <summary>시전자 칸을 뺀, 시전자 사거리 안의 벽 아닌 칸.</summary>
+        protected static IEnumerable<Position> CellsInRange(GameState state, Unit caster, int range, RangeShape shape)
+        {
+            if (!caster.IsPlaced)
+                yield break;
+
+            foreach (Position position in RangeCalculator.GetPositionsInRange(state.Board, caster.Position.Value, range, shape))
+            {
+                if (!state.Board.GetCell(position).IsWall)
+                    yield return position;
+            }
+        }
+
         public bool IsValid(GameState state, Unit caster, Position target)
         {
             return IsValid(state, caster, new[] { target });

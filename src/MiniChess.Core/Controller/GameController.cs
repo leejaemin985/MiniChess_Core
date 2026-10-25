@@ -322,6 +322,16 @@ namespace MiniChess.Core.Controller
             return SkillQueries.GetValidTargets(State, caster, skillId, chosen ?? Array.Empty<Position>());
         }
 
+        /// <summary>사용 가능 여부와 대상 유무와 상관없이 스킬이 닿는 칸(사거리 미리보기, 스킬 버튼에 마우스를 올렸을 때 등).</summary>
+        public List<Position> GetSkillReach(int unitId, string skillId)
+        {
+            Unit caster = State.FindUnit(unitId);
+            if (caster == null || !caster.IsPlaced)
+                return new List<Position>();
+
+            return SkillQueries.GetReach(State, caster, skillId);
+        }
+
         /// <summary>해당 칸을 지정했을 때 효과가 적용될 칸(범위 미리보기). 회전 범위는 회전할 때마다 다시 조회한다.</summary>
         public IReadOnlyList<Position> GetSkillArea(int unitId, string skillId, Position target, AreaRotation rotation = AreaRotation.R0)
         {

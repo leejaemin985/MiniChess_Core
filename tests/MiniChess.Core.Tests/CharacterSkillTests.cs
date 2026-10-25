@@ -1393,6 +1393,28 @@ namespace MiniChess.Core.Tests
 
         #endregion
 
+        #region Reach
+
+        // 사거리 미리보기: 대상이 없거나 지금 쓸 수 없어도 사거리 안의 벽 아닌 칸 전부(시전자 칸 제외)
+        [Fact]
+        public void SkillReach_IsRangeCells_EvenWithoutTargets()
+        {
+            var (state, u) = Game()
+                .WithMap(".......", ".......", ".......", ".......", ".......", "..#....", ".......")
+                .Place(Team.Player1, 1, 0, With(WarriorPiece.SmashId))
+                .Place(Team.Player2, 6, 6)
+                .Start();
+            var game = new MiniChess.Core.Controller.GameController(state);
+
+            Assert.Empty(game.GetSkillTargets(u[0].Id, WarriorPiece.SmashId));
+            var reach = game.GetSkillReach(u[0].Id, WarriorPiece.SmashId);
+            Assert.Equal(4, reach.Count); // (0,0),(2,0),(0,1),(1,1) — (2,1) 벽, 시전자 칸 제외
+            Assert.DoesNotContain(new Position(2, 1), reach);
+            Assert.DoesNotContain(new Position(1, 0), reach);
+        }
+
+        #endregion
+
         #region Obstacle
 
         // 명세 11.3: 장애물은 이동을 막지만 공격/스킬 사거리는 막지 않는다

@@ -22,6 +22,11 @@ namespace MiniChess.Core.Skills.Targeting
             Require(Range, path, nameof(Range), issues);
         }
 
+        public override IEnumerable<Position> GetReach(GameState state, Unit caster)
+        {
+            return CellsInRange(state, caster, Range.Value, RangeShape.Orthogonal);
+        }
+
         public override IEnumerable<Position> GetCandidates(GameState state, Unit caster)
         {
             if (!caster.IsPlaced)

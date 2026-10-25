@@ -40,6 +40,11 @@ namespace MiniChess.Core.Skills.Targeting
             Require(MaxCells, path, nameof(MaxCells), issues);
         }
 
+        public override IEnumerable<Position> GetReach(GameState state, Unit caster)
+        {
+            return _unitTargeting.GetReach(state, caster);
+        }
+
         public override IEnumerable<Position> GetCandidates(GameState state, Unit caster)
         {
             return _unitTargeting.GetCandidates(state, caster);

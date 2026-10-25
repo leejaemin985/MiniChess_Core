@@ -69,6 +69,15 @@ namespace MiniChess.Core.Skills.Targeting
             }
         }
 
+        public override IEnumerable<Position> GetReach(GameState state, Unit caster)
+        {
+            if (IncludeCasterCell && caster.IsPlaced)
+                yield return caster.Position.Value;
+
+            foreach (Position position in CellsInRange(state, caster, Range.Value, Shape))
+                yield return position;
+        }
+
         private bool CanPlaceLayer(GameState state, Position position)
         {
             return PlaceableLayer == null
