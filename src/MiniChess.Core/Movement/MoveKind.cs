@@ -9,7 +9,7 @@ namespace MiniChess.Core.Movement
         /// <summary>기본 경로 이동. 직교 직선, 칸당 AP.</summary>
         Path,
 
-        /// <summary>돌진. 전투 행동을 포함하는 특수 이동.</summary>
+        /// <summary>돌진. 공격을 포함하는 특수 이동.</summary>
         Dash,
 
         /// <summary>위치 교환.</summary>

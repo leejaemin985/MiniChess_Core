@@ -6,7 +6,6 @@ using MiniChess.Core.Skills;
 using MiniChess.Core.Skills.Areas;
 using MiniChess.Core.State;
 using MiniChess.Core.Statuses;
-using MiniChess.Core.Turns;
 
 namespace MiniChess.Core.Actions
 {
@@ -67,8 +66,8 @@ namespace MiniChess.Core.Actions
             if (skill == null) return SkillFailReason.SkillNotOwned;
             if (!skill.IsConfigured) return SkillFailReason.ConfigMissing;
 
-            SkillFailReason turnReason = CheckTurnState(state, caster, skill);
-            if (turnReason != SkillFailReason.None) return turnReason;
+            if (caster.TurnState.ActionsEnded) return SkillFailReason.ActionsEnded;
+            if (caster.TurnState.HasUsedSkill(skillId)) return SkillFailReason.AlreadyUsedThisTurn;
 
             if (StatusSystem.BlocksSkillUse(state, caster)) return SkillFailReason.BlockedByStatus;
 
@@ -96,8 +95,6 @@ namespace MiniChess.Core.Actions
             state.Events.Record(new SkillUsedEvent(Caster.Id, skill.Id, Targets, Rotation, affectedCells));
 
             state.GetPlayer(Caster.Team).Ap.TrySpend(skill.ApCost.Value);
-            if (skill.ActionKind != SkillActionKind.Movement)
-                Caster.TurnState.MarkCombatActionUsed();
             Caster.TurnState.MarkSkillUsed(skill.Id);
 
             SkillEffect.ApplyAll(skill.Effects, new SkillContext(state, Caster, skill, Targets, affectedCells));
@@ -106,17 +103,6 @@ namespace MiniChess.Core.Actions
                 Caster.TurnState.EndActions();
 
             return new SkillResult(Caster, skill, Targets, Rotation, affectedCells, state.Events.Since(eventStart));
-        }
-
-        private static SkillFailReason CheckTurnState(GameState state, Unit caster, SkillDefinition skill)
-        {
-            if (caster.TurnState.ActionsEnded) return SkillFailReason.ActionsEnded;
-            if (TurnActionRules.IsSkillUsedUp(state, caster, skill.Id)) return SkillFailReason.AlreadyUsedThisTurn;
-
-            if (skill.ActionKind == SkillActionKind.Movement)
-                return TurnActionRules.IsVoluntaryMoveLocked(state, caster) ? SkillFailReason.MoveLocked : SkillFailReason.None;
-
-            return TurnActionRules.IsCombatLocked(state, caster) ? SkillFailReason.AlreadyActed : SkillFailReason.None;
         }
     }
 }

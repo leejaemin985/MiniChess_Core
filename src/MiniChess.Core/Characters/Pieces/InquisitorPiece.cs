@@ -37,7 +37,7 @@ namespace MiniChess.Core.Characters.Pieces
         public static SkillDefinition Purify(PurifyTuning t)
         {
             return new SkillDefinition(
-                PurifyId, "정화", t.ApCost, SkillActionKind.Combat,
+                PurifyId, "정화", t.ApCost,
                 new UnitTargeting(TargetFilter.AllyOrSelf, t.Range),
                 PatternArea.SingleCell,
                 new SkillEffect[] { new CleanseEffect(TargetFilter.AllyOrSelf) });
@@ -50,7 +50,7 @@ namespace MiniChess.Core.Characters.Pieces
         public static SkillDefinition Judgment(JudgmentTuning t)
         {
             return new SkillDefinition(
-                JudgmentId, "심판", t.ApCost, SkillActionKind.Combat,
+                JudgmentId, "심판", t.ApCost,
                 new UnitTargeting(TargetFilter.Enemy, t.Range),
                 PatternArea.SingleCell,
                 new SkillEffect[]

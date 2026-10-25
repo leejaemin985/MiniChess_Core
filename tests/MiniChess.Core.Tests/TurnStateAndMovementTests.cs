@@ -12,7 +12,7 @@ namespace MiniChess.Core.Tests
     public class TurnStateAndMovementTests
     {
         [Fact]
-        public void Attack_SetsCombatActionUsedAndVoluntaryMoveLock()
+        public void Attack_MarksBasicAttackUsed_AndMoveStaysAllowed()
         {
             var (state, u) = new TestGame()
                 .Place(Team.Player1, 0, 0)
@@ -21,16 +21,16 @@ namespace MiniChess.Core.Tests
 
             new AttackAction(u[0], u[1]).Execute(state);
 
-            Assert.True(u[0].TurnState.CombatActionUsed);
-            Assert.True(u[0].TurnState.VoluntaryMoveLocked);
+            Assert.True(u[0].TurnState.BasicAttackUsed);
+            Assert.Equal(MoveFailReason.None, new MoveAction(u[0], new Position(1, 0)).Validate(state));
         }
 
-        // 명세 14: "A 공격 후 B가 A를 워프" → 외부 이동은 허용, A의 전투 행동은 회복되지 않음
+        // 명세 14: "A 공격 후 B가 A를 워프" → 외부 이동은 허용, A의 기본 공격 기록은 회복되지 않음
         [Theory]
         [InlineData(MoveKind.Warp)]
         [InlineData(MoveKind.Knockback)]
         [InlineData(MoveKind.Pull)]
-        public void ExternalMove_AfterAttack_IsAllowed_AndDoesNotRestoreCombatAction(MoveKind kind)
+        public void ExternalMove_AfterAttack_IsAllowed_AndDoesNotRestoreBasicAttack(MoveKind kind)
         {
             var (state, u) = new TestGame()
                 .Place(Team.Player1, 0, 0)
@@ -44,13 +44,12 @@ namespace MiniChess.Core.Tests
             MovementResolver.Resolve(state, u[0], u[2], kind, new[] { new Position(1, 0) });
 
             Assert.Equal(new Position(1, 0), u[0].Position);
-            Assert.True(u[0].TurnState.CombatActionUsed);
-            Assert.Equal(AttackFailReason.AlreadyActed, new AttackAction(u[0], u[1]).Validate(state));
-            Assert.Equal(MoveFailReason.AlreadyActed, new MoveAction(u[0], new Position(2, 0)).Validate(state));
+            Assert.True(u[0].TurnState.BasicAttackUsed);
+            Assert.Equal(AttackFailReason.AlreadyUsedThisTurn, new AttackAction(u[0], u[1]).Validate(state));
         }
 
         [Fact]
-        public void VoluntaryWarpOfSelf_AfterAttack_IsBlocked()
+        public void VoluntaryWarpOfSelf_AfterAttack_IsAllowed()
         {
             var (state, u) = new TestGame()
                 .Place(Team.Player1, 0, 0)
@@ -58,7 +57,7 @@ namespace MiniChess.Core.Tests
                 .Start();
             new AttackAction(u[0], u[1]).Execute(state);
 
-            Assert.Equal(MoveBlockReason.VoluntaryMoveLocked, MovementControl.Check(state, u[0], u[0], MoveKind.Warp, 1));
+            Assert.Equal(MoveBlockReason.None, MovementControl.Check(state, u[0], u[0], MoveKind.Warp, 1));
         }
 
         [Fact]

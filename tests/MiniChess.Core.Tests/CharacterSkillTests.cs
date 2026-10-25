@@ -474,7 +474,7 @@ namespace MiniChess.Core.Tests
         #region Shield
 
         [Fact]
-        public void SingleShield_ShieldsAlly_SpendsAp_AndUsesCombatAction()
+        public void SingleShield_ShieldsAlly_SpendsAp_AndMarksSkillUsed()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 1, 1, With(GardenerPiece.SingleShieldId))
@@ -487,7 +487,7 @@ namespace MiniChess.Core.Tests
             Assert.Equal(3, u[1].Stats.FindShield(GardenerPiece.SingleShieldId).Amount);
             Assert.Same(u[0], u[1].Stats.FindShield(GardenerPiece.SingleShieldId).Source);
             Assert.Equal(1, state.GetPlayer(Team.Player1).Ap.Current);
-            Assert.True(u[0].TurnState.CombatActionUsed);
+            Assert.True(u[0].TurnState.HasUsedSkill(GardenerPiece.SingleShieldId));
         }
 
         [Fact]
@@ -616,9 +616,10 @@ namespace MiniChess.Core.Tests
         #region Dash
 
         [Fact]
-        public void Dash_MovesStraight_ThenHitsOnlyTheEnemyDirectlyAhead()
+        public void Dash_MovesStraight_ThenHitsOnlyTheEnemyDirectlyAhead_AndBasicAttackStaysAvailable()
         {
             var (state, u) = Game()
+                .WithRules(r => { r.Ap.MaxAp = 12; r.Ap.StartAp = 12; })
                 .Place(Team.Player1, 0, 0, With(WarriorPiece.DashId))
                 .Place(Team.Player2, 0, 4) // 전방
                 .Place(Team.Player2, 1, 4) // 대각선 앞
@@ -629,7 +630,7 @@ namespace MiniChess.Core.Tests
             Assert.Equal(new Position(0, 3), u[0].Position);
             Assert.Equal(7, u[1].Stats.CurrentHp);
             Assert.Equal(10, u[2].Stats.CurrentHp);
-            Assert.Equal(AttackFailReason.AlreadyActed, new AttackAction(u[0], u[1]).Validate(state));
+            Assert.Equal(AttackFailReason.None, new AttackAction(u[0], u[1]).Validate(state));
         }
 
         [Fact]
@@ -1057,9 +1058,9 @@ namespace MiniChess.Core.Tests
             Assert.Empty(done);
         }
 
-        // 명세 11.2: 이미 공격한 아군도 옮길 수 있고(이동 잠금 예외), 전투 행동은 회복되지 않는다
+        // 명세 11.2: 이미 공격한 아군도 옮길 수 있고, 쓴 기본 공격은 회복되지 않는다
         [Fact]
-        public void Warp_MovesAllyThatAlreadyAttacked_WithoutRestoringItsCombatAction()
+        public void Warp_MovesAllyThatAlreadyAttacked_WithoutRestoringItsBasicAttack()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 0, 0, With(SeamstressPiece.WarpId))
@@ -1072,7 +1073,7 @@ namespace MiniChess.Core.Tests
             Warp(u[0], (1, 1), (1, 2)).Execute(state);
 
             Assert.Equal(new Position(1, 2), u[1].Position);
-            Assert.Equal(AttackFailReason.AlreadyActed, new AttackAction(u[1], u[2]).Validate(state));
+            Assert.Equal(AttackFailReason.AlreadyUsedThisTurn, new AttackAction(u[1], u[2]).Validate(state));
         }
 
         [Fact]
@@ -1208,7 +1209,7 @@ namespace MiniChess.Core.Tests
             Hit(state, u[0], 1); // 보호막 2 → 1
             EndTurn(state); // 착탄
 
-            Assert.False(u[0].TurnState.CombatActionUsed); // 착탄은 행동이 아니다
+            Assert.Empty(u[0].TurnState.UsedSkillIds); // 착탄은 행동이 아니다
             Assert.Equal(SkillFailReason.None, Check(state, u[0], MortarPiece.BombardId, 4, 4));
             Assert.Equal(SkillFailReason.None, Check(state, u[0], MortarPiece.UninstallId, 0, 0));
             Assert.Equal(SkillFailReason.ConditionNotMet, Check(state, u[0], MortarPiece.ShockShellId, 1, 1));
@@ -1276,11 +1277,12 @@ namespace MiniChess.Core.Tests
 
         #region Mortar - Uninstall
 
-        // 사용자 확정: 해체는 설치 중에만 가능한 전투 행동. 설치와 보호막이 사라지고, 다음 턴부터 이동/충격탄 가능
+        // 사용자 확정: 해체는 설치 중에만 가능. 설치와 보호막이 사라지고, 해체한 턴에도 이동/충격탄 가능
         [Fact]
-        public void Uninstall_RemovesInstallAndShield_AsCombatAction()
+        public void Uninstall_RemovesInstallAndShield_ThenMoveAndShockShellAreAllowed()
         {
             var (state, u) = Game()
+                .WithRules(r => { r.Ap.MaxAp = 12; r.Ap.StartAp = 12; })
                 .Place(Team.Player1, 0, 0, Mortar())
                 .Place(Team.Player2, 1, 2)
                 .Start();
@@ -1293,8 +1295,8 @@ namespace MiniChess.Core.Tests
             Use(state, u[0], MortarPiece.UninstallId, 0, 0);
             Assert.Null(u[0].FindStatus(StatusLibrary.InstalledId));
             Assert.Equal(0, u[0].Stats.Shield);
-            Assert.Equal(SkillFailReason.AlreadyActed, Check(state, u[0], MortarPiece.ShockShellId, 1, 2));
-            Assert.Equal(MoveFailReason.AlreadyActed, new MoveAction(u[0], new Position(0, 1)).Validate(state));
+            Assert.Equal(SkillFailReason.None, Check(state, u[0], MortarPiece.ShockShellId, 1, 2));
+            Assert.Equal(MoveFailReason.None, new MoveAction(u[0], new Position(0, 1)).Validate(state));
 
             EndTurn(state);
             EndTurn(state);
@@ -1439,7 +1441,7 @@ namespace MiniChess.Core.Tests
             Assert.Equal(SkillFailReason.None, Check(state, u[2], WarriorPiece.DashId, 0, 3));
         }
 
-        // 사용자 확정: 양 팀 모두 기본 공격 1회로 부술 수 있고, AP 와 전투 행동을 쓴다
+        // 사용자 확정: 양 팀 모두 기본 공격 1회로 부술 수 있고, AP 와 그 턴의 기본 공격을 쓴다
         [Fact]
         public void Obstacle_IsDestroyedByOneBasicAttack_FromEitherTeam()
         {
@@ -1459,7 +1461,7 @@ namespace MiniChess.Core.Tests
             Assert.True(result.Destroyed);
             Assert.False(state.Board.GetCell(new Position(0, 2)).HasObstacle);
             Assert.Equal(apBefore - 2, state.CurrentPlayer.Ap.Current);
-            Assert.Equal(AttackFailReason.AlreadyActed, new AttackAction(u[2], u[1]).Validate(state));
+            Assert.Equal(AttackFailReason.AlreadyUsedThisTurn, new AttackAction(u[2], u[1]).Validate(state)); // 장애물 공격도 기본 공격
         }
 
         [Fact]
@@ -1783,9 +1785,9 @@ namespace MiniChess.Core.Tests
             Assert.Equal(AttackFailReason.None, new AttackAction(u[0], u[1]).Validate(state));
         }
 
-        // 명세 4.4: 공격/스킬 후에는 교환 불가, 소환 직후 행동 불능을 교환으로 우회 불가
+        // 명세 4.4: 소환 직후 행동 불능을 교환으로 우회 불가. 공격 후에는 교환할 수 있다
         [Fact]
-        public void CloneSwap_NotOnSummonTurn_NorAfterAttacking()
+        public void CloneSwap_NotOnSummonTurn_ButAllowedAfterAttacking()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 3, 0, ScytheWithSwap())
@@ -1799,7 +1801,7 @@ namespace MiniChess.Core.Tests
             EndTurn(state);
             new AttackAction(u[0], u[1]).Execute(state);
 
-            Assert.Equal(SkillFailReason.MoveLocked, Check(state, u[0], ScythePiece.CloneSwapId, 3, 1));
+            Assert.Equal(SkillFailReason.None, Check(state, u[0], ScythePiece.CloneSwapId, 3, 1));
         }
 
         [Fact]
@@ -1826,7 +1828,7 @@ namespace MiniChess.Core.Tests
         private static UnitBaseStats Assassin() =>
             TestGame.Stats("assassin", hp: 9, attack: 4, range: 1, skills: new[] { AssassinPiece.LeapId, AssassinPiece.ChargeId });
 
-        // 사용자 확정: 사거리 4 안의 빈 칸으로 순간이동(벽/유닛을 넘음), 이동 계열이라 도약 후 기본 공격 가능
+        // 사용자 확정: 사거리 4 안의 빈 칸으로 순간이동(벽/유닛을 넘음), 도약 후 기본 공격 가능
         [Fact]
         public void Leap_TeleportsOverWallsToEmptyCellInRange_ThenCanAttack()
         {
@@ -1845,16 +1847,16 @@ namespace MiniChess.Core.Tests
 
             Assert.Equal(new Position(2, 3), u[0].Position);
             Assert.Equal(MoveKind.Warp, result.Events.OfType<UnitMovedEvent>().Single().Kind);
-            Assert.False(u[0].TurnState.CombatActionUsed);
 
             new AttackAction(u[0], u[1]).Execute(state);
             Assert.Equal(6, u[1].Stats.CurrentHp);
         }
 
         [Fact]
-        public void Leap_IsBlockedWhenRooted_OrAfterCombatAction()
+        public void Leap_IsBlockedWhenRooted_ButAllowedAfterAttack()
         {
             var (state, u) = Game()
+                .WithRules(r => { r.Ap.MaxAp = 12; r.Ap.StartAp = 12; })
                 .Place(Team.Player1, 0, 0, Assassin())
                 .Place(Team.Player1, 6, 0, Assassin())
                 .Place(Team.Player2, 6, 1)
@@ -1864,7 +1866,7 @@ namespace MiniChess.Core.Tests
             Assert.Equal(SkillFailReason.ConditionNotMet, Check(state, u[0], AssassinPiece.LeapId, 2, 2));
 
             new AttackAction(u[1], u[2]).Execute(state);
-            Assert.Equal(SkillFailReason.MoveLocked, Check(state, u[1], AssassinPiece.LeapId, 4, 2));
+            Assert.Equal(SkillFailReason.None, Check(state, u[1], AssassinPiece.LeapId, 4, 2));
         }
 
         // 사용자 확정: 차징 후 다음 내 턴의 기본 공격에 추가 피해. 보호막/호위 없는 궁수(체력 8)는 한 번에 쓰러진다
@@ -1879,7 +1881,7 @@ namespace MiniChess.Core.Tests
 
             Use(state, u[0], AssassinPiece.ChargeId, 3, 3);
             Assert.NotNull(u[0].FindStatus(StatusLibrary.ChargedId));
-            Assert.Equal(AttackFailReason.AlreadyActed, new AttackAction(u[0], u[1]).Validate(state)); // 차징은 전투 행동
+            Assert.Equal(AttackFailReason.None, new AttackAction(u[0], u[1]).Validate(state)); // 차징한 턴에도 기본 공격 가능
 
             EndTurn(state);
             EndTurn(state);

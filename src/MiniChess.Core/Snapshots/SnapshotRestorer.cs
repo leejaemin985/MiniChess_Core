@@ -71,8 +71,7 @@ namespace MiniChess.Core.Snapshots
 
                 var unit = new Unit(value.Id, value.Team, stats) { IsSummon = value.IsSummon };
                 unit.Stats.RestoreHp(value.Hp);
-                unit.TurnState.Restore(value.CombatActionUsed, value.VoluntaryMoveLocked, value.ActionsEnded, value.VoluntaryCellsMoved,
-                    value.BasicAttackUsed, value.UsedSkillIds);
+                unit.TurnState.Restore(value.ActionsEnded, value.VoluntaryCellsMoved, value.BasicAttackUsed, value.UsedSkillIds);
                 state.RestoreUnit(unit);
 
                 if (value.Position.HasValue && !state.Board.TrySpawn(unit, value.Position.Value))

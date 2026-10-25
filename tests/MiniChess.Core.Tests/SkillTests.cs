@@ -27,7 +27,7 @@ namespace MiniChess.Core.Tests
         private static SkillDefinition StrikeSkill(int? apCost = 3, int? damage = 5, int? range = 1)
         {
             return new SkillDefinition(
-                Strike, "test strike", apCost, SkillActionKind.Combat,
+                Strike, "test strike", apCost,
                 new UnitTargeting(TargetFilter.Enemy, range),
                 PatternArea.SingleCell,
                 new SkillEffect[] { new DamageEffect(damage) });
@@ -38,7 +38,7 @@ namespace MiniChess.Core.Tests
         #region Basic use
 
         [Fact]
-        public void CombatSkill_DealsDamage_SpendsAp_AndUsesCombatAction()
+        public void Skill_DealsDamage_SpendsAp_AndMarksSkillUsed()
         {
             var (state, u) = new TestGame()
                 .WithSkills(StrikeSkill())
@@ -50,7 +50,7 @@ namespace MiniChess.Core.Tests
 
             Assert.Equal(5, u[1].Stats.CurrentHp);
             Assert.Equal(1, state.GetPlayer(Team.Player1).Ap.Current);
-            Assert.True(u[0].TurnState.CombatActionUsed);
+            Assert.True(u[0].TurnState.HasUsedSkill(Strike));
             Assert.IsType<SkillUsedEvent>(result.Events[0]);
             Assert.Contains(result.Events, e => e is UnitDamagedEvent d && d.SourceId == u[0].Id);
         }
@@ -155,7 +155,7 @@ namespace MiniChess.Core.Tests
         }
 
         [Fact]
-        public void SkillThenMove_IsRejected()
+        public void SkillThenMove_IsAllowed()
         {
             var (state, u) = new TestGame()
                 .WithSkills(StrikeSkill(apCost: 1))
@@ -165,13 +165,14 @@ namespace MiniChess.Core.Tests
 
             new UseSkillAction(u[0], Strike, new Position(0, 1)).Execute(state);
 
-            Assert.Equal(MoveFailReason.AlreadyActed, new MoveAction(u[0], new Position(1, 0)).Validate(state));
+            Assert.Equal(MoveFailReason.None, new MoveAction(u[0], new Position(1, 0)).Validate(state));
         }
 
         [Fact]
-        public void AttackThenSkill_AndSkillThenAttack_AreRejected()
+        public void AttackThenSkill_AndSkillThenAttack_AreAllowed()
         {
             var (state, u) = new TestGame()
+                .WithRules(r => { r.Ap.MaxAp = 12; r.Ap.StartAp = 12; })
                 .WithSkills(StrikeSkill(apCost: 1))
                 .Place(Team.Player1, 0, 0, Caster(Strike))
                 .Place(Team.Player1, 6, 0, Caster(Strike))
@@ -180,35 +181,10 @@ namespace MiniChess.Core.Tests
                 .Start();
 
             new AttackAction(u[0], u[2]).Execute(state);
-            Assert.Equal(SkillFailReason.AlreadyActed, new UseSkillAction(u[0], Strike, new Position(0, 1)).Validate(state));
+            Assert.Equal(SkillFailReason.None, new UseSkillAction(u[0], Strike, new Position(0, 1)).Validate(state));
 
             new UseSkillAction(u[1], Strike, new Position(6, 1)).Execute(state);
-            Assert.Equal(AttackFailReason.AlreadyActed, new AttackAction(u[1], u[3]).Validate(state));
-        }
-
-        [Fact]
-        public void MovementSkill_DoesNotUseCombatAction_AndIsBlockedAfterCombat()
-        {
-            const string swap = "SWAP_LIKE";
-            var movementSkill = new SkillDefinition(
-                swap, "movement-like", 1, SkillActionKind.Movement,
-                new SelfTargeting(), PatternArea.SingleCell, Array.Empty<SkillEffect>());
-            var (state, u) = new TestGame()
-                .WithSkills(movementSkill)
-                .Place(Team.Player1, 0, 0, Caster(swap))
-                .Place(Team.Player1, 6, 0, Caster(swap))
-                .Place(Team.Player2, 0, 1, TestGame.Stats(hp: 20))
-                .Place(Team.Player2, 6, 1, TestGame.Stats(hp: 20))
-                .Start();
-
-            // 이동 계열 사용 후 공격 가능 (낫: 분신 교환 후 공격 허용)
-            new UseSkillAction(u[0], swap, new Position(0, 0)).Execute(state);
-            Assert.False(u[0].TurnState.CombatActionUsed);
-            Assert.Equal(AttackFailReason.None, new AttackAction(u[0], u[2]).Validate(state));
-
-            // 공격 후 이동 계열 사용 불가 (낫: 본체 공격 후 분신 교환 거부)
-            new AttackAction(u[1], u[3]).Execute(state);
-            Assert.Equal(SkillFailReason.MoveLocked, new UseSkillAction(u[1], swap, new Position(6, 0)).Validate(state));
+            Assert.Equal(AttackFailReason.None, new AttackAction(u[1], u[3]).Validate(state));
         }
 
         // 명세 14: "낫이 분신 소환 후 본체 이동/공격/교환" → 모두 거부
@@ -217,7 +193,7 @@ namespace MiniChess.Core.Tests
         {
             const string summon = "SUMMON_LIKE";
             var summonSkill = new SkillDefinition(
-                summon, "summon-like", 1, SkillActionKind.Combat,
+                summon, "summon-like", 1,
                 new CellTargeting(1, CellRequirement.Empty, RangeShape.Orthogonal), PatternArea.SingleCell,
                 Array.Empty<SkillEffect>(), endsCasterActions: true);
             var (state, u) = new TestGame()
@@ -238,7 +214,7 @@ namespace MiniChess.Core.Tests
         {
             const string conditional = "CONDITIONAL";
             var skill = new SkillDefinition(
-                conditional, "conditional", 1, SkillActionKind.Combat,
+                conditional, "conditional", 1,
                 new SelfTargeting(), PatternArea.SingleCell, Array.Empty<SkillEffect>(),
                 new SkillCondition[] { new NeverCondition() });
             var (state, u) = new TestGame().WithSkills(skill).Place(Team.Player1, 0, 0, Caster(conditional)).Start();
@@ -255,7 +231,7 @@ namespace MiniChess.Core.Tests
         {
             const string summon = "SUMMON_LIKE";
             var skill = new SkillDefinition(
-                summon, "summon-like", 1, SkillActionKind.Combat,
+                summon, "summon-like", 1,
                 new CellTargeting(1, CellRequirement.Empty, RangeShape.Orthogonal), PatternArea.SingleCell,
                 Array.Empty<SkillEffect>());
             var (state, u) = new TestGame()
@@ -275,7 +251,7 @@ namespace MiniChess.Core.Tests
         {
             const string blast = "BLAST";
             var skill = new SkillDefinition(
-                blast, "blast", 2, SkillActionKind.Combat,
+                blast, "blast", 2,
                 new CellTargeting(3, CellRequirement.NotWall), Square3x3,
                 new SkillEffect[] { new DamageEffect(2) });
             var (state, u) = new TestGame()
@@ -300,7 +276,7 @@ namespace MiniChess.Core.Tests
             var status = new StatusDefinition("rooted", 1, StatusStackPolicy.Refresh,
                 new StatusTiming(TurnStep.EndDurationTick, TimingOwner.TargetOwner, false));
             var skill = new SkillDefinition(
-                root, "root", 1, SkillActionKind.Combat,
+                root, "root", 1,
                 new UnitTargeting(TargetFilter.Enemy, 2), PatternArea.SingleCell,
                 new SkillEffect[] { new ApplyStatusEffect(status) });
             var (state, u) = new TestGame()
@@ -321,7 +297,7 @@ namespace MiniChess.Core.Tests
             const string traps = "TRAPS";
             StatusDefinition root = Statuses.Library.StatusLibrary.Root(targetTurns: 1, blocksExternalMoves: false);
             var skill = new SkillDefinition(
-                traps, "traps", 1, SkillActionKind.Combat,
+                traps, "traps", 1,
                 new CellTargeting(3, CellRequirement.NotWall), Square3x3,
                 new SkillEffect[] { new PlaceZoneEffect(2, (zone, p) => new RootTrap(zone, 0, root, singleUse: true)) });
             var (state, u) = new TestGame()

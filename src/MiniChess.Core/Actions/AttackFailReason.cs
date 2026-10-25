@@ -15,9 +15,6 @@ namespace MiniChess.Core.Actions
         /// <summary>공격하는 유닛이 보드 위에 없거나 사망.</summary>
         AttackerNotOnBoard,
 
-        /// <summary>전투 행동 후라 자발적 이동/추가 전투 행동 불가.</summary>
-        AlreadyActed,
-
         /// <summary>대상이 보드 위에 없거나 사망.</summary>
         InvalidTarget,
 
@@ -34,7 +31,7 @@ namespace MiniChess.Core.Actions
         /// <summary>요청 형식이 잘못됨(요청 없음, 존재하지 않는 팀 등).</summary>
         InvalidRequest,
 
-        /// <summary>이번 턴에 이미 기본 공격을 함(TurnActionRuleData.EachActionOncePerTurn).</summary>
+        /// <summary>이번 턴에 이미 기본 공격(장애물 공격 포함)을 함. 기본 공격은 유닛당 턴에 한 번.</summary>
         AlreadyUsedThisTurn,
     }
 }

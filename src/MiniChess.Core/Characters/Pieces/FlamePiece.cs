@@ -47,7 +47,7 @@ namespace MiniChess.Core.Characters.Pieces
             effects.Add(new PlaceZoneEffect(t.Lifetime, (zone, _) => new DamageField(zone, damage.Value)));
 
             return new SkillDefinition(
-                FlameZoneId, "화염지대", t.ApCost, SkillActionKind.Combat,
+                FlameZoneId, "화염지대", t.ApCost,
                 SkillBuildUtil.AreaTargeting(t.Area, t.Range, CellRequirement.NotWall),
                 SkillBuildUtil.Area(t.Area),
                 effects,
@@ -66,7 +66,7 @@ namespace MiniChess.Core.Characters.Pieces
             effects.Add(new ApplyStatusEffect(StatusLibrary.Burn(t.BurnDamage, t.BurnTriggers)));
 
             return new SkillDefinition(
-                CompressedShellId, "압축열탄", t.ApCost, SkillActionKind.Combat,
+                CompressedShellId, "압축열탄", t.ApCost,
                 new UnitTargeting(TargetFilter.Enemy, t.Range),
                 PatternArea.SingleCell,
                 effects,

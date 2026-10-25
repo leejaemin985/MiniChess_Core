@@ -35,7 +35,7 @@ namespace MiniChess.Core.Characters.Pieces
         public static SkillDefinition AimedShot(AimedShotTuning t)
         {
             return new SkillDefinition(
-                AimedShotId, "장거리 조준", t.ApCost, SkillActionKind.Combat,
+                AimedShotId, "장거리 조준", t.ApCost,
                 new UnitTargeting(TargetFilter.Enemy, t.Range),
                 PatternArea.SingleCell,
                 new SkillEffect[] { new DamageEffect(t.Damage) });
@@ -52,7 +52,7 @@ namespace MiniChess.Core.Characters.Pieces
             effects.Add(new ApplyStatusEffect(StatusLibrary.DistanceLimit(t.MaxCells, t.TargetTurns)));
 
             return new SkillDefinition(
-                BolaId, "볼라 투척", t.ApCost, SkillActionKind.Combat,
+                BolaId, "볼라 투척", t.ApCost,
                 new UnitTargeting(TargetFilter.Enemy, t.Range),
                 PatternArea.SingleCell,
                 effects,

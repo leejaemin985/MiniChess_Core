@@ -46,7 +46,7 @@ namespace MiniChess.Core.Characters.Pieces
             bool? singleUse = t.SingleUse;
 
             return new SkillDefinition(
-                RootTrapId, "속박 덫", t.ApCost, SkillActionKind.Combat,
+                RootTrapId, "속박 덫", t.ApCost,
                 new CellTargeting(t.Range, CellRequirement.Empty, placeableLayer: CellEffectLayer.Trap),
                 PatternArea.SingleCell,
                 new SkillEffect[]
@@ -73,7 +73,7 @@ namespace MiniChess.Core.Characters.Pieces
             StatusDefinition poison = StatusLibrary.Poison(t.PoisonDamage, t.PoisonTurns);
 
             return new SkillDefinition(
-                PoisonGasId, "독가스 설치", t.ApCost, SkillActionKind.Combat,
+                PoisonGasId, "독가스 설치", t.ApCost,
                 SkillBuildUtil.AreaTargeting(t.Area, t.Range, CellRequirement.NotWall),
                 SkillBuildUtil.Area(t.Area),
                 new SkillEffect[]

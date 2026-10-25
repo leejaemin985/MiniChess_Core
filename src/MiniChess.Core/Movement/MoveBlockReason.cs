@@ -8,9 +8,6 @@ namespace MiniChess.Core.Movement
         /// <summary>이번 턴 행동이 끝난 유닛의 자발적 이동.</summary>
         ActionsEnded,
 
-        /// <summary>전투 행동 후의 자발적 이동.</summary>
-        VoluntaryMoveLocked,
-
         /// <summary>속박 등 이동 불가 상태.</summary>
         Rooted,
 

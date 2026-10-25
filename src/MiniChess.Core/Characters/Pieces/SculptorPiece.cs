@@ -37,7 +37,7 @@ namespace MiniChess.Core.Characters.Pieces
         public static SkillDefinition Seal(SealTuning t)
         {
             return new SkillDefinition(
-                SealId, "마법석 봉인", t.ApCost, SkillActionKind.Combat,
+                SealId, "마법석 봉인", t.ApCost,
                 new UnitTargeting(TargetFilter.Any, t.Range),
                 PatternArea.SingleCell,
                 new SkillEffect[] { new ApplyStatusEffect(StatusLibrary.Sealed(), TargetFilter.Any) });
@@ -50,7 +50,7 @@ namespace MiniChess.Core.Characters.Pieces
         public static SkillDefinition Correction(CorrectionTuning t)
         {
             return new SkillDefinition(
-                CorrectionId, "자리 교정", t.ApCost, SkillActionKind.Combat,
+                CorrectionId, "자리 교정", t.ApCost,
                 new PushDirectionTargeting(TargetFilter.Enemy, t.Range, t.PushCells),
                 PatternArea.SingleCell,
                 new SkillEffect[]

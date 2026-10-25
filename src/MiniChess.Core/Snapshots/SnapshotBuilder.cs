@@ -29,9 +29,7 @@ namespace MiniChess.Core.Snapshots
                 unit.Stats.Base.SkillIds.ToList(),
                 unit.Stats.Shields.Select(shield => new ShieldSnapshot(shield.Id, shield.Amount)).ToList(),
                 unit.Statuses.Select(Status).ToList(),
-                unit.TurnState.CombatActionUsed,
                 unit.TurnState.ActionsEnded,
-                unit.TurnState.VoluntaryMoveLocked,
                 unit.TurnState.VoluntaryCellsMoved,
                 unit.TurnState.BasicAttackUsed,
                 unit.TurnState.UsedSkillIds.ToList());

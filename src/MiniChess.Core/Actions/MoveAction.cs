@@ -32,7 +32,6 @@ namespace MiniChess.Core.Actions
             switch (MovementControl.Check(state, Unit, Unit, MoveKind.Path, path.Count))
             {
                 case MoveBlockReason.ActionsEnded: return MoveFailReason.ActionsEnded;
-                case MoveBlockReason.VoluntaryMoveLocked: return MoveFailReason.AlreadyActed;
                 case MoveBlockReason.Rooted: return MoveFailReason.Rooted;
                 case MoveBlockReason.DistanceLimited: return MoveFailReason.DistanceLimited;
                 case MoveBlockReason.Installed: return MoveFailReason.Installed;

@@ -38,7 +38,7 @@ namespace MiniChess.Core.Characters.Pieces
         public static SkillDefinition Guard(GuardTuning t)
         {
             return new SkillDefinition(
-                GuardId, "호위", t.ApCost, SkillActionKind.Combat,
+                GuardId, "호위", t.ApCost,
                 new UnitTargeting(TargetFilter.Ally, t.Range),
                 PatternArea.SingleCell,
                 new SkillEffect[] { new ApplyStatusEffect(StatusLibrary.Guard(t.MaxDistance), TargetFilter.Ally) },
@@ -55,7 +55,7 @@ namespace MiniChess.Core.Characters.Pieces
             effects.Add(new ApplyStatusEffect(StatusLibrary.Root(1, root.BlocksExternalMoves)));
 
             return new SkillDefinition(
-                ChainBindId, "사슬 속박", t.ApCost, SkillActionKind.Combat,
+                ChainBindId, "사슬 속박", t.ApCost,
                 new UnitTargeting(TargetFilter.Enemy, t.Range),
                 PatternArea.SingleCell,
                 effects,

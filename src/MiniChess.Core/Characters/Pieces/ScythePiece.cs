@@ -41,14 +41,13 @@ namespace MiniChess.Core.Characters.Pieces
 
         /// <summary>
         /// 분신 교환: 본체가 자신의 분신과 자리를 맞바꾼다(명세 4.4, 사용자 확정: AP 고정, 거리 무제한).
-        /// 스킬 슬롯이 아닌 이동 계열 기능이라 전투 행동을 쓰지 않는다. 교환 후 본체는 공격/스킬을 쓸 수 있고,
-        /// 공격/스킬을 쓴 뒤나 소환 직후(행동 종료)에는 쓸 수 없다. 본체가 속박되면 불가.
+        /// 스킬 슬롯이 아닌 고유 기능이다. 소환 직후(행동 종료)에는 쓸 수 없고, 본체가 속박되면 불가.
         /// 분신 쪽은 본체가 일으킨 외부 이동이며 분신의 행동 기록은 바뀌지 않는다.
         /// </summary>
         public static SkillDefinition CloneSwap(CloneSwapTuning t)
         {
             return new SkillDefinition(
-                CloneSwapId, "분신 교환", t.ApCost, SkillActionKind.Movement,
+                CloneSwapId, "분신 교환", t.ApCost,
                 new OwnSummonTargeting(movedBy: MoveKind.Swap),
                 PatternArea.SingleCell,
                 new SkillEffect[] { new SwapWithCasterEffect() },
@@ -62,7 +61,7 @@ namespace MiniChess.Core.Characters.Pieces
         public static SkillDefinition Slash(SlashTuning t)
         {
             return new SkillDefinition(
-                SlashId, "일자 베기", t.ApCost, SkillActionKind.Combat,
+                SlashId, "일자 베기", t.ApCost,
                 SkillBuildUtil.AreaTargeting(t.Area, t.Range, CellRequirement.NotWall),
                 SkillBuildUtil.Area(t.Area),
                 new SkillEffect[] { new DamageEffect(t.Damage) });
@@ -79,7 +78,7 @@ namespace MiniChess.Core.Characters.Pieces
             StatusDefinition mark = StatusLibrary.CurseMark(t.MarkBonusDamage);
 
             return new SkillDefinition(
-                ShadowCloneId, "그림자 분신", t.ApCost, SkillActionKind.Combat,
+                ShadowCloneId, "그림자 분신", t.ApCost,
                 new CellTargeting(1, CellRequirement.Empty),
                 PatternArea.SingleCell,
                 new SkillEffect[] { new SummonEffect(CloneStats(t), new[] { mark }) },

@@ -36,7 +36,7 @@ namespace MiniChess.Core.Characters.Pieces
         public static SkillDefinition Smash(SmashTuning t)
         {
             return new SkillDefinition(
-                SmashId, "강타", t.ApCost, SkillActionKind.Combat,
+                SmashId, "강타", t.ApCost,
                 new UnitTargeting(TargetFilter.Enemy, 1),
                 PatternArea.SingleCell,
                 new SkillEffect[] { new DamageEffect(t.Damage) });
@@ -46,12 +46,11 @@ namespace MiniChess.Core.Characters.Pieces
         /// 돌진: 제어기의 멈춤을 무시하는 직선 이동 후, 전방 1칸의 적을 공격(명세 7.3, 사용자 확정).
         /// 이동 제약 상태(속박, 이동 거리 제한 등)는 무시하고 쓸 수 있다(사용자 확정). 행동 자체를 막는 상태(봉인, 기절)에서만
         /// 쓸 수 없으며, 이는 스킬 공통 검사(StatusBehavior.BlocksSkillUse)가 막는다.
-        /// 전투 행동이므로 기본 공격과 같은 턴에 함께 쓸 수 없다.
         /// </summary>
         public static SkillDefinition Dash(DashTuning t)
         {
             return new SkillDefinition(
-                DashId, "돌진", t.ApCost, SkillActionKind.Combat,
+                DashId, "돌진", t.ApCost,
                 new StraightMoveTargeting(t.Range),
                 PatternArea.SingleCell,
                 new SkillEffect[]

@@ -40,7 +40,7 @@ namespace MiniChess.Core.Characters.Pieces
         }
 
         /// <summary>
-        /// 포격: 범위를 조준하고 다음 내 턴 시작에 착탄해 범위 안 적에게 장판 피해. 전투 행동이다.
+        /// 포격: 범위를 조준하고 다음 내 턴 시작에 착탄해 범위 안 적에게 장판 피해.
         /// 설치 상태가 아니면 이때 설치되며 보호막을 받는다(이미 설치 중이면 보호막은 다시 받지 않는다).
         /// 설치 중에는 자발적 이동/기본 공격이 막히므로, 착탄한 턴에는 다시 포격하거나 해체만 할 수 있다.
         /// 착탄 위치는 조준한 칸에 고정. 착탄 전에 시전자가 죽으면 예약이 취소된다.
@@ -48,7 +48,7 @@ namespace MiniChess.Core.Characters.Pieces
         public static SkillDefinition Bombard(BombardTuning t)
         {
             return new SkillDefinition(
-                BombardId, "포격", t.ApCost, SkillActionKind.Combat,
+                BombardId, "포격", t.ApCost,
                 SkillBuildUtil.AreaTargeting(t.Area, t.Range, CellRequirement.NotWall),
                 SkillBuildUtil.Area(t.Area),
                 new SkillEffect[]
@@ -62,13 +62,12 @@ namespace MiniChess.Core.Characters.Pieces
         }
 
         /// <summary>
-        /// 해체: 설치 상태를 풀고 설치 보호막을 제거한다. 설치 중에만 보이는 고유 기능이며 전투 행동이다
-        /// (해체한 턴에는 충격탄/이동 불가, 다음 턴부터 가능).
+        /// 해체: 설치 상태를 풀고 설치 보호막을 제거한다. 설치 중에만 보이는 고유 기능이다.
         /// </summary>
         public static SkillDefinition Uninstall(UninstallTuning t)
         {
             return new SkillDefinition(
-                UninstallId, "해체", t.ApCost, SkillActionKind.Combat,
+                UninstallId, "해체", t.ApCost,
                 new SelfTargeting(),
                 PatternArea.SingleCell,
                 new SkillEffect[]
@@ -87,7 +86,7 @@ namespace MiniChess.Core.Characters.Pieces
         public static SkillDefinition ShockShell(ShockShellTuning t)
         {
             return new SkillDefinition(
-                ShockShellId, "충격탄", t.ApCost, SkillActionKind.Combat,
+                ShockShellId, "충격탄", t.ApCost,
                 new UnitTargeting(TargetFilter.Enemy, t.Range),
                 PatternArea.SingleCell,
                 new SkillEffect[]

@@ -35,13 +35,12 @@ namespace MiniChess.Core.Characters.Pieces
 
         /// <summary>
         /// 도약: 사거리 안(대각선 포함)의 빈 칸으로 순간이동한다. 벽/유닛을 넘어간다.
-        /// 이동 계열 기능이라 전투 행동을 쓰지 않아 도약 후 기본 공격/차징이 가능하고, 공격 후에는 쓸 수 없다.
         /// 속박 등 자발적 이동을 막는 상태면 불가. 도착 칸의 덫은 발동한다.
         /// </summary>
         public static SkillDefinition Leap(LeapTuning t)
         {
             return new SkillDefinition(
-                LeapId, "도약", t.ApCost, SkillActionKind.Movement,
+                LeapId, "도약", t.ApCost,
                 new CellTargeting(t.Range, CellRequirement.Empty),
                 PatternArea.SingleCell,
                 new SkillEffect[] { new TeleportEffect() },
@@ -50,12 +49,11 @@ namespace MiniChess.Core.Characters.Pieces
 
         /// <summary>
         /// 차징: 자신에게 차징 상태를 건다. 다음 내 턴 끝까지 첫 기본 공격에 추가 피해를 주고 소모된다(스킬 피해에는 미적용).
-        /// 전투 행동이라 차징한 턴에는 공격할 수 없다.
         /// </summary>
         public static SkillDefinition Charge(ChargeTuning t)
         {
             return new SkillDefinition(
-                ChargeId, "차징", t.ApCost, SkillActionKind.Combat,
+                ChargeId, "차징", t.ApCost,
                 new SelfTargeting(),
                 PatternArea.SingleCell,
                 new SkillEffect[] { new ApplyStatusEffect(StatusLibrary.Charged(t.BonusDamage), TargetFilter.Self) });

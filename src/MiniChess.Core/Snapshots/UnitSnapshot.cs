@@ -34,14 +34,8 @@ namespace MiniChess.Core.Snapshots
         /// <summary>걸린 상태(부여 순).</summary>
         public IReadOnlyList<StatusSnapshot> Statuses { get; }
 
-        /// <summary>이번 턴에 전투 행동(기본 공격/전투 스킬)을 했는지.</summary>
-        public bool CombatActionUsed { get; }
-
         /// <summary>이번 턴에 더 이상 행동할 수 없는지.</summary>
         public bool ActionsEnded { get; }
-
-        /// <summary>이번 턴에 자발적 이동이 금지되었는지(전투 행동 후).</summary>
-        public bool VoluntaryMoveLocked { get; }
 
         /// <summary>이번 턴에 일반 이동으로 움직인 칸 수의 누적(이동 거리 제한 판정용).</summary>
         public int VoluntaryCellsMoved { get; }
@@ -56,13 +50,12 @@ namespace MiniChess.Core.Snapshots
             int id, Team team, string characterId, string name, Position? position,
             int hp, int maxHp, int attack, int attackRange, bool isSummon, int? summonOwnerId,
             IReadOnlyList<string> skillIds, IReadOnlyList<ShieldSnapshot> shields, IReadOnlyList<StatusSnapshot> statuses,
-            bool combatActionUsed, bool actionsEnded, bool voluntaryMoveLocked, int voluntaryCellsMoved,
-            bool basicAttackUsed = false, IReadOnlyList<string> usedSkillIds = null)
+            bool actionsEnded, int voluntaryCellsMoved, bool basicAttackUsed, IReadOnlyList<string> usedSkillIds)
         {
+            ActionsEnded = actionsEnded;
+            VoluntaryCellsMoved = voluntaryCellsMoved;
             BasicAttackUsed = basicAttackUsed;
             UsedSkillIds = usedSkillIds ?? new List<string>();
-            VoluntaryMoveLocked = voluntaryMoveLocked;
-            VoluntaryCellsMoved = voluntaryCellsMoved;
             Id = id;
             Team = team;
             CharacterId = characterId;
@@ -77,8 +70,6 @@ namespace MiniChess.Core.Snapshots
             SkillIds = skillIds;
             Shields = shields;
             Statuses = statuses;
-            CombatActionUsed = combatActionUsed;
-            ActionsEnded = actionsEnded;
         }
     }
 

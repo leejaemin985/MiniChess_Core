@@ -33,7 +33,7 @@ namespace MiniChess.Core.Tests
         private static readonly StatusDefinition Poison = StatusLibrary.Poison(damagePerTrigger: 1, triggers: 2);
 
         private static SkillDefinition PoisonSkill(string id) =>
-            new SkillDefinition(id, id, 1, SkillActionKind.Combat, new UnitTargeting(TargetFilter.Enemy, 6), PatternArea.SingleCell,
+            new SkillDefinition(id, id, 1, new UnitTargeting(TargetFilter.Enemy, 6), PatternArea.SingleCell,
                 new SkillEffect[] { new ApplyStatusEffect(Poison) });
 
         private static TestGame Game() => new TestGame()
@@ -96,7 +96,7 @@ namespace MiniChess.Core.Tests
 
             Use(state, u[0], PoisonA, 3, 3);
             EndTurn(state);
-            EndTurn(state); // 한 유닛은 한 턴에 전투 행동 1회 → 다음 턴에 다른 스킬
+            EndTurn(state);
             Use(state, u[0], PoisonB, 3, 3);
 
             Assert.Equal(new[] { PoisonA, PoisonB }, u[1].Statuses.Select(s => s.OriginId));

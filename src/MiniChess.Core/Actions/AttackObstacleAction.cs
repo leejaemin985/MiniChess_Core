@@ -10,7 +10,7 @@ namespace MiniChess.Core.Actions
 {
     /// <summary>
     /// 기본 공격으로 장애물을 치는 명령. 양 팀 모두 칠 수 있다.
-    /// 검사와 비용은 유닛 기본 공격과 같다(사거리, AP, 전투 행동 1회, 상태효과 차단). 피해량과 무관하게 피격 1회로 센다.
+    /// 검사와 비용은 유닛 기본 공격과 같다(사거리, AP, 턴당 기본 공격 1회, 상태효과 차단). 피해량과 무관하게 피격 1회로 센다.
     /// </summary>
     internal class AttackObstacleAction
     {

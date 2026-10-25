@@ -39,7 +39,7 @@ namespace MiniChess.Core.Characters.Pieces
             int? heal = t.Heal;
 
             return new SkillDefinition(
-                HealingMeadowId, "회복 초원", t.ApCost, SkillActionKind.Combat,
+                HealingMeadowId, "회복 초원", t.ApCost,
                 SkillBuildUtil.AreaTargeting(t.Area, t.Range, CellRequirement.NotWall, includeCasterCell: true),
                 SkillBuildUtil.Area(t.Area),
                 new SkillEffect[]
@@ -56,7 +56,7 @@ namespace MiniChess.Core.Characters.Pieces
         public static SkillDefinition SingleShield(SingleShieldTuning t)
         {
             return new SkillDefinition(
-                SingleShieldId, "단일 보호막", t.ApCost, SkillActionKind.Combat,
+                SingleShieldId, "단일 보호막", t.ApCost,
                 new UnitTargeting(TargetFilter.AllyOrSelf, t.Range),
                 PatternArea.SingleCell,
                 new SkillEffect[] { new ApplyShieldEffect(SingleShieldId, t.Amount, TargetFilter.AllyOrSelf) });

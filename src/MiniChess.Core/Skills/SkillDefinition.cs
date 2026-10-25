@@ -5,7 +5,7 @@ namespace MiniChess.Core.Skills
 {
     /// <summary>
     /// 스킬 정의(데이터). 부품의 조합으로 구성한다.
-    ///   비용(ApCost) + 행동 종류(ActionKind) + 지정 규칙(Targeting) + 범위(Area) + 효과 목록(Effects) + 사용 조건(Conditions)
+    ///   비용(ApCost) + 지정 규칙(Targeting) + 범위(Area) + 효과 목록(Effects) + 사용 조건(Conditions)
     ///   + 필수 수치(RequiredTuning)
     /// 수치가 TBD 인 항목은 null 로 두며, 설정이 비어 있는 스킬은 사용할 수 없다(SkillFailReason.ConfigMissing).
     /// </summary>
@@ -19,7 +19,6 @@ namespace MiniChess.Core.Skills
         /// <summary>AP 비용. [TBD 가능]</summary>
         public int? ApCost { get; }
 
-        public SkillActionKind ActionKind { get; }
         public SkillTargeting Targeting { get; }
         public SkillArea Area { get; }
         public IReadOnlyList<SkillEffect> Effects { get; }
@@ -37,7 +36,6 @@ namespace MiniChess.Core.Skills
             string id,
             string name,
             int? apCost,
-            SkillActionKind actionKind,
             SkillTargeting targeting,
             SkillArea area,
             IReadOnlyList<SkillEffect> effects,
@@ -50,7 +48,6 @@ namespace MiniChess.Core.Skills
             Id = id;
             Name = name;
             ApCost = apCost;
-            ActionKind = actionKind;
             Targeting = targeting ?? throw new ArgumentNullException(nameof(targeting));
             Area = area ?? throw new ArgumentNullException(nameof(area));
             Effects = effects ?? throw new ArgumentNullException(nameof(effects));

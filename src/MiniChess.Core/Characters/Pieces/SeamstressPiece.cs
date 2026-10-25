@@ -46,7 +46,7 @@ namespace MiniChess.Core.Characters.Pieces
             int? hits = t.Hits;
 
             return new SkillDefinition(
-                ObstacleId, "장애물 생성", t.ApCost, SkillActionKind.Combat,
+                ObstacleId, "장애물 생성", t.ApCost,
                 new CellTargeting(t.Range, CellRequirement.Empty, placeableLayer: CellEffectLayer.Obstacle),
                 SkillBuildUtil.Area(t.Area),
                 new SkillEffect[]
@@ -62,13 +62,13 @@ namespace MiniChess.Core.Characters.Pieces
 
         /// <summary>
         /// 실 관문: 마법실로 관문을 열어 사거리 안의 아군 하나(자신 포함)를 사거리 안의 빈 칸으로 순간이동시킨다(사용자 확정, 워프/위치 교환 대체).
-        /// 다른 아군은 외부 이동이라 이미 공격했어도 옮길 수 있고 전투 행동은 회복되지 않으며, 속박 등은 외부 이동 정책을 따른다.
+        /// 다른 아군은 외부 이동이라 행동 기록과 상관없이 옮길 수 있고(행동 기록은 바뀌지 않는다), 속박 등은 외부 이동 정책을 따른다.
         /// 자신을 옮기면 자발적 이동이라 속박 중에는 지정할 수 없다. 도착 칸의 칸 효과는 발동한다.
         /// </summary>
         public static SkillDefinition Warp(WarpTuning t)
         {
             return new SkillDefinition(
-                WarpId, "실 관문", t.ApCost, SkillActionKind.Combat,
+                WarpId, "실 관문", t.ApCost,
                 new UnitToCellTargeting(TargetFilter.AllyOrSelf, t.Range, MoveKind.Warp),
                 PatternArea.SingleCell,
                 new SkillEffect[] { new WarpUnitEffect() });

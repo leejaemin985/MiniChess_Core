@@ -18,7 +18,7 @@ namespace MiniChess.Core.State
         /// <summary>보드에 배치되지 않았으면 null. 변경은 Board 를 통해서만 한다.</summary>
         public Position? Position { get; internal set; }
 
-        /// <summary>자기 소유자의 이번 턴 행동 기록(전투 행동 사용, 이동 잠금 등).</summary>
+        /// <summary>자기 소유자의 이번 턴 행동 기록(쓴 기본 공격/스킬, 행동 종료 등).</summary>
         public UnitTurnState TurnState { get; } = new UnitTurnState();
 
         /// <summary>소환물(분신 등)인지. 점령/전멸 판정에서 다르게 취급된다.</summary>
@@ -42,6 +42,12 @@ namespace MiniChess.Core.State
             Team = team;
             Stats = new UnitStats(baseStats);
         }
+
+        /// <summary>
+        /// 이번 턴에 아직 쓰지 않은 기본 공격이나 스킬이 남아 있는지(행동 종료면 false). AP, 상태효과, 대상 유무는 보지 않는다.
+        /// </summary>
+        public bool HasCombatActionLeft =>
+            !TurnState.ActionsEnded && (!TurnState.BasicAttackUsed || Stats.Base.SkillIds.Any(id => !TurnState.HasUsedSkill(id)));
 
         public bool HasSkill(string skillId)
         {

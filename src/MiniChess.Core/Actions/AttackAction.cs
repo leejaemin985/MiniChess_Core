@@ -7,7 +7,6 @@ using MiniChess.Core.Events;
 using MiniChess.Core.Skills;
 using MiniChess.Core.State;
 using MiniChess.Core.Statuses;
-using MiniChess.Core.Turns;
 
 namespace MiniChess.Core.Actions
 {
@@ -81,8 +80,7 @@ namespace MiniChess.Core.Actions
             if (attacker.Team != state.CurrentTeam) return AttackFailReason.NotYourTurn;
             if (!attacker.IsOnBoard) return AttackFailReason.AttackerNotOnBoard;
             if (attacker.TurnState.ActionsEnded) return AttackFailReason.ActionsEnded;
-            if (TurnActionRules.IsCombatLocked(state, attacker)) return AttackFailReason.AlreadyActed;
-            if (TurnActionRules.IsBasicAttackUsedUp(state, attacker)) return AttackFailReason.AlreadyUsedThisTurn;
+            if (attacker.TurnState.BasicAttackUsed) return AttackFailReason.AlreadyUsedThisTurn;
             if (StatusSystem.BlocksBasicAttack(state, attacker)) return AttackFailReason.BlockedByStatus;
 
             return AttackFailReason.None;
@@ -100,11 +98,10 @@ namespace MiniChess.Core.Actions
             return AttackFailReason.None;
         }
 
-        /// <summary>기본 공격 비용(AP, 전투 행동)을 치른다. 장애물 공격과 공용.</summary>
+        /// <summary>기본 공격 비용(AP, 이번 턴 기본 공격 사용)을 치른다. 장애물 공격과 공용.</summary>
         internal static void PayCost(GameState state, Unit attacker)
         {
             state.GetPlayer(attacker.Team).Ap.TrySpend(state.Rules.ActionCost.BasicAttackCost);
-            attacker.TurnState.MarkCombatActionUsed();
             attacker.TurnState.MarkBasicAttackUsed();
         }
 
