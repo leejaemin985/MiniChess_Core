@@ -142,10 +142,10 @@ namespace MiniChess.Core.Snapshots
         {
             foreach (StrikeSnapshot value in snapshot.Strikes)
             {
-                Unit source = Find(state, value.SourceId)
-                    ?? throw new ArgumentException($"포격 {value.Id} 의 시전자 {value.SourceId} 가 스냅샷에 없음");
+                // 착탄 전에 시전자가 죽어도 포격은 남는다. 스냅샷에는 살아 있는 유닛만 있으므로 그때는 시전자 없이 복원한다.
+                Unit source = Find(state, value.SourceId);
 
-                var strike = new ScheduledStrike(value.SkillId, source, value.Cells.ToList(), value.Damage, value.ScheduledTurnNumber)
+                var strike = new ScheduledStrike(value.SkillId, source, value.SourceId, value.SourceTeam, value.Cells.ToList(), value.Damage, value.ScheduledTurnNumber)
                 {
                     Id = value.Id,
                 };

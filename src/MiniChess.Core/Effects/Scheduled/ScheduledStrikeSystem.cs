@@ -30,7 +30,7 @@ namespace MiniChess.Core.Effects.Scheduled
 
             GameState state = context.State;
             var due = state.ScheduledStrikes
-                .Where(s => s.Source.Team == context.ActiveTeam && s.ScheduledTurnNumber != state.TurnNumber)
+                .Where(s => s.SourceTeam == context.ActiveTeam && s.ScheduledTurnNumber != state.TurnNumber)
                 .ToList();
 
             foreach (ScheduledStrike strike in due)

@@ -28,7 +28,7 @@ namespace MiniChess.Core.Snapshots
         /// <summary>viewer 에게 숨기는 예약 포격인지(상대 포격의 조준 칸).</summary>
         public static bool IsHidden(ScheduledStrike strike, Team viewer)
         {
-            return IsHiddenStrike(strike.Source.Team, viewer);
+            return IsHiddenStrike(strike.SourceTeam, viewer);
         }
 
         /// <summary>viewer 에게 숨기는 예약 포격인지(팀으로 판정).</summary>

@@ -62,7 +62,7 @@ namespace MiniChess.Core.Snapshots
         public static StrikeSnapshot Strike(ScheduledStrike strike)
         {
             return new StrikeSnapshot(
-                strike.Id, strike.SkillId, strike.Source.Id, strike.Source.Team, strike.Cells.ToList(), strike.Damage, strike.ScheduledTurnNumber);
+                strike.Id, strike.SkillId, strike.SourceId, strike.SourceTeam, strike.Cells.ToList(), strike.Damage, strike.ScheduledTurnNumber);
         }
 
         public static GameSnapshot Game(GameState state, Team viewer)

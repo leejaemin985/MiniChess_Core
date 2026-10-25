@@ -186,6 +186,26 @@ namespace MiniChess.Core.Tests
             return game;
         }
 
+        // 착탄 전에 시전자가 죽어도 포격은 남는데(사용자 확정), 스냅샷에는 살아 있는 유닛만 실린다. 시전자 없이 복원되어야 한다.
+        [Fact]
+        public void Restore_KeepsAStrikeWhoseCasterDiedBeforeItLanded()
+        {
+            var (game, _, _) = TrapAndBombard();
+            var mortar = game.State.Board.GetCell(new Position(1, 1)).Occupant;
+            Combat.DamageSystem.Apply(game.State, new Combat.DamageRequest(null, mortar, 100, Combat.DamageType.Direct));
+            Assert.False(mortar.IsAlive);
+            Assert.Single(game.State.ScheduledStrikes);
+
+            GameSnapshot snapshot = game.GetSnapshot(Team.Player1);
+            GameController restored = GameController.Restore(Config(), OverTheWire(snapshot));
+
+            var strike = Assert.Single(restored.State.ScheduledStrikes);
+            Assert.Null(strike.Source);
+            Assert.Equal(mortar.Id, strike.SourceId);
+            Assert.Equal(Team.Player1, strike.SourceTeam);
+            Assert.Equal(Comparable(snapshot), Comparable(restored.GetSnapshot(Team.Player1)));
+        }
+
         [Theory]
         [InlineData(Team.Player1)]
         [InlineData(Team.Player2)]
