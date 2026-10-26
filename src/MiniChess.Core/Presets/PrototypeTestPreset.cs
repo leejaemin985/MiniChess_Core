@@ -52,7 +52,7 @@ namespace MiniChess.Core.Presets
                     ActiveFromStart = true,
                     RewardPool = new List<CaptureReward>
                     {
-                        new ShieldReward(amount: 3, regenerate: true),
+                        new ShieldReward(amount: 2, regenerate: true),
                         new BasicAttackStatusReward(StatusLibrary.Burn(damagePerTrigger: 1, triggers: 2)),
                     },
                 },
@@ -216,7 +216,7 @@ namespace MiniChess.Core.Presets
             t.Mortar.ShockShell.Range = 3;
             t.Mortar.ShockShell.Damage = 1;
             t.Mortar.ShockShell.PushCells = 2;
-            t.Mortar.ShockShell.LimitCells = 1;
+            t.Mortar.ShockShell.LimitCells = 2;
             t.Mortar.ShockShell.LimitTurns = 1;
 
             t.Scythe.Slash.ApCost = 3;
@@ -264,7 +264,7 @@ namespace MiniChess.Core.Presets
             t.Archer.Bola.ApCost = 3;
             t.Archer.Bola.Range = 3;
             t.Archer.Bola.Damage = 1;
-            t.Archer.Bola.MaxCells = 1;
+            t.Archer.Bola.MaxCells = 2;
             t.Archer.Bola.TargetTurns = 1;
 
             return t;

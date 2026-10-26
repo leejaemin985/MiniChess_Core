@@ -553,10 +553,11 @@ namespace MiniChess.Core.Tests
             Assert.Equal(9, u[1].Stats.CurrentHp);
             EndTurn(state);
 
-            // 프리셋 누적 1칸: 2칸 이동은 막히고, 1칸 이동 뒤 추가 1칸도 막힌다.
-            Assert.Equal(MoveFailReason.DistanceLimited, new MoveAction(u[1], new Position(2, 4)).Validate(state));
+            // 프리셋 누적 2칸: 3칸 이동은 막히고, 1칸 이동 뒤에는 추가 1칸만 된다(추가 2칸은 막힌다).
+            Assert.Equal(MoveFailReason.DistanceLimited, new MoveAction(u[1], new Position(2, 5)).Validate(state));
             new MoveAction(u[1], new Position(2, 3)).Execute(state);
-            Assert.Equal(MoveFailReason.DistanceLimited, new MoveAction(u[1], new Position(2, 4)).Validate(state));
+            Assert.Equal(MoveFailReason.DistanceLimited, new MoveAction(u[1], new Position(2, 5)).Validate(state));
+            Assert.Equal(MoveFailReason.None, new MoveAction(u[1], new Position(2, 4)).Validate(state));
         }
 
         [Fact]
@@ -1351,7 +1352,7 @@ namespace MiniChess.Core.Tests
             Assert.All(result.Events.OfType<UnitMovedEvent>(), e => Assert.Equal(MoveKind.Knockback, e.Kind));
         }
 
-        // 사용자 확정: 밀어낸 뒤 이동 거리 제한(누적 1칸)을 건다. [가정] 지속은 대상의 다음 턴(볼라와 같음)
+        // 사용자 확정: 밀어낸 뒤 이동 거리 제한(누적 2칸)을 건다. [가정] 지속은 대상의 다음 턴(볼라와 같음)
         [Fact]
         public void ShockShell_LimitsTargetMoveDistanceAfterPush()
         {
@@ -1364,8 +1365,8 @@ namespace MiniChess.Core.Tests
             Assert.NotNull(u[1].FindStatus(StatusLibrary.DistanceLimitId));
 
             EndTurn(state); // 대상의 턴
-            Assert.Equal(MoveFailReason.DistanceLimited, new MoveAction(u[1], new Position(2, 4)).Validate(state)); // 2칸
-            Assert.Equal(MoveFailReason.None, new MoveAction(u[1], new Position(3, 4)).Validate(state));            // 1칸
+            Assert.Equal(MoveFailReason.DistanceLimited, new MoveAction(u[1], new Position(1, 4)).Validate(state)); // 3칸
+            Assert.Equal(MoveFailReason.None, new MoveAction(u[1], new Position(2, 4)).Validate(state));            // 2칸
 
             EndTurn(state); // 대상의 턴 종료: 해제
             Assert.Null(u[1].FindStatus(StatusLibrary.DistanceLimitId));
