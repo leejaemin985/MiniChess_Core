@@ -156,7 +156,7 @@ namespace MiniChess.Core.Presets
             t.Flame.CompressedShell.BurnTriggers = 2;
 
             t.Chemist.RootTrap.ApCost = 3;
-            t.Chemist.RootTrap.Range = 2;
+            t.Chemist.RootTrap.Range = 3;
             t.Chemist.RootTrap.Damage = 1;
             t.Chemist.RootTrap.RootTurns = 1;
             t.Chemist.RootTrap.MaxActive = 2;
@@ -193,10 +193,11 @@ namespace MiniChess.Core.Presets
             };
             t.Gardener.HealingMeadow.Heal = 1;
             t.Gardener.HealingMeadow.Lifetime = 2;
+            t.Gardener.HealingMeadow.MaxActive = 1;
 
             t.Gardener.SingleShield.ApCost = 3;
             t.Gardener.SingleShield.Range = 2;
-            t.Gardener.SingleShield.Amount = 3;
+            t.Gardener.SingleShield.Amount = 2;
 
             t.Mortar.Bombard.ApCost = 4;
             t.Mortar.Bombard.Range = 4;
@@ -244,8 +245,8 @@ namespace MiniChess.Core.Presets
 
             t.Assassin.Leap.ApCost = 3;
             t.Assassin.Leap.Range = 4;
-            t.Assassin.Charge.ApCost = 2;
-            t.Assassin.Charge.BonusDamage = 4;
+            t.Assassin.Charge.ApCost = 3;
+            t.Assassin.Charge.BonusDamage = 3;
 
             t.Sculptor.Seal.ApCost = 4;
             t.Sculptor.Seal.Range = 3;

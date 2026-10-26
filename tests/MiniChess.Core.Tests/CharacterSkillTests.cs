@@ -469,6 +469,23 @@ namespace MiniChess.Core.Tests
             Assert.IsType<HealField>(state.Board.GetCell(new Position(2, 1)).GetEffect(CellEffectLayer.AreaEffect));
         }
 
+        // 사용자 확정: 회복 초원은 시전자당 동시 1개. 앞 초원이 만료되면(수명 2: 턴 3, 5 의 P1 종료) 다시 깔 수 있다.
+        [Fact]
+        public void HealingMeadow_OnlyOneActivePerCaster()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 1, 1, With(GardenerPiece.HealingMeadowId))
+                .Place(Team.Player2, 6, 6)
+                .Start();
+
+            Use(state, u[0], GardenerPiece.HealingMeadowId, 1, 1); // 턴 1
+            EndTurn(state); EndTurn(state);
+            Assert.Equal(SkillFailReason.ConditionNotMet, Check(state, u[0], GardenerPiece.HealingMeadowId, 2, 2)); // 턴 3
+
+            EndTurn(state); EndTurn(state); EndTurn(state); EndTurn(state); // 턴 5 종료에 만료 → 턴 7
+            Assert.Equal(SkillFailReason.None, Check(state, u[0], GardenerPiece.HealingMeadowId, 2, 2));
+        }
+
         #endregion
 
         #region Shield
@@ -484,7 +501,7 @@ namespace MiniChess.Core.Tests
 
             Use(state, u[0], GardenerPiece.SingleShieldId, 3, 3);
 
-            Assert.Equal(3, u[1].Stats.FindShield(GardenerPiece.SingleShieldId).Amount);
+            Assert.Equal(2, u[1].Stats.FindShield(GardenerPiece.SingleShieldId).Amount);
             Assert.Same(u[0], u[1].Stats.FindShield(GardenerPiece.SingleShieldId).Source);
             Assert.Equal(1, state.GetPlayer(Team.Player1).Ap.Current);
             Assert.True(u[0].TurnState.HasUsedSkill(GardenerPiece.SingleShieldId));
@@ -501,7 +518,7 @@ namespace MiniChess.Core.Tests
             Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], GardenerPiece.SingleShieldId, 2, 2));
 
             Use(state, u[0], GardenerPiece.SingleShieldId, 1, 1);
-            Assert.Equal(3, u[0].Stats.Shield);
+            Assert.Equal(2, u[0].Stats.Shield);
         }
 
         [Fact]
@@ -512,12 +529,12 @@ namespace MiniChess.Core.Tests
                 .Place(Team.Player2, 6, 6)
                 .Start();
             Use(state, u[0], GardenerPiece.SingleShieldId, 1, 1);
-            DamageSystem.Apply(state, new DamageRequest(null, u[0], 2, DamageType.Direct)); // 3 → 1
+            DamageSystem.Apply(state, new DamageRequest(null, u[0], 1, DamageType.Direct)); // 2 → 1
             EndTurn(state); EndTurn(state);
 
             Use(state, u[0], GardenerPiece.SingleShieldId, 1, 1);
 
-            Assert.Equal(3, u[0].Stats.Shield);
+            Assert.Equal(2, u[0].Stats.Shield);
             Assert.Single(u[0].Stats.Shields);
         }
 
@@ -532,7 +549,7 @@ namespace MiniChess.Core.Tests
 
             Use(state, u[0], GardenerPiece.SingleShieldId, 1, 1);
 
-            Assert.Equal(6, u[0].Stats.Shield);
+            Assert.Equal(5, u[0].Stats.Shield);
             Assert.Equal(new[] { ShieldReward.ShieldId, GardenerPiece.SingleShieldId }, u[0].Stats.Shields.Select(s => s.Id));
         }
 
@@ -1870,11 +1887,12 @@ namespace MiniChess.Core.Tests
             Assert.Equal(SkillFailReason.None, Check(state, u[1], AssassinPiece.LeapId, 4, 2));
         }
 
-        // 사용자 확정: 차징 후 다음 내 턴의 기본 공격에 추가 피해. 보호막/호위 없는 궁수(체력 8)는 한 번에 쓰러진다
+        // 사용자 확정: 차징 후 다음 내 턴의 기본 공격에 추가 피해(프리셋 4 + 3 = 7). 체력 8 궁수는 1 이 남는다(사용자 조정)
         [Fact]
-        public void Charge_NextTurnBasicAttackDealsBonus_DownsUnprotectedArcher()
+        public void Charge_NextTurnBasicAttackDealsBonus()
         {
             var (state, u) = Game()
+                .WithRules(r => r.Ap.StartAp = 6) // 차징(3) 뒤 같은 턴 기본 공격(2) 가능 여부도 본다
                 .Place(Team.Player1, 3, 3, Assassin())
                 .Place(Team.Player2, 3, 4, TestGame.Stats(hp: 8))
                 .Place(Team.Player2, 6, 6)
@@ -1888,8 +1906,9 @@ namespace MiniChess.Core.Tests
             EndTurn(state);
             AttackResult attack = new AttackAction(u[0], u[1]).Execute(state);
 
-            Assert.True(attack.TargetDied);
-            Assert.Equal(8, attack.Damage);
+            Assert.False(attack.TargetDied);
+            Assert.Equal(7, attack.Damage);
+            Assert.Equal(1, u[1].Stats.CurrentHp);
             Assert.Null(u[0].FindStatus(StatusLibrary.ChargedId));
         }
 
@@ -1908,7 +1927,7 @@ namespace MiniChess.Core.Tests
             EndTurn(state);
             EndTurn(state);
 
-            Assert.Equal(8, new AttackAction(u[0], u[2]).Execute(state).Damage);
+            Assert.Equal(7, new AttackAction(u[0], u[2]).Execute(state).Damage);
             Assert.Null(u[0].FindStatus(StatusLibrary.ChargedId));
             Assert.NotNull(u[1].FindStatus(StatusLibrary.ChargedId)); // 공격하지 않은 쪽은 이번 턴 동안 유지
 

@@ -4,6 +4,7 @@ using MiniChess.Core.Data;
 using MiniChess.Core.Effects.Zones;
 using MiniChess.Core.Skills;
 using MiniChess.Core.Skills.Areas;
+using MiniChess.Core.Skills.Conditions;
 using MiniChess.Core.Skills.Effects;
 using MiniChess.Core.Skills.Targeting;
 
@@ -33,6 +34,7 @@ namespace MiniChess.Core.Characters.Pieces
 
         /// <summary>
         /// 회복 초원: 고정 회복 장판. 장판 위 아군을 매 턴 시작에 회복(명세 6.2). 자기 칸 중심 설치 허용.
+        /// 시전자당 동시 구역 수는 MaxActive 까지(사용자 확정: 1, 다른 장판과 같다).
         /// </summary>
         public static SkillDefinition HealingMeadow(HealingMeadowTuning t)
         {
@@ -45,6 +47,10 @@ namespace MiniChess.Core.Characters.Pieces
                 new SkillEffect[]
                 {
                     new PlaceZoneEffect(t.Lifetime, (zone, _) => new HealField(zone, heal.Value)),
+                },
+                new SkillCondition[]
+                {
+                    new MaxActiveZonesCondition(HealingMeadowId, t.MaxActive),
                 },
                 requiredTuning: SkillBuildUtil.Require((nameof(t.Heal), t.Heal)));
         }
@@ -97,5 +103,8 @@ namespace MiniChess.Core.Characters.Pieces
 
         /// <summary>장판 수명(설치한 쪽 소유자 턴 종료 횟수).</summary>
         public int? Lifetime { get; set; }
+
+        /// <summary>시전자당 동시 구역 수.</summary>
+        public int? MaxActive { get; set; }
     }
 }
