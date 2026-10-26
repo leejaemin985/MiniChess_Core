@@ -22,12 +22,12 @@ namespace MiniChess.Core.Presets
         {
             return new GameRuleData
             {
-                // [가정] 명세 v0.1 3.2 의 [프로토타입] 값(6/4/4)에서 플레이 테스트를 위해 12/8/8 로 변경. 나머지는 [프로토타입] 값
+                // [가정] 명세 v0.1 3.2 의 [프로토타입] 값(6/4/4)에서 플레이 테스트를 위해 14/8/10 으로 변경. 나머지는 [프로토타입] 값
                 Ap = new ApRuleData
                 {
-                    MaxAp = 12,
+                    MaxAp = 14,
                     StartAp = 8,
-                    TurnRecoveryAp = 8,
+                    TurnRecoveryAp = 10,
                     CarryOver = true,
                 },
                 ActionCost = new ActionCostData
