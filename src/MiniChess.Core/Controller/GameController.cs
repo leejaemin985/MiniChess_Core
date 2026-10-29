@@ -184,8 +184,9 @@ namespace MiniChess.Core.Controller
         }
 
         /// <summary>
-        /// 한 팀의 연결이 끊겨 경기를 끝낸다(상대 승리, GameEndReason.Disconnect). 서버만 호출한다.
-        /// 배치 단계에서도 끝낼 수 있다. 이미 끝났거나 팀이 잘못되었으면 아무것도 하지 않고 빈 목록을 돌려준다.
+        /// 한 팀의 연결이 끊겨 경기를 끝낸다(GameEndReason.Disconnect). 서버만 호출한다.
+        /// 전투 중이면 상대 승리, 배치 단계면 승자 없음(짝지어진 상대가 이미 끊긴 연결이었으면 싸우지도 않고 이기게 된다).
+        /// 이미 끝났거나 팀이 잘못되었으면 아무것도 하지 않고 빈 목록을 돌려준다.
         /// </summary>
         public IReadOnlyList<GameEvent> EndByDisconnect(Team disconnected)
         {
@@ -194,7 +195,8 @@ namespace MiniChess.Core.Controller
                 return Array.Empty<GameEvent>();
 
             int eventStart = State.Events.Count;
-            DeathSystem.EndGame(State, TurnSystem.GetOpponent(disconnected), GameEndReason.Disconnect);
+            Team? winner = State.Phase == GamePhase.Setup ? (Team?)null : TurnSystem.GetOpponent(disconnected);
+            DeathSystem.EndGame(State, winner, GameEndReason.Disconnect);
             return State.Events.Since(eventStart);
         }
 

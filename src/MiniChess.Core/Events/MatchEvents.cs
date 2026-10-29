@@ -50,7 +50,7 @@ namespace MiniChess.Core.Events
         /// <summary>최대 턴 도달 후 판정.</summary>
         TurnLimit,
 
-        /// <summary>한쪽 연결이 끊김. 끊긴 팀이 진다.</summary>
+        /// <summary>한쪽 연결이 끊김. 전투 중이면 끊긴 팀이 지고, 배치 단계면 승자 없이 끝난다.</summary>
         Disconnect,
 
         /// <summary>서버 오류로 경기가 무효 처리됨. 승자 없음.</summary>

@@ -166,14 +166,16 @@ namespace MiniChess.Core.Tests
         }
 
         [Fact]
-        public void EndByDisconnect_WorksDuringSetup()
+        public void EndByDisconnect_DuringSetup_EndsWithoutAWinner()
         {
             GameController game = NewGame();
 
-            game.EndByDisconnect(Team.Player2);
+            IReadOnlyList<GameEvent> events = game.EndByDisconnect(Team.Player2);
 
+            var ended = Assert.IsType<GameEndedEvent>(Assert.Single(events));
+            Assert.Null(ended.Winner);
+            Assert.Equal(GameEndReason.Disconnect, ended.Reason);
             Assert.True(game.State.IsGameOver);
-            Assert.Equal(Team.Player1, game.State.Winner);
         }
 
         #endregion
