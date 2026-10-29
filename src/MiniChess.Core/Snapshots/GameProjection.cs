@@ -13,6 +13,7 @@ namespace MiniChess.Core.Snapshots
     /// 한 팀 시점의 투영: 상대에게 숨겨야 할 정보를 스냅샷과 이벤트에서 거른다. 서버는 이 결과만 각 클라이언트에 보낸다.
     /// 무엇을 숨기는지(덫/포격)는 GameVisibility 에 두고(봇도 같은 규칙을 씀), 스냅샷/이벤트에 적용하는 방법은 이 클래스에 둔다. 지금 규칙(사용자 확정):
     ///   - 상대 덫(ROOT_TRAP): 설치 위치를 숨긴다. 밟아서 발동하면 그 칸을 알린다(발동 이벤트, 소모로 인한 제거).
+    ///     그 칸에 내 덫을 설치해 해체하면 양쪽에 해체(제거 이벤트, Disarmed)를 알린다. 새로 놓은 덫은 그대로 숨긴다.
     ///   - 상대 예약 포격: 조준 칸을 숨긴다. 착탄할 때만 알린다(착탄 이벤트).
     ///   - 상대가 그 스킬을 썼다는 사실(시전자, 스킬 Id)은 알린다. 지정 칸과 범위만 비운다.
     ///   - 배치 단계에서 상대 배치(유닛과 위치)를 숨긴다. 상대가 확정했다는 사실(HasPlaced, 빈 배치 이벤트)은 알리고,
@@ -72,8 +73,10 @@ namespace MiniChess.Core.Snapshots
                 case CellEffectPlacedEvent placed:
                     return IsHiddenEffect(placed.Effect.Kind, placed.Effect.OwnerTeam, viewer);
                 case CellEffectRemovedEvent removed:
-                    // 밟아서 소모된 덫은 발동 이벤트로 이미 알렸다. 수명 종료/덮어쓰기는 위치가 드러나므로 숨긴다.
-                    return removed.Reason != CellEffectRemoveReason.Consumed && IsHiddenEffect(removed.Kind, removed.OwnerTeam, viewer);
+                    // 밟아서 소모된 덫은 발동 이벤트로 이미 알렸고, 해체는 양쪽에 알리는 규칙이다. 수명 종료/덮어쓰기는 위치가 드러나므로 숨긴다.
+                    return removed.Reason != CellEffectRemoveReason.Consumed
+                        && removed.Reason != CellEffectRemoveReason.Disarmed
+                        && IsHiddenEffect(removed.Kind, removed.OwnerTeam, viewer);
                 case StrikeScheduledEvent scheduled:
                     return GameVisibility.IsHiddenStrike(scheduled.Strike.SourceTeam, viewer);
                 default:

@@ -8,7 +8,7 @@ namespace MiniChess.Protocol
     public static class ProtocolInfo
     {
         /// <summary>메시지 형식 버전. 메시지/이벤트/스냅샷의 모양이 바뀌면 올린다.</summary>
-        public const int Version = 5;
+        public const int Version = 6;
 
         /// <summary>클라이언트가 PingMessage 를 보내는 간격(초).</summary>
         public const int PingIntervalSeconds = 10;

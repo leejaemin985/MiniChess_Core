@@ -64,11 +64,21 @@ namespace MiniChess.Core.Effects
             if (reason != CellEffectPlaceFailReason.None)
                 return reason;
 
-            Remove(state, position, effect.Layer, CellEffectRemoveReason.Replaced);
+            ICellEffect existing = state.Board.GetCell(position).GetEffect(effect.Layer);
+            Remove(state, position, effect.Layer, ReplaceReason(existing, effect));
 
             state.Board.GetCell(position).SetEffect(effect);
             state.Events.Record(new CellEffectPlacedEvent(SnapshotBuilder.CellEffect(position, effect)));
             return CellEffectPlaceFailReason.None;
+        }
+
+        /// <summary>덮어쓰는 효과가 설치자에게 숨겨져 있던 상대 효과면 해체(양쪽에 공개), 아니면 교체.</summary>
+        private static CellEffectRemoveReason ReplaceReason(ICellEffect existing, ICellEffect placed)
+        {
+            Team? placer = (placed as ZoneCellEffect)?.Zone.OwnerTeam;
+            return placer.HasValue && GameVisibility.IsHidden(existing, placer.Value)
+                ? CellEffectRemoveReason.Disarmed
+                : CellEffectRemoveReason.Replaced;
         }
 
         /// <summary>해당 레이어의 효과를 제거한다. 제거할 효과가 없으면 false.</summary>

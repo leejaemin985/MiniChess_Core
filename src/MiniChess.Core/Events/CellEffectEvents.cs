@@ -30,6 +30,12 @@ namespace MiniChess.Core.Events
         Destroyed,
 
         Removed,
+
+        /// <summary>
+        /// 설치자가 볼 수 없던 상대 효과(숨긴 덫) 위에 같은 레이어 효과를 설치해 해체함. 양 팀 모두에게 알린다.
+        /// (사용자 확정: 어느 쪽 덫이 사라져도 위치는 드러나므로, 드러나는 것을 규칙으로 둔다)
+        /// </summary>
+        Disarmed,
     }
 
     /// <summary>장애물이 기본 공격을 받았다. 남은 횟수가 0 이면 이어서 파괴(제거) 이벤트가 기록된다.</summary>

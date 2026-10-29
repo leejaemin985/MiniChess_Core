@@ -132,6 +132,31 @@ namespace MiniChess.Core.Tests
             Assert.Contains(StrikeTarget, landed.Strike.Cells);
         }
 
+        // 상대 덫 칸에 내 덫을 놓으면 상대 덫은 해체되고, 해체는 양쪽에 알린다(사용자 확정). 새로 놓은 덫은 계속 숨긴다.
+        [Fact]
+        public void PlacingATrapOnAHiddenEnemyTrap_DisarmsIt_AndTellsBothTeams()
+        {
+            var (game, _, _) = TrapAndBombard();
+            game.EndTurn(new EndTurnRequest(Team.Player1));
+            int chemist = UnitAt(game, new Position(0, 5));
+            Assert.True(game.Move(new MoveRequest(Team.Player2, chemist, new Position(0, 4))).Success);
+
+            var trap = game.UseSkill(new UseSkillRequest(Team.Player2, chemist, ChemistPiece.RootTrapId, TrapCell));
+            Assert.True(trap.Success, trap.Reason.ToString());
+
+            foreach (Team viewer in new[] { Team.Player1, Team.Player2 })
+            {
+                var removed = Assert.Single(game.GetVisibleEvents(viewer, trap.Events).OfType<CellEffectRemovedEvent>());
+                Assert.Equal(CellEffectRemoveReason.Disarmed, removed.Reason);
+                Assert.Equal(TrapCell, removed.Position);
+                Assert.Equal(Team.Player1, removed.OwnerTeam);
+            }
+
+            Assert.DoesNotContain(game.GetVisibleEvents(Team.Player1, trap.Events), e => e is CellEffectPlacedEvent);
+            Assert.DoesNotContain(game.GetSnapshot(Team.Player1).CellEffects, e => e.Kind == CellEffectKinds.RootTrap);
+            Assert.Contains(game.GetSnapshot(Team.Player2).CellEffects, e => e.Kind == CellEffectKinds.RootTrap && e.Position == TrapCell);
+        }
+
         [Fact]
         public void OwnTrapExpiring_IsHiddenFromOpponent()
         {
