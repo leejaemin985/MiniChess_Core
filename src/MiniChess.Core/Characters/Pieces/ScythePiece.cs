@@ -137,7 +137,7 @@ namespace MiniChess.Core.Characters.Pieces
         /// <summary>소환 AP.</summary>
         public int? ApCost { get; set; }
 
-        /// <summary>분신 HP. [설계 의도] 1~2.</summary>
+        /// <summary>분신 HP. [설계 의도] 1~2 였으나 사용자 확정으로 4.</summary>
         public int? CloneHp { get; set; }
 
         /// <summary>분신 기본 공격 사거리.</summary>

@@ -1599,7 +1599,7 @@ namespace MiniChess.Core.Tests
 
             Assert.True(clone.IsSummon);
             Assert.Equal(new Position(3, 1), clone.Position);
-            Assert.Equal(1, clone.Stats.CurrentHp);
+            Assert.Equal(4, clone.Stats.CurrentHp);
             Assert.Equal(MoveFailReason.ActionsEnded, new MoveAction(u[0], new Position(2, 0)).Validate(state));
 
             new MoveAction(clone, new Position(3, 2)).Execute(state);
@@ -1638,7 +1638,8 @@ namespace MiniChess.Core.Tests
 
             Assert.Equal(SkillFailReason.ConditionNotMet, Check(state, u[0], ScythePiece.ShadowCloneId, 4, 0));
 
-            DamageSystem.Apply(state, new DamageRequest(null, CloneOf(state, u[0]), 1, DamageType.Direct));
+            Unit clone = CloneOf(state, u[0]);
+            DamageSystem.Apply(state, new DamageRequest(null, clone, clone.Stats.CurrentHp, DamageType.Direct));
             Assert.Equal(SkillFailReason.None, Check(state, u[0], ScythePiece.ShadowCloneId, 4, 0));
         }
 
