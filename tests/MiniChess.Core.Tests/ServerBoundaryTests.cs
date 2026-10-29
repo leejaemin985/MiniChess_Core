@@ -93,6 +93,23 @@ namespace MiniChess.Core.Tests
             Assert.Equal(eventsBefore, game.State.Events.Count);
         }
 
+        // 이동이 막혔는지는 None 여부로 정하고 사유는 따로 옮긴다. 새 차단 이유를 추가하면 이 테스트가 사유 연결을 요구한다.
+        [Fact]
+        public void EveryMoveBlockReason_MapsToItsOwnFailReason_AndUnknownStaysBlocked()
+        {
+            Assert.Equal(MoveFailReason.None, MoveAction.ToFailReason(Movement.MoveBlockReason.None));
+            foreach (Movement.MoveBlockReason block in Enum.GetValues(typeof(Movement.MoveBlockReason)))
+            {
+                if (block == Movement.MoveBlockReason.None)
+                    continue;
+
+                MoveFailReason reason = MoveAction.ToFailReason(block);
+                Assert.True(reason != MoveFailReason.None && reason != MoveFailReason.Unknown, $"{block} 의 실패 사유가 없음");
+            }
+
+            Assert.Equal(MoveFailReason.Unknown, MoveAction.ToFailReason((Movement.MoveBlockReason)99));
+        }
+
         public static IEnumerable<object[]> OffBoardPositions()
         {
             yield return new object[] { 0, int.MaxValue };

@@ -32,15 +32,9 @@ namespace MiniChess.Core.Actions
 
             IReadOnlyList<Position> path = GetPath(state);
 
-            switch (MovementControl.Check(state, Unit, Unit, MoveKind.Path, path.Count))
-            {
-                case MoveBlockReason.ActionsEnded: return MoveFailReason.ActionsEnded;
-                case MoveBlockReason.Rooted: return MoveFailReason.Rooted;
-                case MoveBlockReason.DistanceLimited: return MoveFailReason.DistanceLimited;
-                case MoveBlockReason.Installed: return MoveFailReason.Installed;
-                case MoveBlockReason.Sealed: return MoveFailReason.Sealed;
-                case MoveBlockReason.Stunned: return MoveFailReason.Stunned;
-            }
+            MoveBlockReason block = MovementControl.Check(state, Unit, Unit, MoveKind.Path, path.Count);
+            if (block != MoveBlockReason.None)
+                return ToFailReason(block);
 
             if (path.Count == 0) return MoveFailReason.NotStraightLine;
             if (!state.Board.IsPathClear(path)) return MoveFailReason.PathBlocked;
@@ -71,6 +65,24 @@ namespace MiniChess.Core.Actions
             // 칸 효과에 의한 사망은 DamageSystem 에서 이미 처리된다.
             result.Events = state.Events.Since(eventStart);
             return result;
+        }
+
+        /// <summary>
+        /// 막힌 이유를 실패 사유로 옮긴다. 막혔는지는 None 여부로만 정하므로(위), 옮기지 못한 새 이유가 생겨도 이동은 막힌 채 Unknown 이 된다.
+        /// </summary>
+        internal static MoveFailReason ToFailReason(MoveBlockReason block)
+        {
+            switch (block)
+            {
+                case MoveBlockReason.None: return MoveFailReason.None;
+                case MoveBlockReason.ActionsEnded: return MoveFailReason.ActionsEnded;
+                case MoveBlockReason.Rooted: return MoveFailReason.Rooted;
+                case MoveBlockReason.DistanceLimited: return MoveFailReason.DistanceLimited;
+                case MoveBlockReason.Installed: return MoveFailReason.Installed;
+                case MoveBlockReason.Sealed: return MoveFailReason.Sealed;
+                case MoveBlockReason.Stunned: return MoveFailReason.Stunned;
+                default: return MoveFailReason.Unknown;
+            }
         }
 
         private IReadOnlyList<Position> GetPath(GameState state)

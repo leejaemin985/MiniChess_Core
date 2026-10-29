@@ -41,5 +41,8 @@ namespace MiniChess.Core.Actions
 
         /// <summary>요청 형식이 잘못됨(요청 없음, 존재하지 않는 팀 등).</summary>
         InvalidRequest,
+
+        /// <summary>상태 때문에 이동이 막혔지만 실패 사유로 옮기지 못한 이유(새로 생긴 MoveBlockReason 등).</summary>
+        Unknown,
     }
 }
