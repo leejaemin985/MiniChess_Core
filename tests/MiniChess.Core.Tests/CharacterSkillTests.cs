@@ -1584,9 +1584,9 @@ namespace MiniChess.Core.Tests
         private static Unit CloneOf(GameState state, Unit owner) =>
             state.GetPlayer(owner.Team).Units.Single(unit => unit.SummonOwner == owner && unit.IsAlive);
 
-        // 명세 4.3 + 사용자 확정: 소환한 턴에 본체는 행동 종료, 분신은 그 턴부터 팀 AP 로 이동/공격
+        // 명세 4.3 + 사용자 확정: 소환한 턴에도 본체는 계속 행동할 수 있고, 분신은 그 턴부터 팀 AP 로 이동/공격
         [Fact]
-        public void ShadowClone_SummonsAdjacent_EndsOwnerActions_CloneActsSameTurnWithTeamAp()
+        public void ShadowClone_SummonsAdjacent_OwnerKeepsActing_CloneActsSameTurnWithTeamAp()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 3, 0, Scythe())
@@ -1600,7 +1600,8 @@ namespace MiniChess.Core.Tests
             Assert.True(clone.IsSummon);
             Assert.Equal(new Position(3, 1), clone.Position);
             Assert.Equal(4, clone.Stats.CurrentHp);
-            Assert.Equal(MoveFailReason.ActionsEnded, new MoveAction(u[0], new Position(2, 0)).Validate(state));
+            Assert.False(u[0].TurnState.ActionsEnded);
+            Assert.Equal(MoveFailReason.None, new MoveAction(u[0], new Position(2, 0)).Validate(state));
 
             new MoveAction(clone, new Position(3, 2)).Execute(state);
             AttackResult attack = new AttackAction(clone, u[1]).Execute(state);
@@ -1804,9 +1805,9 @@ namespace MiniChess.Core.Tests
             Assert.Equal(AttackFailReason.None, new AttackAction(u[0], u[1]).Validate(state));
         }
 
-        // 명세 4.4: 소환 직후 행동 불능을 교환으로 우회 불가. 공격 후에는 교환할 수 있다
+        // 사용자 확정: 소환한 턴에도 바로 교환할 수 있고, 공격 후에도 교환할 수 있다
         [Fact]
-        public void CloneSwap_NotOnSummonTurn_ButAllowedAfterAttacking()
+        public void CloneSwap_AllowedOnSummonTurn_AndAfterAttacking()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 3, 0, ScytheWithSwap())
@@ -1814,7 +1815,7 @@ namespace MiniChess.Core.Tests
                 .WithRules(r => r.Ap.StartAp = 6)
                 .Start();
             Use(state, u[0], ScythePiece.ShadowCloneId, 3, 1);
-            Assert.Equal(SkillFailReason.ActionsEnded, Check(state, u[0], ScythePiece.CloneSwapId, 3, 1));
+            Assert.Equal(SkillFailReason.None, Check(state, u[0], ScythePiece.CloneSwapId, 3, 1));
 
             EndTurn(state);
             EndTurn(state);

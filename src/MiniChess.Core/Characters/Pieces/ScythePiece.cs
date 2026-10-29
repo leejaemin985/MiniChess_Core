@@ -41,7 +41,7 @@ namespace MiniChess.Core.Characters.Pieces
 
         /// <summary>
         /// 분신 교환: 본체가 자신의 분신과 자리를 맞바꾼다(명세 4.4, 사용자 확정: AP 고정, 거리 무제한).
-        /// 스킬 슬롯이 아닌 고유 기능이다. 소환 직후(행동 종료)에는 쓸 수 없고, 본체가 속박되면 불가.
+        /// 스킬 슬롯이 아닌 고유 기능이다. 소환한 턴에도 바로 쓸 수 있고(사용자 확정), 본체가 속박되면 불가.
         /// 분신 쪽은 본체가 일으킨 외부 이동이며 분신의 행동 기록은 바뀌지 않는다.
         /// </summary>
         public static SkillDefinition CloneSwap(CloneSwapTuning t)
@@ -69,7 +69,7 @@ namespace MiniChess.Core.Characters.Pieces
 
         /// <summary>
         /// 그림자 분신: 본체 주변 8칸(대각선 포함) 중 빈 칸에 분신을 소환한다(명세 4.3, 사용자 확정).
-        /// 본체당 1개(살아 있으면 재소환 불가), 소환한 턴에 본체는 행동 종료, 분신은 그 턴부터 팀 AP 로 이동/공격 가능.
+        /// 본체당 1개(살아 있으면 재소환 불가). 소환한 턴에도 본체는 계속 행동할 수 있고(사용자 확정), 분신은 그 턴부터 팀 AP 로 이동/공격 가능.
         /// 분신의 기본 공격은 피해 0 이며 적중 시 저주 표식을 건다. 본체가 죽으면 분신도 사라진다.
         /// 분신은 점령과 전멸 판정에서 제외된다.
         /// </summary>
@@ -82,8 +82,7 @@ namespace MiniChess.Core.Characters.Pieces
                 new CellTargeting(1, CellRequirement.Empty),
                 PatternArea.SingleCell,
                 new SkillEffect[] { new SummonEffect(CloneStats(t), new[] { mark }) },
-                new SkillCondition[] { new NoLivingSummonCondition() },
-                endsCasterActions: true);
+                new SkillCondition[] { new NoLivingSummonCondition() });
         }
 
         /// <summary>분신 능력치. 기본 공격 피해는 0 으로 고정(명세 4.3 확정).</summary>

@@ -21,7 +21,7 @@ namespace MiniChess.Core.Actions
 
         NotEnoughAp,
 
-        /// <summary>이번 턴에 더 이상 행동할 수 없는 유닛(예: 분신 소환 직후).</summary>
+        /// <summary>이번 턴에 더 이상 행동할 수 없는 유닛(예: 사용 후 행동이 끝나는 스킬을 쓴 직후).</summary>
         ActionsEnded,
 
         /// <summary>속박 등 이동 불가 상태.</summary>

@@ -9,7 +9,7 @@ namespace MiniChess.Core.State
     /// </summary>
     public class UnitTurnState
     {
-        /// <summary>이번 턴에 더 이상 어떤 행동도 할 수 없는지(예: 분신 소환 직후의 본체).</summary>
+        /// <summary>이번 턴에 더 이상 어떤 행동도 할 수 없는지(예: 사용 후 행동이 끝나는 스킬을 쓴 유닛).</summary>
         public bool ActionsEnded { get; private set; }
 
         /// <summary>이번 턴에 일반 경로 이동(Path)으로 자발적으로 이동한 칸 수의 누적(이동 거리 제한 판정용).</summary>
