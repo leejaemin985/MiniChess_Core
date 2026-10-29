@@ -45,7 +45,6 @@ namespace MiniChess.Core.Tests
         [InlineData("{\"Type\":\"Move\"}")]
         [InlineData("{\"Type\":\"Nope\",\"Payload\":{}}")]
         [InlineData("{\"Type\":\"Move\",\"Payload\":{\"Destination\":{}}}")]
-        [InlineData("{\"Type\":\"Move\",\"Payload\":{\"Destination\":null}}")]
         [InlineData("{\"Type\":\"Move\",\"Payload\":{\"Destination\":{\"X\":\"a\",\"Y\":1}}}")]
         [InlineData("{\"Type\":\"Move\",\"Payload\":{\"UnitId\":99999999999}}")]
         [InlineData("{\"Type\":\"UseSkill\",\"Payload\":{\"Rotation\":7}}")]

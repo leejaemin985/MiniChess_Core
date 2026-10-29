@@ -91,6 +91,37 @@ namespace MiniChess.Core.Tests
             Assert.Equal(CommandOutcome.InvalidRequest, CommandExecutor.Execute(game, Team.Player1, new UseSkillMessage { SkillId = "X" }).Reason);
         }
 
+        // 필수 값이 빠진 명령은 0 이나 (0,0) 으로 실행하지 않고 형식 오류로 거절한다.
+        [Theory]
+        [InlineData("{\"Type\":\"Move\",\"Payload\":{\"TurnNumber\":1,\"Destination\":{\"X\":0,\"Y\":2}}}")]
+        [InlineData("{\"Type\":\"Move\",\"Payload\":{\"TurnNumber\":1,\"UnitId\":1}}")]
+        [InlineData("{\"Type\":\"Move\",\"Payload\":{\"TurnNumber\":1,\"UnitId\":1,\"Destination\":null}}")]
+        [InlineData("{\"Type\":\"Attack\",\"Payload\":{\"TurnNumber\":1,\"UnitId\":1}}")]
+        [InlineData("{\"Type\":\"Attack\",\"Payload\":{\"TurnNumber\":1,\"TargetUnitId\":5}}")]
+        [InlineData("{\"Type\":\"AttackObstacle\",\"Payload\":{\"TurnNumber\":1,\"UnitId\":1}}")]
+        [InlineData("{\"Type\":\"UseSkill\",\"Payload\":{\"TurnNumber\":1,\"SkillId\":\"WARRIOR_SMASH\",\"Targets\":[{\"X\":0,\"Y\":2}]}}")]
+        public void Execute_CommandMissingARequiredField_IsInvalidRequest(string json)
+        {
+            GameController game = NewGame();
+            CommandExecutor.Execute(game, Team.Player1, Place(1));
+            CommandExecutor.Execute(game, Team.Player2, Place(5));
+            int eventsBefore = game.State.Events.Count;
+
+            var command = Assert.IsAssignableFrom<CommandMessage>(ProtocolJson.DecodeClient(json));
+
+            Assert.Equal(CommandOutcome.InvalidRequest, CommandExecutor.Execute(game, Team.Player1, command).Reason);
+            Assert.Equal(eventsBefore, game.State.Events.Count);
+        }
+
+        [Fact]
+        public void Execute_PlacementMissingAPosition_IsInvalidRequest()
+        {
+            PlaceUnitsMessage place = Place(1);
+            place.Placements[0].Position = null;
+
+            Assert.Equal(CommandOutcome.InvalidRequest, CommandExecutor.Execute(NewGame(), Team.Player1, place).Reason);
+        }
+
         [Fact]
         public void Execute_Success_ReturnsEventsOfThatCommand()
         {

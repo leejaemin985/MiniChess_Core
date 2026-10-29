@@ -32,6 +32,7 @@ namespace MiniChess.Protocol
 
     /// <summary>
     /// 경기 명령. 요청 팀은 보내지 않는다(서버가 연결 기준으로 정한다).
+    /// 필수 값(유닛 Id, 좌표 등)은 nullable 로 받아, 빠지면 0 이나 (0,0) 으로 실행하지 않고 형식 오류(ToRequest → null)로 거절한다.
     /// </summary>
     public abstract class CommandMessage : ClientMessage
     {
@@ -48,7 +49,7 @@ namespace MiniChess.Protocol
     public class PlacementEntry
     {
         public string CharacterId { get; set; }
-        public Position Position { get; set; }
+        public Position? Position { get; set; }
     }
 
     public class PlaceUnitsMessage : CommandMessage
@@ -57,40 +58,49 @@ namespace MiniChess.Protocol
 
         public override GameRequest ToRequest(Team team)
         {
-            if (Placements == null || Placements.Any(entry => entry == null || entry.CharacterId == null))
+            if (Placements == null || Placements.Any(entry => entry == null || entry.CharacterId == null || !entry.Position.HasValue))
                 return null;
 
-            return new PlaceUnitsRequest(team, Placements.Select(entry => new UnitPlacement(entry.CharacterId, entry.Position)).ToList());
+            return new PlaceUnitsRequest(team, Placements.Select(entry => new UnitPlacement(entry.CharacterId, entry.Position.Value)).ToList());
         }
     }
 
     public class MoveMessage : CommandMessage
     {
-        public int UnitId { get; set; }
-        public Position Destination { get; set; }
+        public int? UnitId { get; set; }
+        public Position? Destination { get; set; }
 
-        public override GameRequest ToRequest(Team team) => new MoveRequest(team, UnitId, Destination);
+        public override GameRequest ToRequest(Team team)
+        {
+            return UnitId.HasValue && Destination.HasValue ? new MoveRequest(team, UnitId.Value, Destination.Value) : null;
+        }
     }
 
     public class AttackMessage : CommandMessage
     {
-        public int UnitId { get; set; }
-        public int TargetUnitId { get; set; }
+        public int? UnitId { get; set; }
+        public int? TargetUnitId { get; set; }
 
-        public override GameRequest ToRequest(Team team) => new AttackRequest(team, UnitId, TargetUnitId);
+        public override GameRequest ToRequest(Team team)
+        {
+            return UnitId.HasValue && TargetUnitId.HasValue ? new AttackRequest(team, UnitId.Value, TargetUnitId.Value) : null;
+        }
     }
 
     public class AttackObstacleMessage : CommandMessage
     {
-        public int UnitId { get; set; }
-        public Position Target { get; set; }
+        public int? UnitId { get; set; }
+        public Position? Target { get; set; }
 
-        public override GameRequest ToRequest(Team team) => new AttackObstacleRequest(team, UnitId, Target);
+        public override GameRequest ToRequest(Team team)
+        {
+            return UnitId.HasValue && Target.HasValue ? new AttackObstacleRequest(team, UnitId.Value, Target.Value) : null;
+        }
     }
 
     public class UseSkillMessage : CommandMessage
     {
-        public int UnitId { get; set; }
+        public int? UnitId { get; set; }
         public string SkillId { get; set; }
 
         /// <summary>지정 칸 전부(지정 순).</summary>
@@ -100,10 +110,10 @@ namespace MiniChess.Protocol
 
         public override GameRequest ToRequest(Team team)
         {
-            if (SkillId == null || Targets == null || Targets.Count == 0)
+            if (!UnitId.HasValue || SkillId == null || Targets == null || Targets.Count == 0)
                 return null;
 
-            return new UseSkillRequest(team, UnitId, SkillId, Targets.ToList(), Rotation);
+            return new UseSkillRequest(team, UnitId.Value, SkillId, Targets.ToList(), Rotation);
         }
     }
 
