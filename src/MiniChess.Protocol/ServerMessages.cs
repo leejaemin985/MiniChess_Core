@@ -18,6 +18,9 @@ namespace MiniChess.Protocol
 
         /// <summary>받는 팀 시점으로 거른 경기 상태.</summary>
         public GameSnapshot Snapshot { get; set; }
+
+        /// <summary>배치 단계의 남은 시간(밀리초). 다 되면 서버가 아직 배치하지 않은 팀을 무작위로 배치한다. 제한이 없으면 null.</summary>
+        public int? TurnTimeLeftMs { get; set; }
     }
 
     /// <summary>
@@ -45,7 +48,10 @@ namespace MiniChess.Protocol
         /// <summary>변화가 끝난 뒤의 경기 상태(받는 팀 시점으로 걸러진 것).</summary>
         public GameSnapshot Snapshot { get; set; }
 
-        /// <summary>현재 턴의 남은 시간(밀리초). 시간이 다 되면 서버가 그 팀의 턴을 끝낸다. 턴이 없으면(배치 단계, 경기 종료) null.</summary>
+        /// <summary>
+        /// 현재 턴(배치 단계면 배치)의 남은 시간(밀리초). 다 되면 서버가 그 팀의 턴을 끝낸다(배치 단계면 아직 배치하지 않은 팀을 무작위 배치).
+        /// 제한이 없으면(경기 종료) null.
+        /// </summary>
         public int? TurnTimeLeftMs { get; set; }
     }
 

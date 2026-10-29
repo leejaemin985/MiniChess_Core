@@ -4,6 +4,7 @@ using MiniChess.Core.Common;
 using MiniChess.Core.Controller;
 using MiniChess.Core.Events;
 using MiniChess.Core.Presets;
+using MiniChess.Core.State;
 using MiniChess.Protocol;
 using Xunit;
 
@@ -31,6 +32,21 @@ namespace MiniChess.Core.Tests
             {
                 Placements = lineup.Select((id, x) => new PlacementEntry { CharacterId = id, Position = new Position(x, y) }).ToList(),
             };
+        }
+
+        // 배치 시간 초과 시 서버가 쓰는 무작위 배치: 배치 규칙에 맞고, 같은 시드면 같은 결과.
+        [Fact]
+        public void RandomPlacement_IsValid_AndRepeatsForTheSameSeed()
+        {
+            GameController game = NewGame();
+
+            PlaceUnitsRequest first = OnlineMatch.RandomPlacement(game, Team.Player2, new Random(3));
+            PlaceUnitsRequest again = OnlineMatch.RandomPlacement(game, Team.Player2, new Random(3));
+
+            Assert.Equal(first.Placements, again.Placements);
+            Assert.True(game.PlaceUnits(first).Success);
+            Assert.True(game.PlaceUnits(OnlineMatch.RandomPlacement(game, Team.Player1, new Random(4))).Success);
+            Assert.Equal(GamePhase.Battle, game.State.Phase);
         }
 
         [Fact]
