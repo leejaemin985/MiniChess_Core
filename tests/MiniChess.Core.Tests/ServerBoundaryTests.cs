@@ -93,6 +93,42 @@ namespace MiniChess.Core.Tests
             Assert.Equal(eventsBefore, game.State.Events.Count);
         }
 
+        public static IEnumerable<object[]> OffBoardPositions()
+        {
+            yield return new object[] { 0, int.MaxValue };
+            yield return new object[] { 0, int.MinValue };
+            yield return new object[] { int.MaxValue, 1 };
+            yield return new object[] { int.MinValue, 1 };
+            yield return new object[] { -1, 1 };
+            yield return new object[] { 0, -1 };
+            yield return new object[] { 0, 2_000_000_000 };
+            yield return new object[] { int.MaxValue, int.MinValue };
+        }
+
+        // 서버는 코어 예외를 경기 무효로 처리하므로, 클라이언트가 보낸 어떤 좌표로도 명령이 예외를 던지면 안 된다(실패로 돌려준다).
+        [Theory]
+        [MemberData(nameof(OffBoardPositions))]
+        public void OffBoardPositions_FailWithoutThrowing_AndWithoutChangingState(int x, int y)
+        {
+            var position = new Position(x, y);
+
+            GameController setup = NewGame();
+            Assert.Equal(PlaceFailReason.NotSpawnCell, setup.PlaceUnits(new PlaceUnitsRequest(Team.Player1,
+                Lineup.Select((id, i) => new UnitPlacement(id, i == 0 ? position : new Position(i, 1))).ToList())).Reason);
+
+            GameController game = StartedGame();
+            int eventsBefore = game.State.Events.Count;
+            Unit unit = game.State.GetPlayer(Team.Player1).Units[0];
+
+            Assert.Equal(MoveFailReason.PathBlocked, game.Move(new MoveRequest(Team.Player1, unit.Id, position)).Reason);
+            Assert.Equal(AttackFailReason.InvalidTarget, game.AttackObstacle(new AttackObstacleRequest(Team.Player1, unit.Id, position)).Reason);
+            foreach (string skillId in unit.Stats.Base.SkillIds)
+                Assert.False(game.UseSkill(new UseSkillRequest(Team.Player1, unit.Id, skillId, position)).Success);
+
+            Assert.Empty(game.State.Board.GetStraightPath(unit.Position.Value, position));
+            Assert.Equal(eventsBefore, game.State.Events.Count);
+        }
+
         #endregion
 
         #region Disconnect

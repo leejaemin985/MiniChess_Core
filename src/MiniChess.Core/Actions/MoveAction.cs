@@ -27,6 +27,9 @@ namespace MiniChess.Core.Actions
             if (Unit.Team != state.CurrentTeam) return MoveFailReason.NotYourTurn;
             if (!Unit.IsOnBoard) return MoveFailReason.UnitNotOnBoard;
 
+            // 네트워크로 들어온 목적지는 아무 값이나 올 수 있다. 경로를 만들기 전에 거른다.
+            if (!state.Board.IsInBounds(Destination)) return MoveFailReason.PathBlocked;
+
             IReadOnlyList<Position> path = GetPath(state);
 
             switch (MovementControl.Check(state, Unit, Unit, MoveKind.Path, path.Count))

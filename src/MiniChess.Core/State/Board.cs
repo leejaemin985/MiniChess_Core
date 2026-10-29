@@ -122,11 +122,13 @@ namespace MiniChess.Core.State
 
         /// <summary>
         /// from 에서 to 까지 상하좌우 직선 경로의 칸들(from 제외, to 포함).
-        /// 직선이 아니거나 같은 칸이면 빈 목록. 칸이 막혀 있는지는 검사하지 않는다.
+        /// 직선이 아니거나, 같은 칸이거나, 보드 밖 좌표가 끼면 빈 목록. 칸이 막혀 있는지는 검사하지 않는다.
         /// </summary>
         public IReadOnlyList<Position> GetStraightPath(Position from, Position to)
         {
             var path = new List<Position>();
+            if (!IsInBounds(from) || !IsInBounds(to))
+                return path;
 
             bool sameColumn = from.X == to.X;
             bool sameRow = from.Y == to.Y;
