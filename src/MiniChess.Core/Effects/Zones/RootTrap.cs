@@ -36,14 +36,15 @@ namespace MiniChess.Core.Effects.Zones
 
             context.State.Events.Record(new CellEffectTriggeredEvent(context.Cell.Position, Layer, Kind, Zone.OwnerTeam, context.Unit.Id));
 
+            // 소모를 피해보다 먼저: 피해로 경기가 끝나면 그 뒤에는 아무것도 기록하지 않는다.
+            if (SingleUse && context.Cell.Contains(this))
+                CellEffectSystem.Remove(context.State, context.Cell.Position, Layer, CellEffectRemoveReason.Consumed);
+
             if (Damage > 0)
                 DamageSystem.Apply(context.State, new DamageRequest(Zone.Source, context.Unit, Damage, DamageType.Area));
 
-            if (context.Unit.IsAlive)
+            if (context.Unit.IsAlive && !context.State.IsGameOver)
                 StatusSystem.Apply(context.State, Root, context.Unit, Zone.Source, Zone.OwnerTeam, Zone.SkillId);
-
-            if (SingleUse && context.Cell.Contains(this))
-                CellEffectSystem.Remove(context.State, context.Cell.Position, Layer, CellEffectRemoveReason.Consumed);
 
             return CellEnterResult.Stop;
         }

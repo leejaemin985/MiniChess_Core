@@ -77,7 +77,7 @@ namespace MiniChess.Core.Events
         }
     }
 
-    /// <summary>칸 효과가 들어온 유닛에게 발동했다(덫 등). 이어서 발동 결과(피해, 상태, 소모로 인한 제거)가 기록된다.</summary>
+    /// <summary>칸 효과가 들어온 유닛에게 발동했다(덫 등). 이어서 발동 결과(소모로 인한 제거, 피해, 상태 순)가 기록된다.</summary>
     public class CellEffectTriggeredEvent : GameEvent
     {
         public Position Position { get; }

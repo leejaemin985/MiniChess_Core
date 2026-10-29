@@ -313,6 +313,31 @@ namespace MiniChess.Core.Tests
             Assert.Null(state.Board.GetCell(new Position(3, 3)).GetEffect(CellEffectLayer.Trap));
         }
 
+        // 덫 피해로 마지막 적이 죽어 경기가 끝나도 그 뒤에는 아무 이벤트도 기록되지 않는다(일회용 덫의 소모는 피해보다 먼저).
+        [Fact]
+        public void TrapKillingTheLastEnemy_RecordsNothingAfterTheGameEnds()
+        {
+            const string trap = "KILL_TRAP";
+            StatusDefinition root = Statuses.Library.StatusLibrary.Root(targetTurns: 1, blocksExternalMoves: false);
+            var skill = new SkillDefinition(
+                trap, "trap", 1,
+                new CellTargeting(3, CellRequirement.Empty), PatternArea.SingleCell,
+                new SkillEffect[] { new PlaceZoneEffect(2, (zone, p) => new RootTrap(zone, 5, root, singleUse: true)) });
+            var (state, u) = new TestGame()
+                .WithSkills(skill)
+                .Place(Team.Player1, 0, 0, Caster(trap))
+                .Place(Team.Player2, 2, 4, TestGame.Stats(hp: 3))
+                .Start();
+            new UseSkillAction(u[0], trap, new Position(2, 2)).Execute(state);
+            new EndTurnAction(Team.Player1).Execute(state);
+
+            new MoveAction(u[1], new Position(2, 1)).Execute(state);
+
+            Assert.True(state.IsGameOver);
+            Assert.IsType<GameEndedEvent>(state.Events.All.Last());
+            Assert.Contains(state.Events.All, e => e is CellEffectRemovedEvent removed && removed.Reason == CellEffectRemoveReason.Consumed);
+        }
+
         #endregion
 
         #region Queries
