@@ -228,6 +228,40 @@ namespace MiniChess.Core.Tests
             Assert.Equal(6, state.GetPlayer(Team.Player1).Ap.Current); // 4 + 4, 최대 6
         }
 
+        // 선공 보정: 후공만 시작 AP 에 보너스를 한 번 더하고(최대치까지), 이후 회복은 일반 규칙과 같다.
+        [Fact]
+        public void SecondPlayerStartBonus_AddsToSecondPlayerStartApOnce()
+        {
+            var (state, _) = new TestGame()
+                .WithRules(r => { r.Ap = new ApRuleData { MaxAp = 14, StartAp = 8, TurnRecoveryAp = 10, CarryOver = true, SecondPlayerStartBonus = 3 }; })
+                .Place(Team.Player1, 0, 0)
+                .Place(Team.Player2, 6, 6)
+                .Start();
+
+            Assert.Equal(8, state.GetPlayer(Team.Player1).Ap.Current);
+            Assert.Equal(11, state.GetPlayer(Team.Player2).Ap.Current);
+
+            new EndTurnAction(Team.Player1).Execute(state);
+            Assert.Equal(11, state.GetPlayer(Team.Player2).Ap.Current); // 후공 첫 턴: 회복 없이 시작 보유량
+
+            new EndTurnAction(Team.Player2).Execute(state);
+            new EndTurnAction(Team.Player1).Execute(state);
+            Assert.Equal(14, state.GetPlayer(Team.Player2).Ap.Current); // 11 + 10, 최대 14
+        }
+
+        [Fact]
+        public void SecondPlayerStartBonus_IsCappedAtMaxAp()
+        {
+            var (state, _) = new TestGame()
+                .WithRules(r => { r.Ap.SecondPlayerStartBonus = 100; })
+                .Place(Team.Player1, 0, 0)
+                .Place(Team.Player2, 6, 6)
+                .Start();
+
+            Assert.Equal(state.Rules.Ap.StartAp, state.GetPlayer(Team.Player1).Ap.Current);
+            Assert.Equal(state.Rules.Ap.MaxAp, state.GetPlayer(Team.Player2).Ap.Current);
+        }
+
         [Fact]
         public void EndTurn_ByWrongTeam_IsRejected()
         {

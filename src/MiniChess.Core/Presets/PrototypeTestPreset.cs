@@ -29,6 +29,8 @@ namespace MiniChess.Core.Presets
                     StartAp = 8,
                     TurnRecoveryAp = 10,
                     CarryOver = true,
+                    // 선공 보정(사용자 확정): 후공 시작 AP 8 → 11. 봇 대전 측정 근거는 ASSUMPTIONS.md "선공 보정"
+                    SecondPlayerStartBonus = 3,
                 },
                 ActionCost = new ActionCostData
                 {

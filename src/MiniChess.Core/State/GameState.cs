@@ -83,8 +83,8 @@ namespace MiniChess.Core.State
 
             _players = new Dictionary<Team, PlayerState>
             {
-                { Team.Player1, CreatePlayer(Team.Player1, rules.Ap) },
-                { Team.Player2, CreatePlayer(Team.Player2, rules.Ap) },
+                { Team.Player1, CreatePlayer(Team.Player1, rules.Ap, rules.Match.FirstTeam) },
+                { Team.Player2, CreatePlayer(Team.Player2, rules.Ap, rules.Match.FirstTeam) },
             };
 
             Phase = GamePhase.Setup;
@@ -280,10 +280,13 @@ namespace MiniChess.Core.State
                 : new CaptureState(tile, rule.RequiredTurnStartCount, rule.ActiveFromStart);
         }
 
-        /// <summary>게임 시작 시 AP 는 StartAp 만 적용한다. 회복은 각 플레이어의 다음 턴부터.</summary>
-        private static PlayerState CreatePlayer(Team team, ApRuleData apRule)
+        /// <summary>
+        /// 게임 시작 시 AP 는 StartAp 만 적용한다(후공은 + SecondPlayerStartBonus, 최대치까지). 회복은 각 플레이어의 다음 턴부터.
+        /// </summary>
+        private static PlayerState CreatePlayer(Team team, ApRuleData apRule, Team firstTeam)
         {
-            var ap = new ApPool(apRule.MaxAp, apRule.StartAp);
+            int start = apRule.StartAp + (team == firstTeam ? 0 : apRule.SecondPlayerStartBonus);
+            var ap = new ApPool(apRule.MaxAp, Math.Min(apRule.MaxAp, start));
             return new PlayerState(team, ap);
         }
     }
