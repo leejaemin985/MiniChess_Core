@@ -95,17 +95,18 @@ namespace MiniChess.Core.State
         /// <summary>
         /// 명령을 실행해 볼 수 있는 깊은 복사본(GameController.Fork). 원본과 객체를 공유하지 않는다(규칙/스킬/캐릭터 정의 같은 불변 데이터만 공유).
         /// viewer 를 주면 그 팀에게 숨기는 정보(GameVisibility)를 뺀다. 이벤트 기록은 비어 있고, 무작위 값은 원본과 다른 흐름이다.
+        /// randomSeed 를 주면 복사본의 무작위 흐름을 그 값으로 만든다(봇이 무작위 결과를 여러 번 뽑아 볼 때).
         /// </summary>
-        internal GameState Fork(Team? viewer)
+        internal GameState Fork(Team? viewer, int? randomSeed = null)
         {
-            return new GameState(this, viewer);
+            return new GameState(this, viewer, randomSeed);
         }
 
-        private GameState(GameState source, Team? viewer)
+        private GameState(GameState source, Team? viewer, int? randomSeed)
         {
             Seed = source.Seed;
             // 원본의 무작위 흐름을 이어 쓰면 복사본에서 앞으로 나올 결과(점령 보상 등)를 미리 알 수 있어 따로 둔다.
-            Random = new SystemRandomSource(unchecked(source.Seed * 397 ^ source.TurnNumber));
+            Random = new SystemRandomSource(randomSeed ?? unchecked(source.Seed * 397 ^ source.TurnNumber));
             Rules = source.Rules;
             Skills = source.Skills;
             Characters = source.Characters;

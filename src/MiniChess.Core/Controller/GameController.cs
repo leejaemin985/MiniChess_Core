@@ -62,14 +62,16 @@ namespace MiniChess.Core.Controller
         /// 명령을 실행해 볼 수 있는 깊은 복사본(봇의 수 읽기 등). 복사본에 무엇을 해도 이 경기는 바뀌지 않는다.
         /// viewer 를 주면 그 팀에게 숨기는 정보(GameVisibility: 상대 덫, 상대 예약 포격)를 뺀 복사본이라, 그 팀이 알 수 있는 것만으로 결과를 본다.
         /// 복사본의 이벤트 기록은 비어 있고 무작위 값(점령 보상 선택 등)은 이 경기와 다르게 나온다.
+        /// randomSeed 를 주면 복사본의 무작위 값을 그 시드로 낸다. 봇이 시드를 바꿔 가며 무작위 결과를 여러 번 뽑아 볼 때 쓴다
+        /// (주지 않으면 원본 시드와 턴 번호로 정해져, 같은 턴의 복사본은 모두 같은 결과를 낸다).
         /// 스냅샷으로 복원한 경기(Restore)는 효과 동작이 없어 복사할 수 없다.
         /// </summary>
-        public GameController Fork(Team? viewer = null)
+        public GameController Fork(Team? viewer = null, int? randomSeed = null)
         {
             if (IsReadOnly)
                 throw new InvalidOperationException("스냅샷으로 복원한 경기는 효과 동작이 없어 복사해 실행할 수 없다.");
 
-            return new GameController(State.Fork(viewer));
+            return new GameController(State.Fork(viewer, randomSeed));
         }
 
         #region Commands

@@ -209,6 +209,18 @@ namespace MiniChess.Core.Tests
                 cell.GetEffect(CellEffectLayer.Trap) is Effects.Zones.ZoneCellEffect trap && trap.Zone.OwnerTeam == owner);
         }
 
+        // randomSeed: 같은 시드면 같은 무작위 값, 다른 시드면 다른 흐름. 주지 않으면 같은 턴의 복사본은 모두 같은 흐름이다.
+        [Fact]
+        public void Fork_random_seed_controls_the_random_stream_of_the_copy()
+        {
+            GameController game = CreateGame(1);
+            List<int> Draws(GameController fork) => Enumerable.Range(0, 20).Select(_ => fork.State.Random.Next(1000)).ToList();
+
+            Assert.Equal(Draws(game.Fork()), Draws(game.Fork()));
+            Assert.Equal(Draws(game.Fork(randomSeed: 7)), Draws(game.Fork(Team.Player1, randomSeed: 7)));
+            Assert.NotEqual(Draws(game.Fork(randomSeed: 7)), Draws(game.Fork(randomSeed: 8)));
+        }
+
         [Fact]
         public void Restored_game_cannot_be_forked()
         {
