@@ -313,6 +313,23 @@ namespace MiniChess.Core.Tests
             Assert.Equal(SkillFailReason.None, Check(state, u[0], ChemistPiece.PoisonGasId, 0, 2));
         }
 
+        // 사용자 확정: 모든 범위기는 모양과 무관하게 회전 가능. 2×2 독가스는 기준점(모서리)을 중심으로 돈다.
+        [Fact]
+        public void PoisonGas_RotatesAroundAnchorCorner()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0, With(ChemistPiece.PoisonGasId))
+                .Place(Team.Player2, 6, 6)
+                .Start();
+
+            Assert.True(SkillQueries.CanRotate(state, ChemistPiece.PoisonGasId));
+
+            SkillResult result = new UseSkillAction(u[0], ChemistPiece.PoisonGasId, new Position(2, 2), AreaRotation.R180).Execute(state);
+            Assert.Equal(
+                new[] { new Position(2, 2), new Position(1, 2), new Position(2, 1), new Position(1, 1) }.ToHashSet(),
+                result.AffectedCells.ToHashSet());
+        }
+
         // 사용자 확정: 독 장판을 지나가기만 해도 중독. 걸린 그 턴은 세지 않는다(화상과 동일)
         [Fact]
         public void PoisonGas_EnemyPassingThroughGetsPoisoned_AllyDoesNot()

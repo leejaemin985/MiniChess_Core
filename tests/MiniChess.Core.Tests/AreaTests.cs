@@ -92,7 +92,7 @@ namespace MiniChess.Core.Tests
         public void TargetAnchor_Rotate_TurnsClockwiseAroundSelectedCell_RegardlessOfCasterDirection(AreaRotation rotation, int[] expected)
         {
             var (state, caster) = Setup();
-            var area = new PatternArea(AreaShape.Parse(new[] { "#@##" }), AreaAnchor.Target, rotate: true);
+            var area = new PatternArea(AreaShape.Parse(new[] { "#@##" }), AreaAnchor.Target);
 
             // 시전자 (3,3) 기준 대각선 칸도 기준점이 될 수 있다
             IReadOnlyList<Position> cells = area.GetCells(state, caster, new Position(3, 4), rotation);
@@ -109,22 +109,24 @@ namespace MiniChess.Core.Tests
         public void CasterAnchor_Rotate_TurnsClockwiseAroundCaster(AreaRotation rotation, int[] expected)
         {
             var (state, caster) = Setup();
-            var area = new PatternArea(AreaShape.Parse(ForwardLine), AreaAnchor.Caster, rotate: true);
+            var area = new PatternArea(AreaShape.Parse(ForwardLine), AreaAnchor.Caster);
 
             IReadOnlyList<Position> cells = area.GetCells(state, caster, caster.Position.Value, rotation);
 
             Assert.Equal(Cells((expected[0], expected[1]), (expected[2], expected[3])), cells.ToHashSet());
         }
 
-        [Fact]
-        public void NonRotatingArea_IgnoresRotation()
+        // 모든 범위가 회전하지만, 돌려도 같은 칸인 모양(대칭, 한 칸)은 회전 버튼이 필요 없다.
+        [Theory]
+        [InlineData(false, "@")]
+        [InlineData(false, ".#.", "#@#", ".#.")]
+        [InlineData(false, "###", "#@#", "###")]
+        [InlineData(true, "##", "@#")]
+        [InlineData(true, "#@##")]
+        [InlineData(true, "#@#")]
+        public void ChangesWithRotation_FalseOnlyForRotationSymmetricShapes(bool expected, params string[] rows)
         {
-            var (state, caster) = Setup();
-            var area = new PatternArea(AreaShape.Parse(new[] { "#@##" }), AreaAnchor.Target);
-
-            IReadOnlyList<Position> cells = area.GetCells(state, caster, new Position(3, 3), AreaRotation.R90);
-
-            Assert.Equal(Cells((2, 3), (3, 3), (4, 3), (5, 3)), cells.ToHashSet());
+            Assert.Equal(expected, new PatternArea(AreaShape.Parse(rows), AreaAnchor.Target).ChangesWithRotation);
         }
 
         [Theory]

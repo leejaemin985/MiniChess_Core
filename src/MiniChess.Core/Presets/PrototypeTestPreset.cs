@@ -226,7 +226,6 @@ namespace MiniChess.Core.Presets
             t.Scythe.Slash.ApCost = 3;
             t.Scythe.Slash.Range = 2;
             t.Scythe.Slash.Area.Shape = new[] { "#@##" };
-            t.Scythe.Slash.Area.Rotate = true;
             t.Scythe.Slash.Damage = 3;
 
             t.Scythe.ShadowClone.ApCost = 3;
@@ -241,7 +240,6 @@ namespace MiniChess.Core.Presets
             t.Seamstress.Obstacle.ApCost = 3;
             t.Seamstress.Obstacle.Range = 3;
             t.Seamstress.Obstacle.Area.Shape = new[] { "@#" };
-            t.Seamstress.Obstacle.Area.Rotate = true;
             t.Seamstress.Obstacle.Hits = 1;
             t.Seamstress.Obstacle.Lifetime = 2;
             t.Seamstress.Obstacle.MaxActive = 1;

@@ -93,5 +93,12 @@ namespace MiniChess.Core.Skills.Areas
                 yield return (x, y);
             }
         }
+
+        /// <summary>90도 회전했을 때 상대 좌표 집합이 달라지는지. 90도에서 같으면 모든 회전에서 같다.</summary>
+        public bool ChangesWithRotation()
+        {
+            var rotated = new HashSet<(int, int)>(GetOffsets(AreaRotation.R90));
+            return !rotated.SetEquals(Offsets);
+        }
     }
 }

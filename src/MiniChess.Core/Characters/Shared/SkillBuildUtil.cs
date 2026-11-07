@@ -26,7 +26,7 @@ namespace MiniChess.Core.Characters.Shared
         /// <summary>범위 정보로 범위 부품을 만든다.</summary>
         public static PatternArea Area(AreaTuning area)
         {
-            return new PatternArea(AreaShape.Parse(area.Shape), area.Anchor, area.Rotate);
+            return new PatternArea(AreaShape.Parse(area.Shape), area.Anchor);
         }
 
         /// <summary>

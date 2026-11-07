@@ -73,10 +73,10 @@ namespace MiniChess.Core.Skills
             return push?.Predict(state, caster, targets);
         }
 
-        /// <summary>스킬 범위를 플레이어가 회전할 수 있는지(회전 버튼 표시 판단용).</summary>
+        /// <summary>스킬 범위를 회전할 의미가 있는지(회전 버튼 표시 판단용). 모든 범위가 회전하지만, 돌려도 같은 칸이면 false.</summary>
         public static bool CanRotate(GameState state, string skillId)
         {
-            return state.Skills.Find(skillId)?.Area is PatternArea area && area.Rotate;
+            return state.Skills.Find(skillId)?.Area is PatternArea area && area.ChangesWithRotation;
         }
     }
 }
