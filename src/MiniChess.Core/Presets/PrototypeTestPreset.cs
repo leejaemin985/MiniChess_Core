@@ -31,7 +31,7 @@ namespace MiniChess.Core.Presets
                     CarryOver = true,
                     // 선공 보정: 후공 시작 AP 에 한 번 더하는 값. 값은 여기에만 둔다.
                     // 바꾸면 ASSUMPTIONS.md "선공 보정"의 현재 값과 조정 기록도 함께 고친다.
-                    SecondPlayerStartBonus = 3,
+                    SecondPlayerStartBonus = 4,
                 },
                 ActionCost = new ActionCostData
                 {
