@@ -143,5 +143,31 @@ namespace MiniChess.Core.Tests
             Assert.Equal(SkillFailReason.None, skills.Single(s => s.Id == ScythePiece.SlashId).Usable);
             Assert.Empty(game.GetSkillTargets(p1[3], ScythePiece.CloneSwapId)); // 분신이 없어 지정할 칸 없음
         }
+
+        [Fact]
+        public void MovePreview_MatchesMoveCommand()
+        {
+            var (game, p1, p2) = StartedGame();
+            int before = Ap(game, Team.Player1);
+
+            // 전사 (0,1) → (0,2): 한 칸, 이동 가능
+            MovePreview preview = game.GetMovePreview(p1[0], new Position(0, 2));
+            Assert.Equal(MoveFailReason.None, preview.FailReason);
+            Assert.Equal(new[] { new Position(0, 2) }, preview.Path);
+
+            // 벽 (0,3) 너머: 경로는 보여주되 막혔다고 알린다
+            MovePreview blocked = game.GetMovePreview(p1[0], new Position(0, 4));
+            Assert.Equal(MoveFailReason.PathBlocked, blocked.FailReason);
+            Assert.Equal(3, blocked.Path.Count);
+
+            Assert.Equal(MoveFailReason.NotStraightLine, game.GetMovePreview(p1[0], new Position(1, 2)).FailReason);
+            Assert.Equal(MoveFailReason.NotYourTurn, game.GetMovePreview(p2[0], new Position(0, 4)).FailReason);
+            Assert.Equal(MoveFailReason.UnknownUnit, game.GetMovePreview(-1, new Position(0, 2)).FailReason);
+
+            // 미리본 비용만큼 차감된다
+            Assert.True(game.Move(new MoveRequest(Team.Player1, p1[0], new Position(0, 2))).Success);
+            Assert.Equal(before - preview.Cost, Ap(game, Team.Player1));
+            Assert.True(preview.Cost > 0);
+        }
     }
 }

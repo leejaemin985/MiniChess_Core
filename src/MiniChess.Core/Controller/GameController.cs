@@ -284,6 +284,25 @@ namespace MiniChess.Core.Controller
                 .ToList();
         }
 
+        /// <summary>
+        /// destination 으로 이동할 때의 경로와 AP 비용, 지금 이동할 수 있는지(확정 전 미리보기). 이동 명령과 같은 계산을 쓴다.
+        /// 유닛이 없으면 UnknownUnit, 보드에 없거나 범위 밖이면 경로 없이 그 이유.
+        /// </summary>
+        public MovePreview GetMovePreview(int unitId, Position destination)
+        {
+            Unit unit = State.FindUnit(unitId);
+            if (unit == null)
+                return new MovePreview(null, 0, MoveFailReason.UnknownUnit);
+
+            var action = new MoveAction(unit, destination);
+            MoveFailReason reason = action.Validate(State);
+            if (!unit.IsOnBoard || !State.Board.IsInBounds(destination))
+                return new MovePreview(null, 0, reason);
+
+            IReadOnlyList<Position> path = action.GetPath(State);
+            return new MovePreview(path, MoveAction.GetCost(State, unit, path.Count), reason);
+        }
+
         /// <summary>유닛이 지금 기본 공격할 수 있는 적. 지금 공격할 수 없으면 빈 목록.</summary>
         public List<Unit> GetAttackTargets(int unitId)
         {

@@ -85,13 +85,14 @@ namespace MiniChess.Core.Actions
             }
         }
 
-        private IReadOnlyList<Position> GetPath(GameState state)
+        /// <summary>지나갈 칸(출발 칸 제외, 마지막이 도착 칸). 직선이 아니거나 제자리면 빈 목록.</summary>
+        internal IReadOnlyList<Position> GetPath(GameState state)
         {
             return state.Board.GetStraightPath(Unit.Position.Value, Destination);
         }
 
         /// <summary>칸 수 × 칸당 AP × 유닛의 이동 AP 배율.</summary>
-        private static int GetCost(GameState state, Unit unit, int cells)
+        internal static int GetCost(GameState state, Unit unit, int cells)
         {
             return cells * state.Rules.ActionCost.MoveCostPerCell * unit.Stats.Base.MoveCostMultiplier;
         }
