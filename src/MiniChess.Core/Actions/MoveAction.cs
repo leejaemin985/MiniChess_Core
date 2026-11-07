@@ -40,7 +40,7 @@ namespace MiniChess.Core.Actions
             if (!state.Board.IsPathClear(path)) return MoveFailReason.PathBlocked;
 
             PlayerState player = state.GetPlayer(Unit.Team);
-            if (!player.Ap.CanSpend(GetCost(state, path.Count))) return MoveFailReason.NotEnoughAp;
+            if (!player.Ap.CanSpend(GetCost(state, Unit, path.Count))) return MoveFailReason.NotEnoughAp;
 
             return MoveFailReason.None;
         }
@@ -60,7 +60,7 @@ namespace MiniChess.Core.Actions
             MovementResult result = MovementResolver.Resolve(state, Unit, Unit, MoveKind.Path, path);
 
             PlayerState player = state.GetPlayer(Unit.Team);
-            player.Ap.TrySpend(GetCost(state, result.CellsMoved));
+            player.Ap.TrySpend(GetCost(state, Unit, result.CellsMoved));
 
             // 칸 효과에 의한 사망은 DamageSystem 에서 이미 처리된다.
             result.Events = state.Events.Since(eventStart);
@@ -90,9 +90,10 @@ namespace MiniChess.Core.Actions
             return state.Board.GetStraightPath(Unit.Position.Value, Destination);
         }
 
-        private static int GetCost(GameState state, int cells)
+        /// <summary>칸 수 × 칸당 AP × 유닛의 이동 AP 배율.</summary>
+        private static int GetCost(GameState state, Unit unit, int cells)
         {
-            return cells * state.Rules.ActionCost.MoveCostPerCell;
+            return cells * state.Rules.ActionCost.MoveCostPerCell * unit.Stats.Base.MoveCostMultiplier;
         }
     }
 }

@@ -23,6 +23,9 @@ namespace MiniChess.Core.Snapshots
         public int Attack { get; }
         public int AttackRange { get; }
 
+        /// <summary>이동 AP 배율(IReadOnlyUnitBaseStats.MoveCostMultiplier).</summary>
+        public int MoveCostMultiplier { get; }
+
         public bool IsSummon { get; }
 
         /// <summary>소환자 Id. 소환물이 아니면 null.</summary>
@@ -50,8 +53,10 @@ namespace MiniChess.Core.Snapshots
             int id, Team team, string characterId, string name, Position? position,
             int hp, int maxHp, int attack, int attackRange, bool isSummon, int? summonOwnerId,
             IReadOnlyList<string> skillIds, IReadOnlyList<ShieldSnapshot> shields, IReadOnlyList<StatusSnapshot> statuses,
-            bool actionsEnded, int voluntaryCellsMoved, bool basicAttackUsed, IReadOnlyList<string> usedSkillIds)
+            bool actionsEnded, int voluntaryCellsMoved, bool basicAttackUsed, IReadOnlyList<string> usedSkillIds,
+            int moveCostMultiplier = 1)
         {
+            MoveCostMultiplier = moveCostMultiplier;
             ActionsEnded = actionsEnded;
             VoluntaryCellsMoved = voluntaryCellsMoved;
             BasicAttackUsed = basicAttackUsed;

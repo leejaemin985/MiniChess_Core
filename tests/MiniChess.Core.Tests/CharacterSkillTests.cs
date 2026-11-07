@@ -1608,7 +1608,26 @@ namespace MiniChess.Core.Tests
 
             Assert.Equal(0, attack.Damage);
             Assert.NotNull(u[1].FindStatus(StatusLibrary.CurseMarkId));
-            Assert.Equal(0, state.CurrentPlayer.Ap.Current); // 6 - 소환 3 - 이동 1 - 공격 2
+            Assert.Equal(1, state.CurrentPlayer.Ap.Current); // 6 - 소환 3 - 이동 0(분신) - 공격 2
+        }
+
+        // 사용자 확정: 분신은 이동에 AP 를 쓰지 않는다(이동 AP 배율 0). 본체는 그대로 칸마다 쓴다.
+        [Fact]
+        public void ShadowClone_MovesWithoutAp_OwnerStillPaysPerCell()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 3, 0, Scythe())
+                .Place(Team.Player2, 6, 6)
+                .WithRules(r => r.Ap.StartAp = 6)
+                .Start();
+            Use(state, u[0], ScythePiece.ShadowCloneId, 3, 1);
+            Unit clone = CloneOf(state, u[0]);
+
+            new MoveAction(clone, new Position(3, 4)).Execute(state);
+            Assert.Equal(3, state.CurrentPlayer.Ap.Current); // 6 - 소환 3 - 분신 3칸 0
+
+            new MoveAction(u[0], new Position(1, 0)).Execute(state);
+            Assert.Equal(1, state.CurrentPlayer.Ap.Current); // 본체 2칸 2
         }
 
         [Fact]

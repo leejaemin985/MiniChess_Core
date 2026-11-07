@@ -15,6 +15,9 @@ namespace MiniChess.Core.Data
         /// <summary>기본 공격 사거리(칸).</summary>
         int AttackRange { get; }
 
+        /// <summary>이동 AP 배율. 이동 비용 = 칸 수 × 칸당 AP × 이 값(0 이면 이동에 AP 를 쓰지 않는다).</summary>
+        int MoveCostMultiplier { get; }
+
         /// <summary>보유 스킬 Id(슬롯 순). 미정 슬롯은 포함하지 않는다.</summary>
         IReadOnlyList<string> SkillIds { get; }
     }

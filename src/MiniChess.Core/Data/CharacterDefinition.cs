@@ -25,6 +25,9 @@ namespace MiniChess.Core.Data
         /// <summary>기본 공격 사거리(칸, 체비셰프 거리).</summary>
         public int? AttackRange { get; set; }
 
+        /// <summary>이동 AP 배율(기본 1). 이동 비용 = 칸 수 × 칸당 AP × 이 값.</summary>
+        public int MoveCostMultiplier { get; set; } = 1;
+
         /// <summary>액티브 스킬 슬롯 2개의 스킬 Id. 아직 정의하지 않은 슬롯은 null.</summary>
         public string[] SkillSlots { get; } = new string[SkillSlotCount];
 
@@ -66,6 +69,7 @@ namespace MiniChess.Core.Data
                 MaxHp = MaxHp.Value,
                 Attack = Attack.Value,
                 AttackRange = AttackRange.Value,
+                MoveCostMultiplier = MoveCostMultiplier,
                 SkillIds = SkillSlots.Where(id => id != null).Concat(ExtraSkillIds).ToArray(),
             };
         }
@@ -77,6 +81,7 @@ namespace MiniChess.Core.Data
                 MaxHp = MaxHp,
                 Attack = Attack,
                 AttackRange = AttackRange,
+                MoveCostMultiplier = MoveCostMultiplier,
             };
             Array.Copy(SkillSlots, clone.SkillSlots, SkillSlotCount);
             clone.ExtraSkillIds.AddRange(ExtraSkillIds);

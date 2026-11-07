@@ -85,7 +85,7 @@ namespace MiniChess.Core.Characters.Pieces
                 new SkillCondition[] { new NoLivingSummonCondition() });
         }
 
-        /// <summary>분신 능력치. 기본 공격 피해는 0 으로 고정(명세 4.3 확정).</summary>
+        /// <summary>분신 능력치. 기본 공격 피해는 0 으로 고정(명세 4.3 확정). 이동에 AP 를 쓰지 않는다(사용자 확정).</summary>
         private static UnitBaseStats CloneStats(ShadowCloneTuning t)
         {
             if (t.CloneHp == null || t.CloneAttackRange == null)
@@ -98,6 +98,7 @@ namespace MiniChess.Core.Characters.Pieces
                 MaxHp = t.CloneHp.Value,
                 Attack = 0,
                 AttackRange = t.CloneAttackRange.Value,
+                MoveCostMultiplier = 0,
             };
         }
     }

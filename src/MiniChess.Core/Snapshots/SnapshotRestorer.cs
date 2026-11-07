@@ -66,6 +66,7 @@ namespace MiniChess.Core.Snapshots
                     MaxHp = value.MaxHp,
                     Attack = value.Attack,
                     AttackRange = value.AttackRange,
+                    MoveCostMultiplier = value.MoveCostMultiplier,
                     SkillIds = value.SkillIds.ToArray(),
                 };
 
