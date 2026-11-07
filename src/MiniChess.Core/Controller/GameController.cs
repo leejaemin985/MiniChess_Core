@@ -315,6 +315,16 @@ namespace MiniChess.Core.Controller
                 .ToList();
         }
 
+        /// <summary>대상 유무와 상관없이 기본 공격이 닿는 칸(사거리 미리보기, 평타 버튼에 마우스를 올렸을 때 등). 보드에 없으면 빈 목록.</summary>
+        public List<Position> GetAttackReach(int unitId)
+        {
+            Unit attacker = State.FindUnit(unitId);
+            if (attacker == null || !attacker.IsPlaced)
+                return new List<Position>();
+
+            return AttackAction.GetReach(State, attacker);
+        }
+
         /// <summary>유닛이 지금 기본 공격할 수 있는 장애물 칸. 지금 공격할 수 없으면 빈 목록.</summary>
         public List<Position> GetAttackableObstacles(int unitId)
         {

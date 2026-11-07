@@ -145,6 +145,18 @@ namespace MiniChess.Core.Tests
         }
 
         [Fact]
+        public void AttackReach_CoversTargets()
+        {
+            var (game, p1, _) = StartedGame();
+
+            // 궁수 (1,1): 대상 유무와 상관없이 사거리 칸을 돌려주고, 공격 가능한 적은 모두 그 안에 있다
+            List<Position> reach = game.GetAttackReach(p1[1]);
+            Assert.Contains(new Position(1, 2), reach);
+            Assert.All(game.GetAttackTargets(p1[1]), target => Assert.Contains(target.Position.Value, reach));
+            Assert.Empty(game.GetAttackReach(-1));
+        }
+
+        [Fact]
         public void MovePreview_MatchesMoveCommand()
         {
             var (game, p1, p2) = StartedGame();

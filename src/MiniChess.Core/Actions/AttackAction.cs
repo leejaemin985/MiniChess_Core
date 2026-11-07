@@ -114,10 +114,16 @@ namespace MiniChess.Core.Actions
             if (!attacker.IsPlaced)
                 return new List<Unit>();
 
-            List<Position> positions = RangeCalculator.GetPositionsInRange(
-                state.Board, attacker.Position.Value, attacker.Stats.AttackRange);
+            return TargetFilter.Enemy.GetUnits(state.Board, GetReach(state, attacker), attacker);
+        }
 
-            return TargetFilter.Enemy.GetUnits(state.Board, positions, attacker);
+        /// <summary>attacker 의 기본 공격 사거리 안 칸(대상 유무 무관). 보드에 없으면 빈 목록.</summary>
+        public static List<Position> GetReach(GameState state, Unit attacker)
+        {
+            if (!attacker.IsPlaced)
+                return new List<Position>();
+
+            return RangeCalculator.GetPositionsInRange(state.Board, attacker.Position.Value, attacker.Stats.AttackRange);
         }
     }
 }

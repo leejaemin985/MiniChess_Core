@@ -56,7 +56,7 @@ namespace MiniChess.Core.Actions
             if (!attacker.IsPlaced)
                 return positions;
 
-            foreach (Position position in RangeCalculator.GetPositionsInRange(state.Board, attacker.Position.Value, attacker.Stats.AttackRange))
+            foreach (Position position in AttackAction.GetReach(state, attacker))
             {
                 if (FindObstacle(state, position) != null)
                     positions.Add(position);
