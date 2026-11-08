@@ -145,6 +145,21 @@ namespace MiniChess.Core.Tests
         }
 
         [Fact]
+        public void SkillFailReason_MatchesUseSkill()
+        {
+            var (game, p1, _) = StartedGame();
+            int scythe = p1[3];
+
+            // 지정 가능한 칸은 사용 가능, 회전과 무관하게 명령과 같은 결과
+            Position target = game.GetSkillTargets(scythe, ScythePiece.SlashId)[0];
+            Assert.Equal(SkillFailReason.None, game.GetSkillFailReason(scythe, ScythePiece.SlashId, new[] { target }, AreaRotation.R90));
+            Assert.Equal(SkillFailReason.InvalidTarget, game.GetSkillFailReason(scythe, ScythePiece.SlashId, new[] { new Position(6, 6) }));
+            Assert.Equal(SkillFailReason.UnknownUnit, game.GetSkillFailReason(-1, ScythePiece.SlashId, new[] { target }));
+            Assert.Equal(SkillFailReason.InvalidRequest, game.GetSkillFailReason(scythe, ScythePiece.SlashId, new Position[0]));
+            Assert.True(game.UseSkill(new UseSkillRequest(Team.Player1, scythe, ScythePiece.SlashId, target, AreaRotation.R90)).Success);
+        }
+
+        [Fact]
         public void AttackReach_CoversTargets()
         {
             var (game, p1, _) = StartedGame();

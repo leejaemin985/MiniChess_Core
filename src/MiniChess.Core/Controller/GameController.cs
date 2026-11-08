@@ -390,6 +390,21 @@ namespace MiniChess.Core.Controller
         }
 
         /// <summary>
+        /// 지정한 칸(들)과 회전으로 지금 스킬을 쓸 수 있는지(확정 전 미리보기). 스킬 사용 명령과 같은 검사를 쓴다. None 이면 사용 가능.
+        /// 유닛이 없거나 지정 칸이 비었으면 그 이유.
+        /// </summary>
+        public SkillFailReason GetSkillFailReason(int unitId, string skillId, IReadOnlyList<Position> targets, AreaRotation rotation = AreaRotation.R0)
+        {
+            Unit caster = State.FindUnit(unitId);
+            if (caster == null)
+                return SkillFailReason.UnknownUnit;
+            if (skillId == null || targets == null || targets.Count == 0 || !Enum.IsDefined(typeof(AreaRotation), rotation))
+                return SkillFailReason.InvalidRequest;
+
+            return new UseSkillAction(caster, skillId, targets, rotation).Validate(State);
+        }
+
+        /// <summary>
         /// 방향을 골라 미는 스킬(자리 교정 등)의 예상 도착 칸. 밀리지 않으면 대상의 현재 칸.
         /// targets 는 모든 지정 칸(대상, 방향 칸). 지정이 유효하지 않거나 미는 스킬이 아니면 null.
         /// </summary>
