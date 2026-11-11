@@ -47,6 +47,7 @@ namespace MiniChess.Core.Actions
 
         /// <summary>
         /// 이동을 실행한다. AP 는 실제로 이동한 칸 수만큼만 차감한다(덫 등으로 도중에 멈춘 경우 포함).
+        /// 돌려주는 몫은 최대치에서 잘린다(이동 중 AP 토큰으로 최대치가 되었을 때만 해당).
         /// </summary>
         public MovementResult Execute(GameState state)
         {
@@ -57,10 +58,17 @@ namespace MiniChess.Core.Actions
             int eventStart = state.Events.Count;
 
             IReadOnlyList<Position> path = GetPath(state);
+
+            // 경로 전체 비용을 먼저 내고 못 간 칸만큼 돌려준다. 이동 중에 얻는 AP(토큰)가 비용을 내기 전 AP 에 더해져 최대치에서 잘리지 않도록.
+            PlayerState player = state.GetPlayer(Unit.Team);
+            int pathCost = GetCost(state, Unit, path.Count);
+            player.Ap.TrySpend(pathCost);
+
             MovementResult result = MovementResolver.Resolve(state, Unit, Unit, MoveKind.Path, path);
 
-            PlayerState player = state.GetPlayer(Unit.Team);
-            player.Ap.TrySpend(GetCost(state, Unit, result.CellsMoved));
+            int refund = pathCost - GetCost(state, Unit, result.CellsMoved);
+            if (refund > 0)
+                player.Ap.Recover(refund);
 
             // 칸 효과에 의한 사망은 DamageSystem 에서 이미 처리된다.
             result.Events = state.Events.Since(eventStart);

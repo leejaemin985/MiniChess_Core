@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using MiniChess.Core.Common;
 using MiniChess.Core.Events;
 using MiniChess.Core.State;
+using MiniChess.Core.Tokens;
 
 namespace MiniChess.Core.Snapshots
 {
@@ -40,12 +41,16 @@ namespace MiniChess.Core.Snapshots
         public IReadOnlyList<StrikeSnapshot> Strikes { get; }
         public CaptureSnapshot Capture { get; }
 
+        /// <summary>보드 위의 토큰. 없으면 null.</summary>
+        public TokenSnapshot Token { get; }
+
         public GameSnapshot(
             Team viewer, GamePhase phase, Team currentTeam, int turnNumber, Team? winner, GameEndReason? endReason, int lastEventSequence,
             int boardWidth, int boardHeight, IReadOnlyList<CellSnapshot> cells, IReadOnlyList<PlayerSnapshot> players,
             IReadOnlyList<UnitSnapshot> units, IReadOnlyList<CellEffectSnapshot> cellEffects, IReadOnlyList<StrikeSnapshot> strikes,
-            CaptureSnapshot capture)
+            CaptureSnapshot capture, TokenSnapshot token)
         {
+            Token = token;
             Viewer = viewer;
             Phase = phase;
             CurrentTeam = currentTeam;
@@ -107,6 +112,22 @@ namespace MiniChess.Core.Snapshots
             RewardId = rewardId;
             Player1Progress = player1Progress;
             Player2Progress = player2Progress;
+        }
+    }
+
+    public class TokenSnapshot
+    {
+        public TokenKind Kind { get; }
+        public Position Position { get; }
+
+        /// <summary>이 토큰이 생긴 턴의 팀(먹을 수 있는 팀).</summary>
+        public Team Team { get; }
+
+        public TokenSnapshot(TokenKind kind, Position position, Team team)
+        {
+            Kind = kind;
+            Position = position;
+            Team = team;
         }
     }
 }

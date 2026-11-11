@@ -101,7 +101,8 @@ namespace MiniChess.Core.Snapshots
                 state.AllUnits().Where(unit => unit.IsAlive).Select(Unit).ToList(),
                 effects,
                 state.ScheduledStrikes.Select(Strike).ToList(),
-                captureSnapshot);
+                captureSnapshot,
+                state.Token == null ? null : new TokenSnapshot(state.Token.Kind, state.Token.Position, state.Token.Team));
         }
     }
 }

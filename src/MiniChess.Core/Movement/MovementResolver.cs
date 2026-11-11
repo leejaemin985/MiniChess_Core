@@ -6,6 +6,7 @@ using MiniChess.Core.Common;
 using MiniChess.Core.Effects;
 using MiniChess.Core.Events;
 using MiniChess.Core.State;
+using MiniChess.Core.Tokens;
 
 namespace MiniChess.Core.Movement
 {
@@ -101,7 +102,7 @@ namespace MiniChess.Core.Movement
             CaptureSystem.OnOccupancyChanged(state);
         }
 
-        /// <summary>현재 칸의 모든 효과에 OnEnter 를 호출한다. 하나라도 Stop 이면 true.</summary>
+        /// <summary>현재 칸의 모든 효과에 OnEnter 를 호출한 뒤 그 칸의 토큰을 먹는다. 하나라도 Stop 이면 true.</summary>
         private static bool TriggerEnter(GameState state, Unit unit)
         {
             CellEffectContext context = CreateContext(state, unit);
@@ -118,6 +119,7 @@ namespace MiniChess.Core.Movement
                     break;
             }
 
+            TokenSystem.OnUnitEntered(state, unit);
             return stopRequested;
         }
 

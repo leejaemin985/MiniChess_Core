@@ -7,6 +7,7 @@ using MiniChess.Core.Common;
 using MiniChess.Core.Data;
 using MiniChess.Core.Skills;
 using MiniChess.Core.Statuses.Library;
+using MiniChess.Core.Tokens;
 
 namespace MiniChess.Core.Presets
 {
@@ -58,6 +59,16 @@ namespace MiniChess.Core.Presets
                         new ShieldReward(amount: 2, regenerate: true),
                         new BasicAttackStatusReward(StatusLibrary.Burn(damagePerTrigger: 1, triggers: 2)),
                     },
+                },
+                // 사용자 확정: 3 라운드부터 2 라운드마다 양 팀 턴에 각자 토큰, 힐 → AP 순. 수치(AP 4, 체력 3)는 플레이 테스트로 조정
+                // 값을 바꾸면 ASSUMPTIONS.md "토큰"도 함께 고친다.
+                Token = new TokenRuleData
+                {
+                    StartRound = 3,
+                    PeriodRounds = 2,
+                    Sequence = new List<TokenKind> { TokenKind.Heal, TokenKind.Ap },
+                    ApAmount = 4,
+                    HealAmount = 3,
                 },
             };
         }

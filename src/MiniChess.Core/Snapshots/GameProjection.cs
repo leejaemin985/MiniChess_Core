@@ -33,7 +33,8 @@ namespace MiniChess.Core.Snapshots
                 full.Units.Where(unit => !hidePlacement || unit.Team == viewer).ToList(),
                 full.CellEffects.Where(effect => !IsHiddenEffect(effect.Kind, effect.OwnerTeam, viewer)).ToList(),
                 full.Strikes.Where(strike => !GameVisibility.IsHiddenStrike(strike.SourceTeam, viewer)).ToList(),
-                full.Capture);
+                full.Capture,
+                full.Token);
         }
 
         public static IReadOnlyList<GameEvent> FilterEvents(GameState state, Team viewer, IReadOnlyList<GameEvent> events)

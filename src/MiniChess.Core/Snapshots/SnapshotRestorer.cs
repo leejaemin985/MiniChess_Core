@@ -11,6 +11,7 @@ using MiniChess.Core.Effects.Zones;
 using MiniChess.Core.State;
 using MiniChess.Core.Statuses;
 using MiniChess.Core.Statuses.Library;
+using MiniChess.Core.Tokens;
 using MiniChess.Core.Turns;
 
 namespace MiniChess.Core.Snapshots
@@ -51,6 +52,9 @@ namespace MiniChess.Core.Snapshots
             RestoreCellEffects(state, snapshot);
             RestoreStrikes(state, snapshot);
             RestoreCapture(state, config, snapshot.Capture);
+
+            if (snapshot.Token != null)
+                state.Token = new Token(snapshot.Token.Kind, snapshot.Token.Position, snapshot.Token.Team);
             return state;
         }
 

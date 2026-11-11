@@ -10,6 +10,7 @@ using MiniChess.Core.Effects.Scheduled;
 using MiniChess.Core.Events;
 using MiniChess.Core.State;
 using MiniChess.Core.Statuses;
+using MiniChess.Core.Tokens;
 
 namespace MiniChess.Core.Turns
 {
@@ -57,6 +58,8 @@ namespace MiniChess.Core.Turns
 
             Team endingTeam = state.CurrentTeam;
 
+            TokenSystem.OnTurnEnd(state);
+
             foreach (TurnStep step in EndSteps)
             {
                 RunHooks(state, step, endingTeam);
@@ -86,7 +89,7 @@ namespace MiniChess.Core.Turns
 
         /// <summary>
         /// 현재 팀의 턴 시작 처리.
-        /// AP 회복(첫 턴은 StartAp 만 적용) → 유닛 턴 상태 초기화 → 시작 단계 훅 → 점령 판정.
+        /// AP 회복(첫 턴은 StartAp 만 적용) → 유닛 턴 상태 초기화 → 시작 단계 훅 → 토큰 생성 → 점령 판정.
         /// </summary>
         private static void BeginTurn(GameState state)
         {
@@ -108,6 +111,9 @@ namespace MiniChess.Core.Turns
                 if (state.IsGameOver)
                     return;
             }
+
+            // 시작 효과(예약 포격 등)로 비워진 칸도 후보가 되도록 시작 단계 뒤에 만든다.
+            TokenSystem.OnTurnStart(state);
 
             // TurnStep.StartCapture: 시작 효과(예약 포격 등)로 점령 칸의 유닛이 사라졌을 수 있어 마지막에 판정한다.
             CaptureSystem.OnTurnStart(state, state.CurrentTeam);

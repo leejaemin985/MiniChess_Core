@@ -12,6 +12,7 @@ using MiniChess.Core.Skills;
 using MiniChess.Core.Snapshots;
 using MiniChess.Core.Statuses;
 using MiniChess.Core.Statuses.Library;
+using MiniChess.Core.Tokens;
 
 namespace MiniChess.Core.State
 {
@@ -43,6 +44,9 @@ namespace MiniChess.Core.State
 
         /// <summary>점령 목표 상태.</summary>
         public CaptureState Capture { get; }
+
+        /// <summary>지금 보드 위의 토큰(최대 1개). 없으면 null. 변경은 TokenSystem 을 통해서만 한다.</summary>
+        public Token Token { get; internal set; }
 
         /// <summary>이 경기의 무작위 시드. 로그에 남겨두면 같은 경기를 재현할 수 있다.</summary>
         public int Seed { get; }
@@ -119,6 +123,7 @@ namespace MiniChess.Core.State
             _nextStrikeId = source._nextStrikeId;
             _nextZoneId = source._nextZoneId;
             Capture = source.Capture.Fork();
+            Token = source.Token;
 
             var map = new ForkMap();
             _players = new Dictionary<Team, PlayerState>();
