@@ -24,6 +24,9 @@ namespace MiniChess.Core.State
         private readonly List<ScheduledStrike> _scheduledStrikes = new List<ScheduledStrike>();
         private int _nextUnitId = 1;
 
+        /// <summary>일괄 피해 중에는 전멸 판정을 미룬다. 명령 내부 임시값이며 스냅샷/복사에는 포함하지 않는다.</summary>
+        internal int DamageBatchDepth { get; set; }
+
         public GameRuleData Rules { get; }
         public Board Board { get; }
 

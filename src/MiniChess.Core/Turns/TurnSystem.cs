@@ -34,7 +34,6 @@ namespace MiniChess.Core.Turns
             TurnStep.EndHeal,
             TurnStep.EndDamageOverTime,
             TurnStep.EndAreaEffects,
-            TurnStep.EndDurationTick,
         };
 
         /// <summary>Setup 단계를 끝내고 Battle 단계로 넘어가 선공 팀의 첫 턴을 시작한다.</summary>
@@ -66,6 +65,15 @@ namespace MiniChess.Core.Turns
                 if (state.IsGameOver)
                     return;
             }
+
+            // 피로도는 회복/DoT/장판 뒤, 봉인 등 상태의 지속시간이 끝나기 전에 처리한다.
+            FatigueSystem.OnTurnEnd(state);
+            if (state.IsGameOver)
+                return;
+
+            RunHooks(state, TurnStep.EndDurationTick, endingTeam);
+            if (state.IsGameOver)
+                return;
 
             state.Events.Record(new TurnEndedEvent(endingTeam, state.TurnNumber));
 

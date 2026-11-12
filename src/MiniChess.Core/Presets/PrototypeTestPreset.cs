@@ -60,6 +60,8 @@ namespace MiniChess.Core.Presets
                         new BasicAttackStatusReward(StatusLibrary.Burn(damagePerTrigger: 1, triggers: 2)),
                     },
                 },
+                // 사용자 확정: 8 라운드부터 매 턴 종료 시 전체 피해 1, 라운드마다 +1.
+                Fatigue = new FatigueRuleData { StartRound = 8, InitialDamage = 1, DamageIncreasePerRound = 1 },
                 // 사용자 확정: 3 라운드부터 2 라운드마다 양 팀 턴에 각자 토큰, 힐 → AP 순. 수치(AP 4, 체력 3)는 플레이 테스트로 조정
                 // 값을 바꾸면 ASSUMPTIONS.md "토큰"도 함께 고친다.
                 Token = new TokenRuleData

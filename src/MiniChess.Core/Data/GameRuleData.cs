@@ -10,5 +10,8 @@ namespace MiniChess.Core.Data
 
         /// <summary>토큰 규칙. null 이면 토큰이 나오지 않는다.</summary>
         public TokenRuleData Token { get; set; }
+
+        /// <summary>피로도 규칙. null 이면 피로도 피해가 없다.</summary>
+        public FatigueRuleData Fatigue { get; set; }
     }
 }

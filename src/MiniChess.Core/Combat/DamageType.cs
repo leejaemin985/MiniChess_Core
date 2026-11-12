@@ -20,5 +20,8 @@ namespace MiniChess.Core.Combat
 
         /// <summary>호위 등으로 다른 유닛에게 전가된 피해.</summary>
         Redirected,
+
+        /// <summary>턴 종료 시 라운드에 따라 증가하는 피로도 피해.</summary>
+        Fatigue,
     }
 }

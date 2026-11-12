@@ -13,6 +13,28 @@ namespace MiniChess.Core.Combat
     /// </summary>
     public static class DamageSystem
     {
+        /// <summary>기존 피해/사망 처리를 유지하되, 모든 피해와 연쇄 정리 후 한 번만 전멸을 판정한다.</summary>
+        internal static void ApplyBatch(GameState state, IReadOnlyList<DamageRequest> requests)
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
+            if (requests == null) throw new ArgumentNullException(nameof(requests));
+            if (state.IsGameOver)
+                return;
+
+            state.DamageBatchDepth++;
+            try
+            {
+                foreach (DamageRequest request in requests)
+                    Apply(state, request);
+            }
+            finally
+            {
+                state.DamageBatchDepth--;
+            }
+
+            DeathSystem.CheckGameEnd(state);
+        }
+
         /// <summary>
         /// 피해를 적용한다. 보드 위에 살아 있는 대상만 처리하며, 그 외에는 아무것도 하지 않는다.
         /// 체력 변화를 막는 상태(봉인 등)의 대상은 가로채기 전에 무효 처리한다(호위로 넘어가지도 않는다).

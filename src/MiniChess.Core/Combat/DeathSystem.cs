@@ -44,7 +44,7 @@ namespace MiniChess.Core.Combat
         /// </summary>
         internal static void CheckGameEnd(GameState state)
         {
-            if (state.Phase != GamePhase.Battle)
+            if (state.Phase != GamePhase.Battle || state.DamageBatchDepth > 0)
                 return;
 
             SummonEliminationPolicy policy = state.Rules.Match.SummonElimination;
