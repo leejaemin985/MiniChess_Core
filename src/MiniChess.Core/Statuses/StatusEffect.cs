@@ -24,7 +24,7 @@ namespace MiniChess.Core.Statuses
 
         public int Remaining { get; internal set; }
 
-        /// <summary>걸리거나 갱신된 경기 턴 번호.</summary>
+        /// <summary>발동/감소의 첫 턴 유예 기준. 장판 재진입으로 같은 상태를 갱신할 때는 기존 기준을 유지한다.</summary>
         public int AppliedTurnNumber { get; private set; }
 
         /// <summary>

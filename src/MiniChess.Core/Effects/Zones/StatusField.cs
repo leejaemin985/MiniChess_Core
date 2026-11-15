@@ -33,7 +33,9 @@ namespace MiniChess.Core.Effects.Zones
 
         public override CellEnterResult OnEnter(CellEffectContext context)
         {
-            TryApply(context.State, context.Unit);
+            // 장판 안의 이동/재진입으로 남은 횟수는 갱신하되, 기존 중독의 이번 턴 피해를 미루지는 않는다.
+            // 신규 중독이면 Apply가 현재 턴으로 생성하므로 원래의 첫 턴 유예는 유지된다.
+            TryApply(context.State, context.Unit, preserveApplicationTurnOnRefresh: true);
             return CellEnterResult.Continue;
         }
 
@@ -46,10 +48,11 @@ namespace MiniChess.Core.Effects.Zones
             TryApply(context.State, occupant);
         }
 
-        private void TryApply(GameState state, Unit unit)
+        private void TryApply(GameState state, Unit unit, bool preserveApplicationTurnOnRefresh = false)
         {
             if (Affects(unit))
-                StatusSystem.Apply(state, Status, unit, Zone.Source, Zone.OwnerTeam, Zone.SkillId);
+                StatusSystem.Apply(state, Status, unit, Zone.Source, Zone.OwnerTeam, Zone.SkillId,
+                    preserveApplicationTurnOnRefresh);
         }
     }
 }

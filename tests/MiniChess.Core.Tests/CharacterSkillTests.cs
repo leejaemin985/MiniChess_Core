@@ -402,6 +402,56 @@ namespace MiniChess.Core.Tests
             Assert.Equal(1, u[1].FindStatus(StatusLibrary.PoisonId).Remaining);
         }
 
+        // 이미 중독된 유닛이 장판 칸을 다시 밟아도 예정된 이번 턴 DoT가 밀리면 안 된다.
+        [Theory]
+        [InlineData(2, 2)] // 장판 안에서 이동: 턴 종료 장판 단계에서 남은 횟수 갱신
+        [InlineData(1, 1)] // 장판을 지나 밖으로 이동: 이번 피해 후 남은 횟수 감소
+        public void PoisonGas_AlreadyPoisoned_MovingThroughField_DoesNotPostponeDamage(int destinationX, int remaining)
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0, With(ChemistPiece.PoisonGasId))
+                .Place(Team.Player2, 3, 3)
+                .Start();
+            Use(state, u[0], ChemistPiece.PoisonGasId, 2, 2);
+            EndTurn(state);
+
+            var move = new MoveAction(u[1], new Position(destinationX, 3));
+            Assert.Equal(MoveFailReason.None, move.Validate(state));
+            move.Execute(state);
+            EndTurn(state);
+
+            Assert.Equal(9, u[1].Stats.CurrentHp);
+            Assert.Equal(remaining, u[1].FindStatus(StatusLibrary.PoisonId).Remaining);
+            var damaged = Assert.Single(state.Events.All.OfType<UnitDamagedEvent>());
+            Assert.Equal(u[1].Id, damaged.TargetId);
+            Assert.Equal(DamageType.DoT, damaged.Type);
+            Assert.Equal(1, damaged.AppliedAmount);
+        }
+
+        [Fact]
+        public void PoisonGas_MovingInsideEveryTurn_StillTakesDamageEveryTurn()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0, With(ChemistPiece.PoisonGasId))
+                .Place(Team.Player2, 3, 3)
+                .Start();
+            Use(state, u[0], ChemistPiece.PoisonGasId, 2, 2);
+            EndTurn(state);
+
+            for (int turn = 0; turn < 2; turn++)
+            {
+                var move = new MoveAction(u[1], new Position(turn == 0 ? 2 : 3, 3));
+                Assert.Equal(MoveFailReason.None, move.Validate(state));
+                move.Execute(state);
+                EndTurn(state);
+
+                Assert.Equal(9 - turn, u[1].Stats.CurrentHp);
+                Assert.Equal(2, u[1].FindStatus(StatusLibrary.PoisonId).Remaining);
+                if (turn == 0) EndTurn(state);
+            }
+            Assert.Equal(2, state.Events.All.OfType<UnitDamagedEvent>().Count(e => e.Type == DamageType.DoT));
+        }
+
         // 아군은 독 장판 위에 머물러도 중독되지 않는다
         [Fact]
         public void PoisonGas_AllyStaying_NeverPoisoned()

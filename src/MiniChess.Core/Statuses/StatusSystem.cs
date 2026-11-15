@@ -20,7 +20,9 @@ namespace MiniChess.Core.Statuses
         /// 적용(또는 갱신)된 효과를 반환한다. 무시되었거나 대상이 보드 위에 없으면 null.
         /// </summary>
         /// <param name="originId">건 원인(스킬 Id, 기본 공격이면 StatusOrigins.BasicAttack). 모르면 null.</param>
-        internal static StatusEffect Apply(GameState state, StatusDefinition definition, Unit target, Unit source, Team sourceTeam, string originId = null)
+        /// <param name="preserveApplicationTurnOnRefresh">장판 재진입처럼 기존 노출이 계속되면 최초 발동 유예를 다시 시작하지 않는다. 신규 부여/교체에는 적용하지 않는다.</param>
+        internal static StatusEffect Apply(GameState state, StatusDefinition definition, Unit target, Unit source, Team sourceTeam, string originId = null,
+            bool preserveApplicationTurnOnRefresh = false)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
             if (definition == null) throw new ArgumentNullException(nameof(definition));
@@ -39,7 +41,8 @@ namespace MiniChess.Core.Statuses
 
                     // 같은 정의면 갱신한다. 같은 Id 라도 정의가 다르면(점령 보상 화상과 스킬 화상 등) 수치가 다를 수 있어 새 정의로 교체한다.
                     case StatusStackPolicy.Refresh when ReferenceEquals(existing.Definition, definition):
-                        existing.Reapply(source, sourceTeam, state.TurnNumber);
+                        existing.Reapply(source, sourceTeam,
+                            preserveApplicationTurnOnRefresh ? existing.AppliedTurnNumber : state.TurnNumber);
                         state.Events.Record(new StatusAppliedEvent(target.Id, SnapshotBuilder.Status(existing), refreshed: true));
                         return existing;
 
