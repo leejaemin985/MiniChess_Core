@@ -842,7 +842,7 @@ namespace MiniChess.Core.Tests
         private static void Hit(GameState state, Unit target, int amount, DamageType type = DamageType.Direct) =>
             DamageSystem.Apply(state, new DamageRequest(null, target, amount, type));
 
-        // 사용자 확정: 비율 분담 없이 대상이 받을 직접 피해를 호위자가 전부 대신 받는다
+        // 사용자 확정: 비율 분담 없이 대상이 받을 직접 피해를 호위자가 전부 대신 받는다. 호위자는 프리셋 감소량(1)만큼 덜 받는다
         [Fact]
         public void Guard_GuardianTakesAllDirectDamageInsteadOfAlly()
         {
@@ -857,8 +857,31 @@ namespace MiniChess.Core.Tests
             new AttackAction(u[2], u[1]).Execute(state);
 
             Assert.Equal(10, u[1].Stats.CurrentHp);
-            Assert.Equal(7, u[0].Stats.CurrentHp);
+            Assert.Equal(8, u[0].Stats.CurrentHp); // 공격 3 - 감소 1
             Assert.Contains(state.Events.Since(0), e => e is UnitDamagedEvent d && d.TargetId == u[0].Id && d.Type == DamageType.Redirected);
+        }
+
+        // 사용자 확정: 호위자는 대신 받는 피해를 감소량만큼 덜 받고, 0 까지 줄어든다(보호 대상은 그대로 0)
+        [Theory]
+        [InlineData(3, 1, 2)]
+        [InlineData(1, 1, 0)]
+        [InlineData(1, 2, 0)]
+        public void Guard_GuardianTakesReducedDamage_DownToZero(int amount, int reduction, int expectedTaken)
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0)
+                .Place(Team.Player1, 1, 0)
+                .Place(Team.Player2, 6, 6)
+                .Start();
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Guard(maxDistance: 2, damageReduction: reduction), u[1], u[0]);
+
+            Hit(state, u[1], amount);
+
+            Assert.Equal(10, u[1].Stats.CurrentHp);
+            Assert.Equal(10 - expectedTaken, u[0].Stats.CurrentHp);
+            var redirected = Assert.Single(state.Events.All.OfType<UnitDamagedEvent>(), d => d.Type == DamageType.Redirected);
+            Assert.Equal(u[0].Id, redirected.TargetId);
+            Assert.Equal(expectedTaken, redirected.AppliedAmount);
         }
 
         [Fact]

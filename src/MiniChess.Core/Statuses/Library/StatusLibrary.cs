@@ -121,9 +121,10 @@ namespace MiniChess.Core.Statuses.Library
         /// 한 대상에는 호위자 한 명(새로 걸면 교체), 한 호위자는 한 대상만 호위한다.
         /// </summary>
         /// <param name="maxDistance">호위자와 대상 사이 최대 거리(체비셰프).</param>
-        public static StatusDefinition Guard(int? maxDistance)
+        /// <param name="damageReduction">호위자가 대신 받는 피해에서 빼는 양(0 까지). 0 이면 감소 없음.</param>
+        public static StatusDefinition Guard(int? maxDistance, int? damageReduction = 0)
         {
-            if (maxDistance == null)
+            if (maxDistance == null || damageReduction == null)
                 return null;
 
             return new StatusDefinition(
@@ -131,7 +132,7 @@ namespace MiniChess.Core.Statuses.Library
                 duration: 1,
                 StatusStackPolicy.Replace,
                 SourceTurnStart,
-                behavior: new GuardBehavior(maxDistance.Value),
+                behavior: new GuardBehavior(maxDistance.Value, damageReduction.Value),
                 removeOnSourceDeath: true);
         }
 

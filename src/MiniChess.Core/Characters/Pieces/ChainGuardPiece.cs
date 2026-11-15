@@ -33,7 +33,8 @@ namespace MiniChess.Core.Characters.Pieces
 
         /// <summary>
         /// 호위: 아군 1명(자신 제외)의 직접 피해를 대신 받는다(명세 12.2, 사용자 확정: 비율 분담 없이 전부 대신 받음).
-        /// 피해 시점에 MaxDistance 이내일 때만, 다음 내 턴 시작까지. 상세 규칙은 StatusLibrary.Guard.
+        /// 피해 시점에 MaxDistance 이내일 때만, 다음 내 턴 시작까지. 대신 받는 피해는 DamageReduction 만큼 덜 받는다(0 까지).
+        /// 상세 규칙은 StatusLibrary.Guard.
         /// </summary>
         public static SkillDefinition Guard(GuardTuning t)
         {
@@ -41,8 +42,10 @@ namespace MiniChess.Core.Characters.Pieces
                 GuardId, "호위", t.ApCost,
                 new UnitTargeting(TargetFilter.Ally, t.Range),
                 PatternArea.SingleCell,
-                new SkillEffect[] { new ApplyStatusEffect(StatusLibrary.Guard(t.MaxDistance), TargetFilter.Ally) },
-                requiredTuning: SkillBuildUtil.Require((nameof(t.MaxDistance), t.MaxDistance)));
+                new SkillEffect[] { new ApplyStatusEffect(StatusLibrary.Guard(t.MaxDistance, t.DamageReduction), TargetFilter.Ally) },
+                requiredTuning: SkillBuildUtil.Require(
+                    (nameof(t.MaxDistance), t.MaxDistance),
+                    (nameof(t.DamageReduction), t.DamageReduction)));
         }
 
         /// <summary>
@@ -79,6 +82,9 @@ namespace MiniChess.Core.Characters.Pieces
 
         /// <summary>피해 시점에 대신 받을 수 있는 호위자-대상 최대 거리(체비셰프).</summary>
         public int? MaxDistance { get; set; }
+
+        /// <summary>호위자가 대신 받는 피해에서 빼는 양(0 까지). 0 이면 감소 없음.</summary>
+        public int? DamageReduction { get; set; }
     }
 
     /// <summary>사슬 속박(명세 12.3). 지속은 "한 턴"으로 확정. 속박의 외부 이동 정책은 SkillTuning.Root 를 따른다.</summary>

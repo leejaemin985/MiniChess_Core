@@ -194,6 +194,7 @@ namespace MiniChess.Core.Presets
             t.ChainGuard.Guard.ApCost = 3;
             t.ChainGuard.Guard.Range = 2;
             t.ChainGuard.Guard.MaxDistance = 2;
+            t.ChainGuard.Guard.DamageReduction = 1;
 
             t.ChainGuard.ChainBind.ApCost = 3;
             t.ChainGuard.ChainBind.Range = 2;

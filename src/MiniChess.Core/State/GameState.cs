@@ -180,7 +180,7 @@ namespace MiniChess.Core.State
                     throw new NotSupportedException($"피해 가로채기 {interceptor.GetType().Name} 는 복사할 수 없음");
 
                 StatusEffect status = map.Status(guard.Status);
-                var copy = new GuardInterceptor(status, guard.MaxDistance);
+                var copy = new GuardInterceptor(status, guard.MaxDistance, guard.DamageReduction);
                 status.BehaviorData = copy;
                 _damageInterceptors.Add(copy);
             }
