@@ -283,6 +283,21 @@ namespace MiniChess.Core.Tests
             Assert.Empty(state.Events.All.OfType<TokenConsumedEvent>());
         }
 
+        // 사용자 확정: 소환체(사신 분신)는 같은 팀이어도 토큰을 먹지 않는다(점령과 같은 규칙)
+        [Fact]
+        public void Summon_DoesNotConsume()
+        {
+            var (state, u) = TokenAtMiddle(TokenKind.Ap);
+            u[0].IsSummon = true;
+            int apBefore = state.GetPlayer(Team.Player1).Ap.Current;
+
+            new MoveAction(u[0], new Position(3, 0)).Execute(state); // (2,0)을 지나감
+
+            Assert.NotNull(state.Token);
+            Assert.Equal(apBefore - 3, state.GetPlayer(Team.Player1).Ap.Current);
+            Assert.Empty(state.Events.All.OfType<TokenConsumedEvent>());
+        }
+
         [Fact]
         public void ConsumedToken_DoesNotExpireAtTurnEnd()
         {

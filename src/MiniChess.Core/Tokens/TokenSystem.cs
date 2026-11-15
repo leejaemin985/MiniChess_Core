@@ -14,6 +14,7 @@ namespace MiniChess.Core.Tokens
     ///     무작위로 하나(GameState.Random). 장판과 덫이 있는 칸은 허용한다. 빈 칸이 없으면 그 턴은 만들지 않는다.
     ///   - 먹기: 그 턴 팀의 유닛이 토큰 칸에 들어가면(지나가기 포함, 이동 방식 무관) 먹는다. 상대 팀 유닛은 먹지 않는다.
     ///     칸 효과(덫/장판)가 먼저 발동하고, 그 뒤에도 살아 있으면 먹는다. 소환은 칸에 들어가는 것으로 보지 않는다.
+    ///     소환체(사신 분신 등)는 점령과 같이 토큰을 먹지 않는다.
     ///     최대치(AP/체력)에 막혀 효과가 줄거나 없어도 토큰은 사라진다.
     ///   - 소멸: 먹지 않은 토큰은 그 팀의 턴 종료(종료 단계 처리 전)에 사라진다.
     /// </summary>
@@ -72,7 +73,7 @@ namespace MiniChess.Core.Tokens
         internal static void OnUnitEntered(GameState state, Unit unit)
         {
             Token token = state.Token;
-            if (token == null || state.IsGameOver || !unit.IsAlive || unit.Team != token.Team || unit.Position != token.Position)
+            if (token == null || state.IsGameOver || !unit.IsAlive || unit.IsSummon || unit.Team != token.Team || unit.Position != token.Position)
                 return;
 
             state.Token = null;
