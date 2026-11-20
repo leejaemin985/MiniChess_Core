@@ -66,8 +66,11 @@ namespace MiniChess.Core.Actions
             if (skill == null) return SkillFailReason.SkillNotOwned;
             if (!skill.IsConfigured) return SkillFailReason.ConfigMissing;
 
-            if (caster.TurnState.ActionsEnded) return SkillFailReason.ActionsEnded;
-            if (caster.TurnState.HasUsedSkill(skillId)) return SkillFailReason.AlreadyUsedThisTurn;
+            if (!state.Rules.HasUnlimitedActions(caster.Team))
+            {
+                if (caster.TurnState.ActionsEnded) return SkillFailReason.ActionsEnded;
+                if (caster.TurnState.HasUsedSkill(skillId)) return SkillFailReason.AlreadyUsedThisTurn;
+            }
 
             if (StatusSystem.BlocksSkillUse(state, caster)) return SkillFailReason.BlockedByStatus;
 
@@ -77,7 +80,7 @@ namespace MiniChess.Core.Actions
                     return SkillFailReason.ConditionNotMet;
             }
 
-            if (!state.GetPlayer(caster.Team).Ap.CanSpend(skill.ApCost.Value)) return SkillFailReason.NotEnoughAp;
+            if (!state.GetPlayer(caster.Team).Ap.CanSpend(state.Rules.GetSkillCost(caster.Team, skill))) return SkillFailReason.NotEnoughAp;
 
             return SkillFailReason.None;
         }
@@ -94,7 +97,7 @@ namespace MiniChess.Core.Actions
             IReadOnlyList<Position> affectedCells = skill.Area.GetCells(state, Caster, Target, Rotation);
             state.Events.Record(new SkillUsedEvent(Caster.Id, skill.Id, Targets, Rotation, affectedCells));
 
-            state.GetPlayer(Caster.Team).Ap.TrySpend(skill.ApCost.Value);
+            state.GetPlayer(Caster.Team).Ap.TrySpend(state.Rules.GetSkillCost(Caster.Team, skill));
             Caster.TurnState.MarkSkillUsed(skill.Id);
 
             SkillEffect.ApplyAll(skill.Effects, new SkillContext(state, Caster, skill, Targets, affectedCells));

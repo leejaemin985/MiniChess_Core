@@ -99,9 +99,12 @@ namespace MiniChess.Core.Actions
             return state.Board.GetStraightPath(Unit.Position.Value, Destination);
         }
 
-        /// <summary>칸 수 × 칸당 AP × 유닛의 이동 AP 배율.</summary>
+        /// <summary>칸 수 × 칸당 AP × 유닛의 이동 AP 배율. 테스트 규칙으로 AP 를 쓰지 않는 팀이면 0.</summary>
         internal static int GetCost(GameState state, Unit unit, int cells)
         {
+            if (state.Rules.IsApFree(unit.Team))
+                return 0;
+
             return cells * state.Rules.ActionCost.MoveCostPerCell * unit.Stats.Base.MoveCostMultiplier;
         }
     }

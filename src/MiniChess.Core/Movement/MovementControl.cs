@@ -27,7 +27,7 @@ namespace MiniChess.Core.Movement
             if (state == null) throw new ArgumentNullException(nameof(state));
             if (mover == null) throw new ArgumentNullException(nameof(mover));
 
-            if (IsVoluntary(mover, initiator) && mover.TurnState.ActionsEnded)
+            if (IsVoluntary(mover, initiator) && mover.TurnState.ActionsEnded && !state.Rules.HasUnlimitedActions(mover.Team))
                 return MoveBlockReason.ActionsEnded;
 
             return StatusSystem.CheckMove(state, mover, initiator, kind, cells);

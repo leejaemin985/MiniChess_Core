@@ -79,8 +79,11 @@ namespace MiniChess.Core.Actions
             if (state.Phase != GamePhase.Battle) return AttackFailReason.NotBattlePhase;
             if (attacker.Team != state.CurrentTeam) return AttackFailReason.NotYourTurn;
             if (!attacker.IsOnBoard) return AttackFailReason.AttackerNotOnBoard;
-            if (attacker.TurnState.ActionsEnded) return AttackFailReason.ActionsEnded;
-            if (attacker.TurnState.BasicAttackUsed) return AttackFailReason.AlreadyUsedThisTurn;
+            if (!state.Rules.HasUnlimitedActions(attacker.Team))
+            {
+                if (attacker.TurnState.ActionsEnded) return AttackFailReason.ActionsEnded;
+                if (attacker.TurnState.BasicAttackUsed) return AttackFailReason.AlreadyUsedThisTurn;
+            }
             if (StatusSystem.BlocksBasicAttack(state, attacker)) return AttackFailReason.BlockedByStatus;
 
             return AttackFailReason.None;
@@ -92,7 +95,7 @@ namespace MiniChess.Core.Actions
             if (!RangeCalculator.IsInRange(attacker.Position.Value, target, attacker.Stats.AttackRange))
                 return AttackFailReason.OutOfRange;
 
-            if (!state.GetPlayer(attacker.Team).Ap.CanSpend(state.Rules.ActionCost.BasicAttackCost))
+            if (!state.GetPlayer(attacker.Team).Ap.CanSpend(state.Rules.GetBasicAttackCost(attacker.Team)))
                 return AttackFailReason.NotEnoughAp;
 
             return AttackFailReason.None;
@@ -101,7 +104,7 @@ namespace MiniChess.Core.Actions
         /// <summary>기본 공격 비용(AP, 이번 턴 기본 공격 사용)을 치른다. 장애물 공격과 공용.</summary>
         internal static void PayCost(GameState state, Unit attacker)
         {
-            state.GetPlayer(attacker.Team).Ap.TrySpend(state.Rules.ActionCost.BasicAttackCost);
+            state.GetPlayer(attacker.Team).Ap.TrySpend(state.Rules.GetBasicAttackCost(attacker.Team));
             attacker.TurnState.MarkBasicAttackUsed();
         }
 
