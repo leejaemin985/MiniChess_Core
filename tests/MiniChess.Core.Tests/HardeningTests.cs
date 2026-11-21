@@ -201,7 +201,6 @@ namespace MiniChess.Core.Tests
             [nameof(StatusLibrary.Guard)] = StatusLibrary.Guard(2),
             [nameof(StatusLibrary.Installed)] = StatusLibrary.Installed(),
             [nameof(StatusLibrary.CurseMark)] = StatusLibrary.CurseMark(4),
-            [nameof(StatusLibrary.Charged)] = StatusLibrary.Charged(5),
             [nameof(StatusLibrary.Sealed)] = StatusLibrary.Sealed(),
             [nameof(StatusLibrary.Stunned)] = StatusLibrary.Stunned(2),
         };

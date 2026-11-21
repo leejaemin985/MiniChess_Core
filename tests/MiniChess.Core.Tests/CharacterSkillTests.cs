@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using MiniChess.Core.Actions;
 using MiniChess.Core.Capture;
@@ -1955,95 +1956,166 @@ namespace MiniChess.Core.Tests
         #region Assassin
 
         private static UnitBaseStats Assassin() =>
-            TestGame.Stats("assassin", hp: 9, attack: 4, range: 1, skills: new[] { AssassinPiece.LeapId, AssassinPiece.ChargeId });
+            TestGame.Stats("assassin", hp: 9, attack: 4, range: 1, skills: new[] { AssassinPiece.ShurikenId, AssassinPiece.ChainSlashId });
 
-        // 사용자 확정: 사거리 4 안의 빈 칸으로 순간이동(벽/유닛을 넘음), 도약 후 기본 공격 가능
+        private static SkillResult UseChain(GameState state, Unit caster, params Position[] targets) =>
+            new UseSkillAction(caster, AssassinPiece.ChainSlashId, targets).Execute(state);
+
+        private static SkillFailReason CheckChain(GameState state, Unit caster, params Position[] targets) =>
+            new UseSkillAction(caster, AssassinPiece.ChainSlashId, targets).Validate(state);
+
+        private static List<Position> ChainCandidates(GameState state, Unit caster, params Position[] chosen) =>
+            state.Skills.Find(AssassinPiece.ChainSlashId).Targeting.GetCandidates(state, caster, chosen).ToList();
+
+        private static IEnumerable<Position> Sorted(IEnumerable<Position> cells) => cells.OrderBy(p => p.X).ThenBy(p => p.Y);
+
+        // [가정] 수리검: 사거리 3(정사각형) 안 적 한 명 피해 2. 벽은 막지 않는다
         [Fact]
-        public void Leap_TeleportsOverWallsToEmptyCellInRange_ThenCanAttack()
+        public void Shuriken_DamagesOneEnemyInSquareRange()
         {
             var (state, u) = Game()
                 .WithMap(".......", ".......", ".......", ".......", ".......", "#######", ".......")
-                .WithRules(r => r.Ap.StartAp = 6)
                 .Place(Team.Player1, 0, 0, Assassin())
-                .Place(Team.Player2, 2, 4)
+                .Place(Team.Player2, 3, 3)
+                .Place(Team.Player2, 4, 0)
                 .Start();
 
-            Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], AssassinPiece.LeapId, 2, 4)); // 유닛 있는 칸
-            Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], AssassinPiece.LeapId, 1, 1)); // 벽
-            Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], AssassinPiece.LeapId, 0, 5)); // 사거리 초과
+            Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], AssassinPiece.ShurikenId, 4, 0)); // 사거리 초과
 
-            SkillResult result = Use(state, u[0], AssassinPiece.LeapId, 2, 3); // 벽 줄 너머
+            Use(state, u[0], AssassinPiece.ShurikenId, 3, 3); // 대각선 3칸, 벽 줄 너머
+            Assert.Equal(8, u[1].Stats.CurrentHp);
+        }
 
+        // 사용자 확정: 한 명만 고르면 높은 피해, 마지막 대상 상하좌우 중 고른 칸에 순간이동해 착지
+        [Fact]
+        public void ChainSlash_SingleTarget_DealsSingleDamage_AndWarpsToChosenLanding()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0, Assassin())
+                .Place(Team.Player2, 2, 2, TestGame.Stats(hp: 10))
+                .Start();
+
+            SkillResult result = UseChain(state, u[0], new Position(2, 2), new Position(2, 3));
+
+            Assert.Equal(4, u[1].Stats.CurrentHp);
             Assert.Equal(new Position(2, 3), u[0].Position);
             Assert.Equal(MoveKind.Warp, result.Events.OfType<UnitMovedEvent>().Single().Kind);
-
-            new AttackAction(u[0], u[1]).Execute(state);
-            Assert.Equal(6, u[1].Stats.CurrentHp);
         }
 
+        // 사용자 확정: 첫 대상의 연쇄 거리(2, 정사각형) 안 다른 적까지 고를 수 있고, 두 명이면 각자 낮은 피해
         [Fact]
-        public void Leap_IsBlockedWhenRooted_ButAllowedAfterAttack()
+        public void ChainSlash_TwoTargets_DealsMultiDamageToEach_AndLandsNextToLast()
         {
             var (state, u) = Game()
-                .WithRules(r => { r.Ap.MaxAp = 12; r.Ap.StartAp = 12; })
                 .Place(Team.Player1, 0, 0, Assassin())
-                .Place(Team.Player1, 6, 0, Assassin())
-                .Place(Team.Player2, 6, 1)
+                .Place(Team.Player2, 2, 2, TestGame.Stats(hp: 10))
+                .Place(Team.Player2, 3, 4, TestGame.Stats(hp: 10))
+                .Place(Team.Player2, 5, 2, TestGame.Stats(hp: 10)) // 첫 대상에서 3칸
                 .Start();
-            Statuses.StatusSystem.Apply(state, StatusLibrary.Root(1, false), u[0], u[2]);
 
-            Assert.Equal(SkillFailReason.ConditionNotMet, Check(state, u[0], AssassinPiece.LeapId, 2, 2));
+            // 첫 대상 다음: 연쇄 거리 안의 다른 적 + 첫 대상의 착지 칸
+            Assert.Equal(
+                Sorted(new[] { new Position(3, 4), new Position(2, 3), new Position(3, 2), new Position(2, 1), new Position(1, 2) }),
+                Sorted(ChainCandidates(state, u[0], new Position(2, 2))));
 
-            new AttackAction(u[1], u[2]).Execute(state);
-            Assert.Equal(SkillFailReason.None, Check(state, u[1], AssassinPiece.LeapId, 4, 2));
+            // 두 명을 고른 뒤에는 두 번째 대상의 착지 칸만
+            Assert.Equal(
+                Sorted(new[] { new Position(3, 5), new Position(4, 4), new Position(3, 3), new Position(2, 4) }),
+                Sorted(ChainCandidates(state, u[0], new Position(2, 2), new Position(3, 4))));
+
+            UseChain(state, u[0], new Position(2, 2), new Position(3, 4), new Position(4, 4));
+
+            Assert.Equal(7, u[1].Stats.CurrentHp);
+            Assert.Equal(7, u[2].Stats.CurrentHp);
+            Assert.Equal(10, u[3].Stats.CurrentHp);
+            Assert.Equal(new Position(4, 4), u[0].Position);
         }
 
-        // 사용자 확정: 차징 후 다음 내 턴의 기본 공격에 추가 피해(프리셋 4 + 3 = 7). 체력 8 궁수는 1 이 남는다(사용자 조정)
+        // 지정 수가 바뀌는 스킬: 착지 칸을 고르면 끝. 착지 칸 없이 끝내거나 같은 적을 두 번 고른 지정은 거절
         [Fact]
-        public void Charge_NextTurnBasicAttackDealsBonus()
+        public void ChainSlash_IsCompleteOnlyAfterLanding()
         {
             var (state, u) = Game()
-                .WithRules(r => r.Ap.StartAp = 6) // 차징(3) 뒤 같은 턴 기본 공격(2) 가능 여부도 본다
-                .Place(Team.Player1, 3, 3, Assassin())
-                .Place(Team.Player2, 3, 4, TestGame.Stats(hp: 8))
+                .Place(Team.Player1, 0, 0, Assassin())
+                .Place(Team.Player2, 2, 2)
+                .Place(Team.Player2, 3, 3)
+                .Start();
+            SkillTargeting targeting = state.Skills.Find(AssassinPiece.ChainSlashId).Targeting;
+
+            Assert.False(targeting.IsComplete(state, u[0], new[] { new Position(2, 2) }));
+            Assert.False(targeting.IsComplete(state, u[0], new[] { new Position(2, 2), new Position(3, 3) }));
+            Assert.True(targeting.IsComplete(state, u[0], new[] { new Position(2, 2), new Position(2, 3) }));
+            Assert.Empty(ChainCandidates(state, u[0], new Position(2, 2), new Position(2, 3)));
+
+            Assert.Equal(SkillFailReason.InvalidTarget, CheckChain(state, u[0], new Position(2, 2)));
+            Assert.Equal(SkillFailReason.InvalidTarget, CheckChain(state, u[0], new Position(2, 2), new Position(3, 3)));
+            Assert.Equal(SkillFailReason.InvalidTarget, CheckChain(state, u[0], new Position(2, 2), new Position(2, 2), new Position(2, 3)));
+            Assert.Equal(SkillFailReason.InvalidTarget, CheckChain(state, u[0], new Position(2, 2), new Position(4, 4))); // 착지 칸이 아님
+            Assert.Equal(SkillFailReason.None, CheckChain(state, u[0], new Position(2, 2), new Position(3, 3), new Position(3, 4)));
+        }
+
+        // 사용자 확정: 착지할 칸(벽/유닛 없는 상하좌우)이 없는 대상은 고를 수 없다
+        [Fact]
+        public void ChainSlash_TargetWithoutLanding_IsNotCandidate()
+        {
+            var (state, u) = Game()
+                .WithMap(".......", ".......", ".......", ".......", ".......", "#######", ".......")
+                .Place(Team.Player1, 0, 3, Assassin())
+                .Place(Team.Player1, 2, 0)
+                .Place(Team.Player1, 4, 0)
+                .Place(Team.Player2, 3, 0)
+                .Start();
+
+            Assert.DoesNotContain(new Position(3, 0), ChainCandidates(state, u[0]));
+        }
+
+        // 사용자 확정: 시전자가 서 있는 칸도 착지 칸(제자리, 이동 없음)
+        [Fact]
+        public void ChainSlash_CanLandOnCastersOwnCell()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 2, 3, Assassin())
+                .Place(Team.Player2, 2, 2, TestGame.Stats(hp: 10))
+                .Start();
+
+            Assert.Contains(new Position(2, 3), ChainCandidates(state, u[0], new Position(2, 2)));
+
+            SkillResult result = UseChain(state, u[0], new Position(2, 2), new Position(2, 3));
+
+            Assert.Equal(4, u[1].Stats.CurrentHp);
+            Assert.Equal(new Position(2, 3), u[0].Position);
+            Assert.Empty(result.Events.OfType<UnitMovedEvent>());
+        }
+
+        // 사용자 확정: 대상이 죽어도 지정한 착지 칸으로 간다. 첫 대상이 죽어도 두 번째 대상은 벤다
+        [Fact]
+        public void ChainSlash_KillsStillLandOnChosenCell()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0, Assassin())
+                .Place(Team.Player2, 2, 2, TestGame.Stats(hp: 3))
+                .Place(Team.Player2, 3, 3, TestGame.Stats(hp: 3))
                 .Place(Team.Player2, 6, 6)
                 .Start();
 
-            Use(state, u[0], AssassinPiece.ChargeId, 3, 3);
-            Assert.NotNull(u[0].FindStatus(StatusLibrary.ChargedId));
-            Assert.Equal(AttackFailReason.None, new AttackAction(u[0], u[1]).Validate(state)); // 차징한 턴에도 기본 공격 가능
+            UseChain(state, u[0], new Position(2, 2), new Position(3, 3), new Position(3, 2));
 
-            EndTurn(state);
-            EndTurn(state);
-            AttackResult attack = new AttackAction(u[0], u[1]).Execute(state);
-
-            Assert.False(attack.TargetDied);
-            Assert.Equal(7, attack.Damage);
-            Assert.Equal(1, u[1].Stats.CurrentHp);
-            Assert.Null(u[0].FindStatus(StatusLibrary.ChargedId));
+            Assert.False(u[1].IsAlive);
+            Assert.False(u[2].IsAlive);
+            Assert.Equal(new Position(3, 2), u[0].Position);
         }
 
-        // 사용자 확정: 차징은 다음 내 턴 끝까지 유지, 첫 기본 공격에 소모
+        // 공통 이동 규칙: 속박 등 자발적 순간이동을 막는 상태면 사용 불가
         [Fact]
-        public void Charge_IsConsumedByFirstAttack_OrExpiresAtEndOfNextOwnTurn()
+        public void ChainSlash_IsBlockedWhenRooted()
         {
             var (state, u) = Game()
-                .WithRules(r => r.Ap.StartAp = 6)
-                .Place(Team.Player1, 3, 3, Assassin())
                 .Place(Team.Player1, 0, 0, Assassin())
-                .Place(Team.Player2, 3, 4, TestGame.Stats(hp: 20))
+                .Place(Team.Player2, 2, 2)
                 .Start();
-            Use(state, u[0], AssassinPiece.ChargeId, 3, 3);
-            Use(state, u[1], AssassinPiece.ChargeId, 0, 0);
-            EndTurn(state);
-            EndTurn(state);
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Root(1, false), u[0], u[1]);
 
-            Assert.Equal(7, new AttackAction(u[0], u[2]).Execute(state).Damage);
-            Assert.Null(u[0].FindStatus(StatusLibrary.ChargedId));
-            Assert.NotNull(u[1].FindStatus(StatusLibrary.ChargedId)); // 공격하지 않은 쪽은 이번 턴 동안 유지
-
-            EndTurn(state);
-            Assert.Null(u[1].FindStatus(StatusLibrary.ChargedId));
+            Assert.Equal(SkillFailReason.ConditionNotMet, CheckChain(state, u[0], new Position(2, 2), new Position(2, 3)));
         }
 
         #endregion
@@ -2247,11 +2319,11 @@ namespace MiniChess.Core.Tests
             Statuses.StatusSystem.Apply(state, StatusLibrary.Burn(damagePerTrigger: 1, triggers: 2), u[1], u[2]);
             Statuses.StatusSystem.Apply(state, StatusLibrary.Stunned(1), u[1], u[2]);
             Statuses.StatusSystem.Apply(state, StatusLibrary.DistanceLimit(maxCells: 1, targetTurns: 1), u[1], u[0]);
-            Statuses.StatusSystem.Apply(state, StatusLibrary.Charged(2), u[1], u[1]);
+            Statuses.StatusSystem.Apply(state, StatusLibrary.Guard(2), u[1], u[0]);
 
             SkillResult result = Use(state, u[0], InquisitorPiece.PurifyId, 3, 4);
 
-            Assert.Equal(new[] { StatusLibrary.DistanceLimitId, StatusLibrary.ChargedId }, u[1].Statuses.Select(s => s.Definition.Id));
+            Assert.Equal(new[] { StatusLibrary.DistanceLimitId, StatusLibrary.GuardId }, u[1].Statuses.Select(s => s.Definition.Id));
             Assert.Equal(3, result.Events.OfType<StatusRemovedEvent>().Count(e => e.Reason == StatusRemoveReason.Removed));
         }
 

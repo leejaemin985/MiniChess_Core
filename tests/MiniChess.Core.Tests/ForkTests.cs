@@ -70,7 +70,7 @@ namespace MiniChess.Core.Tests
                 foreach (SkillInfo skill in game.GetSkills(unit.Id).Where(skill => skill.Usable == SkillFailReason.None && skill.Definition != null))
                 {
                     var targets = new List<Position>();
-                    while (targets.Count < skill.Definition.Targeting.TargetCount)
+                    while (!game.IsSkillTargetingComplete(unit.Id, skill.Id, targets))
                     {
                         List<Position> next = game.GetSkillTargets(unit.Id, skill.Id, targets);
                         if (next.Count == 0)
@@ -78,7 +78,7 @@ namespace MiniChess.Core.Tests
                         targets.Add(next[random.Next(next.Count)]);
                     }
 
-                    if (targets.Count == skill.Definition.Targeting.TargetCount)
+                    if (game.IsSkillTargetingComplete(unit.Id, skill.Id, targets))
                     {
                         var rotation = skill.CanRotate ? (AreaRotation)random.Next(4) : AreaRotation.R0;
                         steps.Add(new Step("Skill", team, unit.Id, SkillId: skill.Id, Targets: targets, Rotation: rotation));

@@ -36,6 +36,16 @@ namespace MiniChess.Core.Skills
             return state.Skills.Find(skillId).Targeting.GetCandidates(state, caster, chosen).Distinct().ToList();
         }
 
+        /// <summary>chosen 까지 지정하면 지정이 끝나는지(확정할 수 있는지). 스킬이 없거나 설정 오류면 false.</summary>
+        public static bool IsTargetingComplete(GameState state, Unit caster, string skillId, IReadOnlyList<Position> chosen)
+        {
+            SkillDefinition skill = state.Skills.Find(skillId);
+            if (skill == null || !skill.IsConfigured || chosen.Count == 0)
+                return false;
+
+            return skill.Targeting.IsComplete(state, caster, chosen);
+        }
+
         /// <summary>사용 가능 여부와 상관없이 스킬의 첫 지정이 닿는 칸(사거리 미리보기). 스킬이 없으면 빈 목록.</summary>
         public static List<Position> GetReach(GameState state, Unit caster, string skillId)
         {

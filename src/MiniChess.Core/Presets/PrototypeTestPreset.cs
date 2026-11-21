@@ -258,10 +258,14 @@ namespace MiniChess.Core.Presets
             t.Seamstress.Obstacle.Lifetime = 2;
             t.Seamstress.Obstacle.MaxActive = 1;
 
-            t.Assassin.Leap.ApCost = 3;
-            t.Assassin.Leap.Range = 4;
-            t.Assassin.Charge.ApCost = 3;
-            t.Assassin.Charge.BonusDamage = 3;
+            t.Assassin.Shuriken.ApCost = 2;
+            t.Assassin.Shuriken.Range = 3;
+            t.Assassin.Shuriken.Damage = 2;
+            t.Assassin.ChainSlash.ApCost = 4;
+            t.Assassin.ChainSlash.Range = 3;
+            t.Assassin.ChainSlash.ChainRange = 2;
+            t.Assassin.ChainSlash.SingleDamage = 6;
+            t.Assassin.ChainSlash.MultiDamage = 3;
 
             t.Sculptor.Seal.ApCost = 4;
             t.Sculptor.Seal.Range = 3;

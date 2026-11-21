@@ -7,7 +7,7 @@ namespace MiniChess.Core.Statuses.Library
     /// 공용 상태효과 정의 모음. 스킬, 덫, 보상 등 어디서든 같은 상태를 이 정의로 건다.
     /// 수치가 하나라도 null 이면 null 을 반환한다(그 상태를 쓰는 기능은 설정 누락으로 사용 불가).
     /// 쌓임 범위(사용자 확정): 중독/화상/속박/기절/이동 제한은 출처별(건 유닛 + 원인 스킬마다 따로),
-    /// 호위/설치/저주 표식/차징/봉인은 대상당 하나. "다시 걸면 갱신" 설명은 같은 건끼리의 규칙이다.
+    /// 호위/설치/저주 표식/봉인은 대상당 하나. "다시 걸면 갱신" 설명은 같은 건끼리의 규칙이다.
     /// </summary>
     public static class StatusLibrary
     {
@@ -18,7 +18,6 @@ namespace MiniChess.Core.Statuses.Library
         public const string GuardId = "GUARD";
         public const string InstalledId = "INSTALLED";
         public const string CurseMarkId = "CURSE_MARK";
-        public const string ChargedId = "CHARGED";
         public const string SealedId = "SEALED";
         public const string StunnedId = "STUNNED";
 
@@ -170,24 +169,6 @@ namespace MiniChess.Core.Statuses.Library
         }
 
         /// <summary>
-        /// 차징: 대상의 다음 기본 공격에 추가 피해, 공격하면 소모. 걸린 턴은 세지 않아 대상의 다음 자기 턴 끝까지 유지된다.
-        /// 다시 걸면 남은 횟수를 갱신한다.
-        /// </summary>
-        /// <param name="bonusDamage">기본 공격 추가 피해.</param>
-        public static StatusDefinition Charged(int? bonusDamage)
-        {
-            if (bonusDamage == null)
-                return null;
-
-            return new StatusDefinition(
-                ChargedId,
-                duration: 1,
-                StatusStackPolicy.Refresh,
-                TargetDurationTick,
-                behavior: new ChargedBehavior(bonusDamage.Value));
-        }
-
-        /// <summary>
         /// 스냅샷의 값(Id, 지속 횟수, StatusBehavior.Parameters)으로 같은 정의를 다시 만든다. 이 라이브러리에 없는 Id 면 null.
         /// 새 상태를 이 라이브러리에 추가하면 여기에도 추가한다.
         /// </summary>
@@ -204,7 +185,6 @@ namespace MiniChess.Core.Statuses.Library
                 case GuardId: return Guard(Get(nameof(GuardBehavior.MaxDistance)));
                 case InstalledId: return Installed();
                 case CurseMarkId: return CurseMark(Get(nameof(CurseMarkBehavior.BonusDamage)));
-                case ChargedId: return Charged(Get(nameof(ChargedBehavior.BonusDamage)));
                 case SealedId: return Sealed();
                 case StunnedId: return Stunned(duration);
                 default: return null;

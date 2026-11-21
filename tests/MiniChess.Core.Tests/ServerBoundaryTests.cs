@@ -310,7 +310,7 @@ namespace MiniChess.Core.Tests
             foreach (SkillInfo skill in game.GetSkills(unitId).Where(s => s.Usable == SkillFailReason.None))
             {
                 var chosen = new List<Position>();
-                for (int i = 0; i < skill.Definition.Targeting.TargetCount; i++)
+                while (!game.IsSkillTargetingComplete(unitId, skill.Id, chosen))
                 {
                     List<Position> candidates = game.GetSkillTargets(unitId, skill.Id, chosen);
                     if (candidates.Count == 0)
@@ -318,7 +318,7 @@ namespace MiniChess.Core.Tests
                     chosen.Add(candidates[0]);
                 }
 
-                if (chosen.Count == skill.Definition.Targeting.TargetCount &&
+                if (game.IsSkillTargetingComplete(unitId, skill.Id, chosen) &&
                     game.UseSkill(new UseSkillRequest(team, unitId, skill.Id, chosen)).Success)
                     return;
             }

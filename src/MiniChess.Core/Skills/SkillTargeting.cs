@@ -11,8 +11,17 @@ namespace MiniChess.Core.Skills
     /// </summary>
     public abstract class SkillTargeting : SkillComponent
     {
-        /// <summary>지정해야 하는 칸 수.</summary>
+        /// <summary>지정해야 하는 칸 수. 지정 수가 바뀌는 부품(IsComplete 재정의)은 최대 칸 수.</summary>
         public virtual int TargetCount => 1;
+
+        /// <summary>
+        /// chosen 까지 지정하면 지정이 끝나는지(더 고를 칸이 없는지). 기본은 TargetCount 개를 지정했을 때.
+        /// 지정 수가 바뀌는 부품(연속 베기 등)은 재정의한다. chosen 은 앞선 지정 기준으로 유효하다고 본다.
+        /// </summary>
+        public virtual bool IsComplete(GameState state, Unit caster, IReadOnlyList<Position> chosen)
+        {
+            return chosen.Count >= TargetCount;
+        }
 
         /// <summary>시전자 자신만 지정하는지. 클라는 칸을 고르지 않고 확인만 받는다.</summary>
         public virtual bool IsSelfOnly => false;
@@ -53,10 +62,10 @@ namespace MiniChess.Core.Skills
             return IsValid(state, caster, new[] { target });
         }
 
-        /// <summary>지정 개수가 맞고, 각 지정이 앞선 지정 기준으로 유효한지.</summary>
+        /// <summary>각 지정이 앞선 지정 기준으로 유효하고, 마지막 지정에서 지정이 끝나는지(지정 수가 맞는지).</summary>
         public bool IsValid(GameState state, Unit caster, IReadOnlyList<Position> targets)
         {
-            if (targets == null || targets.Count != TargetCount)
+            if (targets == null || targets.Count == 0 || targets.Count > TargetCount)
                 return false;
 
             for (int i = 0; i < targets.Count; i++)
@@ -66,7 +75,7 @@ namespace MiniChess.Core.Skills
                     return false;
             }
 
-            return true;
+            return IsComplete(state, caster, targets);
         }
     }
 }

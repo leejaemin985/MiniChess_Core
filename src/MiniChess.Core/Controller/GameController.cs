@@ -369,6 +369,19 @@ namespace MiniChess.Core.Controller
             return SkillQueries.GetValidTargets(State, caster, skillId, chosen ?? Array.Empty<Position>());
         }
 
+        /// <summary>
+        /// chosen 까지 지정하면 스킬 지정이 끝나는지(확정할 수 있는지). 대부분은 TargetCount 개를 지정했을 때이고,
+        /// 지정 수가 바뀌는 스킬(연속 베기 등)은 스킬이 정한다. 지정 칸 하나하나의 유효성은 GetSkillTargets 로 고른 것으로 본다.
+        /// </summary>
+        public bool IsSkillTargetingComplete(int unitId, string skillId, IReadOnlyList<Position> chosen)
+        {
+            Unit caster = State.FindUnit(unitId);
+            if (caster == null || !caster.IsPlaced || chosen == null)
+                return false;
+
+            return SkillQueries.IsTargetingComplete(State, caster, skillId, chosen);
+        }
+
         /// <summary>사용 가능 여부와 대상 유무와 상관없이 스킬이 닿는 칸(사거리 미리보기, 스킬 버튼에 마우스를 올렸을 때 등).</summary>
         public List<Position> GetSkillReach(int unitId, string skillId)
         {
