@@ -514,7 +514,7 @@ namespace MiniChess.Core.Tests
             Assert.Equal(5, u[1].Stats.CurrentHp);
 
             EndTurn(state); // P2 종료 → P1 시작: 아군 회복, 적은 회복 안 됨
-            Assert.Equal(6, u[1].Stats.CurrentHp);
+            Assert.Equal(7, u[1].Stats.CurrentHp);
             Assert.Equal(5, u[2].Stats.CurrentHp);
         }
 

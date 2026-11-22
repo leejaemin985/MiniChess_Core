@@ -208,7 +208,7 @@ namespace MiniChess.Core.Presets
                 "#@#",
                 "###",
             };
-            t.Gardener.HealingMeadow.Heal = 1;
+            t.Gardener.HealingMeadow.Heal = 2;
             t.Gardener.HealingMeadow.Lifetime = 2;
             t.Gardener.HealingMeadow.MaxActive = 1;
 
@@ -262,7 +262,7 @@ namespace MiniChess.Core.Presets
             t.Assassin.Shuriken.Range = 3;
             t.Assassin.Shuriken.Damage = 2;
             t.Assassin.ChainSlash.ApCost = 4;
-            t.Assassin.ChainSlash.Range = 4;
+            t.Assassin.ChainSlash.Range = 3;
             t.Assassin.ChainSlash.ChainRange = 2;
             t.Assassin.ChainSlash.SingleDamage = 5;
             t.Assassin.ChainSlash.MultiDamage = 3;
