@@ -44,12 +44,15 @@ namespace MiniChess.Core.Snapshots
         /// <summary>남은 수명(설치한 쪽 소유자의 턴 종료 횟수). 수명이 없으면 null.</summary>
         public int? Remaining { get; }
 
-        /// <summary>장애물이 파괴까지 남은 피격 횟수. 장애물이 아니면 null.</summary>
-        public int? HitsRemaining { get; }
+        /// <summary>장애물의 남은 체력. 장애물이 아니면 null.</summary>
+        public int? Hp { get; }
+
+        /// <summary>장애물의 최대 체력. 장애물이 아니면 null.</summary>
+        public int? MaxHp { get; }
 
         public CellEffectSnapshot(
             Position position, CellEffectLayer layer, string kind, Team? ownerTeam, string skillId,
-            int? zoneId, int? sourceId, int? remaining, int? hitsRemaining)
+            int? zoneId, int? sourceId, int? remaining, int? hp, int? maxHp)
         {
             ZoneId = zoneId;
             SourceId = sourceId;
@@ -59,7 +62,8 @@ namespace MiniChess.Core.Snapshots
             OwnerTeam = ownerTeam;
             SkillId = skillId;
             Remaining = remaining;
-            HitsRemaining = hitsRemaining;
+            Hp = hp;
+            MaxHp = maxHp;
         }
     }
 

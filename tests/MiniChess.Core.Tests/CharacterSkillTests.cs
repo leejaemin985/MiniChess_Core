@@ -1554,9 +1554,12 @@ namespace MiniChess.Core.Tests
             Assert.Equal(SkillFailReason.None, Check(state, u[2], WarriorPiece.DashId, 0, 3));
         }
 
-        // 사용자 확정: 양 팀 모두 기본 공격 1회로 부술 수 있고, AP 와 그 턴의 기본 공격을 쓴다
+        private static Obstacle ObstacleAt(GameState state, int x, int y) =>
+            state.Board.GetCell(new Position(x, y)).GetEffect(CellEffectLayer.Obstacle) as Obstacle;
+
+        // 장애물은 체력 4. 양 팀 모두 기본 공격으로 공격력만큼 깎고, 0 이 되면 부서진다. AP 와 그 턴의 기본 공격을 쓴다
         [Fact]
-        public void Obstacle_IsDestroyedByOneBasicAttack_FromEitherTeam()
+        public void Obstacle_BasicAttack_DealsAttackDamage_AndBreaksAtZeroHp_FromEitherTeam()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 0, 0, With(SeamstressPiece.ObstacleId))
@@ -1565,16 +1568,158 @@ namespace MiniChess.Core.Tests
                 .WithRules(r => r.Ap.StartAp = 6)
                 .Start();
             Use(state, u[0], SeamstressPiece.ObstacleId, 0, 2);
+            Assert.Equal(4, ObstacleAt(state, 0, 2).Hp);
             Assert.Equal(AttackFailReason.None, new AttackObstacleAction(u[1], new Position(0, 2)).Validate(state)); // 아군
 
             EndTurn(state);
             int apBefore = state.CurrentPlayer.Ap.Current;
-            AttackObstacleResult result = new AttackObstacleAction(u[2], new Position(0, 2)).Execute(state); // 적
+            AttackObstacleResult result = new AttackObstacleAction(u[2], new Position(0, 2)).Execute(state); // 적, 공격력 3
 
-            Assert.True(result.Destroyed);
-            Assert.False(state.Board.GetCell(new Position(0, 2)).HasObstacle);
+            Assert.False(result.Destroyed);
+            Assert.Equal(1, ObstacleAt(state, 0, 2).Hp);
+            Assert.Equal(u[2].Id, Assert.Single(result.Events.OfType<ObstacleHitEvent>()).AttackerId);
+            var damaged = Assert.Single(result.Events.OfType<ObstacleDamagedEvent>());
+            Assert.Equal((3, 1, 4), (damaged.AppliedAmount, damaged.HpAfter, damaged.MaxHp));
             Assert.Equal(apBefore - 2, state.CurrentPlayer.Ap.Current);
             Assert.Equal(AttackFailReason.AlreadyUsedThisTurn, new AttackAction(u[2], u[1]).Validate(state)); // 장애물 공격도 기본 공격
+
+            var snapshot = new MiniChess.Core.Controller.GameController(state).GetSnapshot(Team.Player1);
+            var cell = snapshot.CellEffects.Single(e => e.Position == new Position(0, 2) && e.Kind == CellEffectKinds.Obstacle);
+            Assert.Equal((1, 4), (cell.Hp, cell.MaxHp));
+
+            EndTurn(state);
+            EndTurn(state);
+            result = new AttackObstacleAction(u[2], new Position(0, 2)).Execute(state);
+
+            Assert.True(result.Destroyed);
+            Assert.Equal(1, result.Events.OfType<ObstacleDamagedEvent>().Single().AppliedAmount); // 남은 체력까지만
+            Assert.False(state.Board.GetCell(new Position(0, 2)).HasObstacle);
+            Assert.Contains(result.Events, e => e is CellEffectRemovedEvent removed && removed.Reason == CellEffectRemoveReason.Destroyed);
+        }
+
+        // 장애물 = 체력만 있는 중립 유닛: 피해를 주는 단일 대상 스킬로 지정할 수 있고(양 팀 모두), 피해만 받는다
+        [Fact]
+        public void Obstacle_CanBeTargetedByDamagingSingleTargetSkill_OfEitherTeam_TakingOnlyDamage()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0, With(SeamstressPiece.ObstacleId))
+                .Place(Team.Player1, 0, 3, With(InquisitorPiece.JudgmentId))
+                .Place(Team.Player2, 6, 6)
+                .WithRules(r => r.Ap.StartAp = 6)
+                .Start();
+            Use(state, u[0], SeamstressPiece.ObstacleId, 0, 2);
+
+            Assert.Equal(SkillFailReason.None, Check(state, u[1], InquisitorPiece.JudgmentId, 0, 2)); // 우리 팀 장애물
+            SkillResult result = Use(state, u[1], InquisitorPiece.JudgmentId, 0, 2);
+
+            Assert.Equal(3, ObstacleAt(state, 0, 2).Hp); // 심판 피해 1
+            Assert.Single(result.Events.OfType<ObstacleDamagedEvent>());
+            Assert.DoesNotContain(result.Events, e => e is UnitMovedEvent || e is StatusAppliedEvent);
+            Assert.Equal(new Position(0, 3), u[1].Position);
+        }
+
+        // 피해가 없는 단일 대상 스킬(사슬 속박 피해 0, 봉인)은 장애물을 지정할 수 없다
+        [Fact]
+        public void Obstacle_CannotBeTargetedBySkillWithoutDamage()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0, With(SeamstressPiece.ObstacleId))
+                .Place(Team.Player1, 0, 3, With(ChainGuardPiece.ChainBindId))
+                .Place(Team.Player1, 1, 3, Sculptor())
+                .Place(Team.Player2, 6, 6)
+                .WithRules(r => { r.Ap.MaxAp = 8; r.Ap.StartAp = 8; })
+                .Start();
+            Use(state, u[0], SeamstressPiece.ObstacleId, 0, 2);
+
+            Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[1], ChainGuardPiece.ChainBindId, 0, 2));
+            Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[2], SculptorPiece.SealId, 1, 2));
+        }
+
+        // 연속 베기도 예외 없이 장애물을 대상으로 고를 수 있다
+        [Fact]
+        public void Obstacle_CanBeChainSlashed()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0, With(SeamstressPiece.ObstacleId))
+                .Place(Team.Player1, 0, 3, Assassin())
+                .Place(Team.Player2, 6, 6)
+                .WithRules(r => { r.Ap.MaxAp = 8; r.Ap.StartAp = 8; })
+                .Start();
+            Use(state, u[0], SeamstressPiece.ObstacleId, 0, 2); // (0,2), (1,2)
+
+            UseChain(state, u[1], new Position(0, 2), new Position(1, 2), new Position(2, 2)); // 두 칸 각 3
+
+            Assert.Equal(1, ObstacleAt(state, 0, 2).Hp);
+            Assert.Equal(1, ObstacleAt(state, 1, 2).Hp);
+            Assert.Equal(new Position(2, 2), u[1].Position);
+        }
+
+        // 범위 스킬 피해와 장판 피해도 받는다(양 팀 모두). 장판은 적 유닛과 같은 박자(장판 주인의 상대 턴 종료)에 들어간다
+        [Fact]
+        public void Obstacle_TakesAreaSkillDamage_AndFieldDamage()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 0, 0, With(SeamstressPiece.ObstacleId))
+                .Place(Team.Player1, 3, 0, With(FlamePiece.FlameZoneId))
+                .Place(Team.Player2, 6, 6)
+                .WithRules(r => { r.Ap.MaxAp = 8; r.Ap.StartAp = 8; })
+                .Start();
+            Use(state, u[0], SeamstressPiece.ObstacleId, 0, 2); // (0,2), (1,2)
+
+            Use(state, u[1], FlamePiece.FlameZoneId, 0, 2); // 우리 팀 화염지대: 십자 안 (0,2), (1,2)
+            Assert.Equal(2, ObstacleAt(state, 0, 2).Hp); // 설치 즉시 피해 2
+            Assert.Equal(2, ObstacleAt(state, 1, 2).Hp);
+
+            EndTurn(state); // 장판 주인(P1) 턴 종료: 피해 없음
+            Assert.Equal(2, ObstacleAt(state, 0, 2).Hp);
+
+            EndTurn(state); // P2 턴 종료: 장판 피해 → 파괴
+            Assert.Null(ObstacleAt(state, 0, 2));
+            Assert.Null(ObstacleAt(state, 1, 2));
+        }
+
+        // 포격 착탄도 받는다
+        [Fact]
+        public void Obstacle_TakesScheduledStrikeDamage()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 6, 0, With(SeamstressPiece.ObstacleId))
+                .Place(Team.Player1, 0, 0, Mortar())
+                .Place(Team.Player2, 6, 6)
+                .WithRules(r => { r.Ap.MaxAp = 8; r.Ap.StartAp = 8; })
+                .Start();
+            Use(state, u[0], SeamstressPiece.ObstacleId, 3, 3); // (3,3), (4,3)
+            Use(state, u[1], MortarPiece.BombardId, 3, 3);
+            EndTurn(state);
+            EndTurn(state); // P1 턴 시작: 착탄 5
+
+            Assert.Null(ObstacleAt(state, 3, 3));
+            Assert.Null(ObstacleAt(state, 4, 3));
+            Assert.Contains(state.Events.Since(0), e => e is ObstacleDamagedEvent d && d.Type == DamageType.Area && d.Position == new Position(3, 3));
+        }
+
+        // 피로도와 돌진 전방 공격도 받는다
+        [Fact]
+        public void Obstacle_TakesFatigueAndDashFrontStrikeDamage()
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 1, 0, With(SeamstressPiece.ObstacleId))
+                .Place(Team.Player1, 0, 0, With(WarriorPiece.DashId))
+                .Place(Team.Player2, 6, 6)
+                .WithRules(r =>
+                {
+                    r.Ap.StartAp = 6;
+                    r.Fatigue = new FatigueRuleData { StartRound = 1, InitialDamage = 1, DamageIncreasePerRound = 0 };
+                })
+                .Start();
+            Use(state, u[0], SeamstressPiece.ObstacleId, 0, 2); // (0,2), (1,2)
+
+            Use(state, u[1], WarriorPiece.DashId, 0, 1); // 앞 칸 (0,2) 장애물에 3
+            Assert.Equal(1, ObstacleAt(state, 0, 2).Hp);
+
+            EndTurn(state); // 피로도 1
+            Assert.Null(ObstacleAt(state, 0, 2));
+            Assert.Equal(3, ObstacleAt(state, 1, 2).Hp);
         }
 
         [Fact]

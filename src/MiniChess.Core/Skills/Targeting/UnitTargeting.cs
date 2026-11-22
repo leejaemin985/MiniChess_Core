@@ -4,7 +4,10 @@ using MiniChess.Core.State;
 
 namespace MiniChess.Core.Skills.Targeting
 {
-    /// <summary>사거리 안에서 조건에 맞는 살아 있는 유닛 하나를 지정한다. 벽은 지정을 막지 않는다.</summary>
+    /// <summary>
+    /// 사거리 안에서 조건에 맞는 살아 있는 유닛 하나를 지정한다. 벽은 지정을 막지 않는다.
+    /// TargetsObstacles 면 장애물 칸도 지정할 수 있다.
+    /// </summary>
     public class UnitTargeting : SkillTargeting
     {
         public TargetFilter Filter { get; }
@@ -43,7 +46,7 @@ namespace MiniChess.Core.Skills.Targeting
 
             foreach (Position position in RangeCalculator.GetPositionsInRange(state.Board, center, Range.Value, Shape))
             {
-                if (Filter.Matches(caster, state.Board.GetLivingUnit(position)))
+                if (Filter.Matches(caster, state.Board.GetLivingUnit(position)) || IsObstacleTarget(state, position))
                     yield return position;
             }
         }

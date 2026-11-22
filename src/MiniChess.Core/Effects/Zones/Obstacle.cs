@@ -1,3 +1,4 @@
+using MiniChess.Core.Combat;
 using MiniChess.Core.Common;
 using MiniChess.Core.Events;
 using MiniChess.Core.State;
@@ -6,31 +7,38 @@ namespace MiniChess.Core.Effects.Zones
 {
     /// <summary>
     /// 장애물: 칸을 막아 유닛이 들어갈 수 없게 한다(Board.CanPlace). 공격/스킬 사거리는 막지 않는다.
-    /// 기본 공격(AttackObstacleAction)에 Hits 번 맞으면 파괴된다. 피해량과 무관하고, 스킬 피해로는 부서지지 않는다.
-    /// 수명은 구역(FieldZone)이 관리한다.
+    /// 체력만 있는 중립 유닛처럼 피해(ObstacleDamage)를 받아 체력이 0 이 되면 파괴된다. 수명은 구역(FieldZone)이 관리한다.
     /// </summary>
     public class Obstacle : ZoneCellEffect
     {
         public override CellEffectLayer Layer => CellEffectLayer.Obstacle;
         public override string Kind => CellEffectKinds.Obstacle;
 
-        /// <summary>파괴까지 남은 피격 횟수.</summary>
-        public int HitsRemaining { get; private set; }
+        public int MaxHp { get; }
 
-        public Obstacle(FieldZone zone, int hits) : base(zone)
+        /// <summary>남은 체력. 0 이 되면 파괴(제거)된다.</summary>
+        public int Hp { get; private set; }
+
+        public Obstacle(FieldZone zone, int maxHp) : this(zone, maxHp, maxHp)
         {
-            HitsRemaining = hits;
         }
 
-        internal override ZoneCellEffect Fork(FieldZone zone) => new Obstacle(zone, HitsRemaining);
-
-        /// <summary>기본 공격 1회를 받는다. 남은 횟수가 0 이 되면 파괴된다. 파괴되었으면 true.</summary>
-        internal bool TakeHit(GameState state, Unit attacker, Position position)
+        public Obstacle(FieldZone zone, int maxHp, int hp) : base(zone)
         {
-            HitsRemaining--;
-            state.Events.Record(new ObstacleHitEvent(attacker.Id, position, HitsRemaining));
+            MaxHp = maxHp;
+            Hp = hp;
+        }
 
-            if (HitsRemaining > 0)
+        internal override ZoneCellEffect Fork(FieldZone zone) => new Obstacle(zone, MaxHp, Hp);
+
+        /// <summary>피해를 받는다(amount &gt; 0). 체력이 0 이 되면 파괴된다. 파괴되었으면 true.</summary>
+        internal bool TakeDamage(GameState state, Unit source, Position position, int amount, DamageType type)
+        {
+            int applied = System.Math.Min(Hp, amount);
+            Hp -= applied;
+            state.Events.Record(new ObstacleDamagedEvent(source?.Id, position, type, amount, applied, Hp, MaxHp));
+
+            if (Hp > 0)
                 return false;
 
             CellEffectSystem.Remove(state, position, Layer, CellEffectRemoveReason.Destroyed);

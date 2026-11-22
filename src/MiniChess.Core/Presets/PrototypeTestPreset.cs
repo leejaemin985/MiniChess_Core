@@ -254,7 +254,7 @@ namespace MiniChess.Core.Presets
             t.Seamstress.Obstacle.ApCost = 3;
             t.Seamstress.Obstacle.Range = 3;
             t.Seamstress.Obstacle.Area.Shape = new[] { "@#" };
-            t.Seamstress.Obstacle.Hits = 1;
+            t.Seamstress.Obstacle.Hp = 4;
             t.Seamstress.Obstacle.Lifetime = 2;
             t.Seamstress.Obstacle.MaxActive = 1;
 

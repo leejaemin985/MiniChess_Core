@@ -26,6 +26,12 @@ namespace MiniChess.Core.Skills.Targeting
 
         public override int TargetCount => 2;
 
+        public override bool TargetsObstacles
+        {
+            get => _unitTargeting.TargetsObstacles;
+            internal set => _unitTargeting.TargetsObstacles = value;
+        }
+
         public PushDirectionTargeting(TargetFilter filter, int? range, int? maxCells = 1)
         {
             Filter = filter;

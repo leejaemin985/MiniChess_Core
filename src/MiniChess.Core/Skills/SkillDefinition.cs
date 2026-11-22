@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MiniChess.Core.Skills
 {
@@ -54,6 +55,7 @@ namespace MiniChess.Core.Skills
             Conditions = conditions ?? Array.Empty<SkillCondition>();
             RequiredTuning = requiredTuning ?? Array.Empty<(string, object)>();
             EndsCasterActions = endsCasterActions;
+            Targeting.TargetsObstacles = Effects.Any(effect => effect.DamagesObstacles);
         }
 
         /// <summary>비어 있는 필수 설정 목록. 비어 있으면 사용 가능한 정의다.</summary>

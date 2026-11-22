@@ -7,7 +7,8 @@ namespace MiniChess.Core.Skills.Effects
 {
     /// <summary>
     /// 전방 공격: 진행 방향(시전 시작 위치 → 지정 칸)으로 시전자 바로 앞 칸의 적에게 직접 피해를 준다.
-    /// 이동 효과 뒤에 두면 "이동 후 전방 공격"이 된다. 앞 칸이 비었거나 벽/아군이면, 또는 시전자가 죽었으면 아무것도 하지 않는다.
+    /// 이동 효과 뒤에 두면 "이동 후 전방 공격"이 된다. 앞 칸의 장애물도 맞는다.
+    /// 앞 칸이 비었거나 벽/아군이면, 또는 시전자가 죽었으면 아무것도 하지 않는다.
     /// </summary>
     public class FrontStrikeEffect : SkillEffect
     {
@@ -36,6 +37,10 @@ namespace MiniChess.Core.Skills.Effects
             Unit target = context.State.Board.GetLivingUnit(front);
             if (TargetFilter.Enemy.Matches(caster, target))
                 DamageSystem.Apply(context.State, new DamageRequest(caster, target, Damage.Value, DamageType.Direct));
+            else
+                ObstacleDamage.Apply(context.State, caster, front, Damage.Value, DamageType.Direct);
         }
+
+        public override bool DamagesObstacles => Damage > 0;
     }
 }

@@ -8,7 +8,7 @@ using MiniChess.Core.State;
 namespace MiniChess.Core.Skills.Effects
 {
     /// <summary>
-    /// 연속 베기: ChainStrikeTargeting 으로 지정한 적들을 지정 순서대로 베고, 마지막에 착지 칸으로 순간이동한다.
+    /// 연속 베기: ChainStrikeTargeting 으로 지정한 적(장애물 포함)들을 지정 순서대로 베고, 마지막에 착지 칸으로 순간이동한다.
     /// 한 명만 베면 SingleDamage, 여러 명이면 각자 MultiDamage. 즉시 해결되며 중간 이동은 없다(연출만 대상마다 옮겨 다닌다).
     /// 대상이 베여 죽어도 착지 칸은 지정할 때 정한 칸 그대로다. 착지 칸이 시전자가 서 있는 칸이면 이동하지 않는다.
     /// 착지는 시전자 스스로의 순간이동(MoveKind.Warp)이라 도착 칸의 효과(덫 등)가 발동한다.
@@ -46,6 +46,8 @@ namespace MiniChess.Core.Skills.Effects
                 Unit target = context.State.Board.GetLivingUnit(cell);
                 if (target != null && TargetFilter.Enemy.Matches(context.Caster, target))
                     DamageSystem.Apply(context.State, new DamageRequest(context.Caster, target, damage, DamageType.Direct));
+                else
+                    ObstacleDamage.Apply(context.State, context.Caster, cell, damage, DamageType.Direct);
             }
 
             if (context.State.IsGameOver || !context.Caster.IsAlive || !context.Caster.IsPlaced)
@@ -55,5 +57,7 @@ namespace MiniChess.Core.Skills.Effects
             if (landing != context.Caster.Position.Value)
                 MovementResolver.Resolve(context.State, context.Caster, context.Caster, MoveKind.Warp, new[] { landing });
         }
+
+        public override bool DamagesObstacles => SingleDamage > 0 || MultiDamage > 0;
     }
 }

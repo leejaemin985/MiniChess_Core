@@ -9,7 +9,7 @@ namespace MiniChess.Core.Skills.Effects
     /// </summary>
     public class ScheduleStrikeEffect : SkillEffect
     {
-        /// <summary>착탄 시 범위 안 적 각각에게 주는 피해. [TBD 가능]</summary>
+        /// <summary>착탄 시 범위 안 적과 장애물 각각에게 주는 피해. [TBD 가능]</summary>
         public int? Damage { get; }
 
         public ScheduleStrikeEffect(int? damage)
@@ -29,5 +29,7 @@ namespace MiniChess.Core.Skills.Effects
 
             ScheduledStrikeSystem.Schedule(context.State, strike);
         }
+
+        public override bool DamagesObstacles => Damage > 0;
     }
 }

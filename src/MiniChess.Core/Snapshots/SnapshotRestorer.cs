@@ -135,7 +135,7 @@ namespace MiniChess.Core.Snapshots
                 }
 
                 ZoneCellEffect effect = value.Kind == CellEffectKinds.Obstacle
-                    ? new Obstacle(zone, value.HitsRemaining ?? 1)
+                    ? new Obstacle(zone, value.MaxHp ?? value.Hp ?? 1, value.Hp ?? 1)
                     : (ZoneCellEffect)new RestoredZoneEffect(zone, value.Layer, value.Kind);
 
                 state.Board.GetCell(value.Position).SetEffect(effect);

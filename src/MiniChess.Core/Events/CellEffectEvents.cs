@@ -1,3 +1,4 @@
+using MiniChess.Core.Combat;
 using MiniChess.Core.Common;
 using MiniChess.Core.Effects;
 using MiniChess.Core.Snapshots;
@@ -38,18 +39,45 @@ namespace MiniChess.Core.Events
         Disarmed,
     }
 
-    /// <summary>장애물이 기본 공격을 받았다. 남은 횟수가 0 이면 이어서 파괴(제거) 이벤트가 기록된다.</summary>
+    /// <summary>유닛이 장애물을 기본 공격했다(UnitAttackedEvent 의 장애물판). 이어서 ObstacleDamagedEvent 가 기록된다.</summary>
     public class ObstacleHitEvent : GameEvent
     {
         public int AttackerId { get; }
         public Position Position { get; }
-        public int HitsRemaining { get; }
 
-        public ObstacleHitEvent(int attackerId, Position position, int hitsRemaining)
+        public ObstacleHitEvent(int attackerId, Position position)
         {
             AttackerId = attackerId;
             Position = position;
-            HitsRemaining = hitsRemaining;
+        }
+    }
+
+    /// <summary>장애물이 피해를 받았다(UnitDamagedEvent 의 장애물판). 체력이 0 이면 이어서 파괴(제거) 이벤트가 기록된다.</summary>
+    public class ObstacleDamagedEvent : GameEvent
+    {
+        /// <summary>피해를 준 유닛 Id. 출처가 유닛이 아니면(피로도 등) null.</summary>
+        public int? SourceId { get; }
+        public Position Position { get; }
+        public DamageType Type { get; }
+
+        /// <summary>요청된 피해량.</summary>
+        public int RequestedAmount { get; }
+
+        /// <summary>실제로 체력에서 깎인 양(남은 체력을 넘지 않음).</summary>
+        public int AppliedAmount { get; }
+
+        public int HpAfter { get; }
+        public int MaxHp { get; }
+
+        public ObstacleDamagedEvent(int? sourceId, Position position, DamageType type, int requestedAmount, int appliedAmount, int hpAfter, int maxHp)
+        {
+            SourceId = sourceId;
+            Position = position;
+            Type = type;
+            RequestedAmount = requestedAmount;
+            AppliedAmount = appliedAmount;
+            HpAfter = hpAfter;
+            MaxHp = maxHp;
         }
     }
 

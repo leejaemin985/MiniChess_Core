@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using MiniChess.Core.Combat;
 using MiniChess.Core.Common;
 using MiniChess.Core.State;
 
@@ -25,6 +26,18 @@ namespace MiniChess.Core.Skills
 
         /// <summary>시전자 자신만 지정하는지. 클라는 칸을 고르지 않고 확인만 받는다.</summary>
         public virtual bool IsSelfOnly => false;
+
+        /// <summary>
+        /// 장애물 칸도 유닛 대신 지정할 수 있는지. 스킬 효과 중 장애물에 피해를 주는 것이 있으면 SkillDefinition 이 켠다.
+        /// 유닛을 지정하는 부품만 쓴다(장애물은 체력만 있는 중립 유닛).
+        /// </summary>
+        public virtual bool TargetsObstacles { get; internal set; }
+
+        /// <summary>TargetsObstacles 이고 그 칸에 장애물이 있는지.</summary>
+        protected bool IsObstacleTarget(GameState state, Position position)
+        {
+            return TargetsObstacles && ObstacleDamage.Find(state, position) != null;
+        }
 
         /// <summary>첫 번째로 지정할 수 있는 칸 전부.</summary>
         public abstract IEnumerable<Position> GetCandidates(GameState state, Unit caster);

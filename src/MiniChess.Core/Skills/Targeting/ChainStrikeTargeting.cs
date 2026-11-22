@@ -6,7 +6,7 @@ using MiniChess.Core.State;
 namespace MiniChess.Core.Skills.Targeting
 {
     /// <summary>
-    /// 적을 1~MaxTargets 명 차례로 지정한 뒤, 마지막 대상 주변 1칸(정사각형, 대각선 포함) 중 하나를 착지 칸으로 지정한다(연속 베기).
+    /// 적(TargetsObstacles 면 장애물 포함)을 1~MaxTargets 명 차례로 지정한 뒤, 마지막 대상 주변 1칸(정사각형, 대각선 포함) 중 하나를 착지 칸으로 지정한다(연속 베기).
     ///   1. 시전자 사거리 안의 적.
     ///   2. 앞 대상의 연쇄 거리 안에 있는 다른 적(같은 적은 다시 못 고름), 또는 앞 대상의 착지 칸 → 착지 칸을 고르면 지정이 끝난다.
     /// 착지 칸은 빈 칸이거나 시전자가 지금 서 있는 칸이다. 착지 칸까지 지정을 마칠 수 없는 대상은 후보에서 뺀다.
@@ -99,12 +99,15 @@ namespace MiniChess.Core.Skills.Targeting
                 .Any(enemy => CanFinish(state, caster, new List<Position>(chosen) { enemy }));
         }
 
-        /// <summary>center 에서 range 안(center 제외)의, 아직 고르지 않은 적 칸.</summary>
-        private static IEnumerable<Position> EnemiesAround(GameState state, Unit caster, Position center, int range, IReadOnlyList<Position> chosen)
+        /// <summary>center 에서 range 안(center 제외)의, 아직 고르지 않은 적(장애물 포함) 칸.</summary>
+        private IEnumerable<Position> EnemiesAround(GameState state, Unit caster, Position center, int range, IReadOnlyList<Position> chosen)
         {
             foreach (Position position in RangeCalculator.GetPositionsInRange(state.Board, center, range, RangeShape.Square))
             {
-                if (!chosen.Contains(position) && TargetFilter.Enemy.Matches(caster, state.Board.GetLivingUnit(position)))
+                if (chosen.Contains(position))
+                    continue;
+
+                if (TargetFilter.Enemy.Matches(caster, state.Board.GetLivingUnit(position)) || IsObstacleTarget(state, position))
                     yield return position;
             }
         }

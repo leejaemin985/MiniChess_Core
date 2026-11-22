@@ -55,6 +55,8 @@ namespace MiniChess.Core.Effects.Scheduled
 
                 DamageSystem.Apply(state, new DamageRequest(strike.Source, target, strike.Damage, DamageType.Area));
             }
+
+            ObstacleDamage.ApplyInCells(state, strike.Source, strike.Cells, strike.Damage, DamageType.Area);
         }
     }
 }

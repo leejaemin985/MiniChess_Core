@@ -58,7 +58,8 @@ namespace MiniChess.Core.Snapshots
                 zone?.Id,
                 zone?.Source?.Id,
                 zone?.Remaining,
-                (effect as Obstacle)?.HitsRemaining);
+                (effect as Obstacle)?.Hp,
+                (effect as Obstacle)?.MaxHp);
         }
 
         public static StrikeSnapshot Strike(ScheduledStrike strike)

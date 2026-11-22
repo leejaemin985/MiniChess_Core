@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
+using MiniChess.Core.Combat;
 using MiniChess.Core.Common;
-using MiniChess.Core.Effects;
-using MiniChess.Core.Effects.Zones;
 using MiniChess.Core.Events;
 using MiniChess.Core.State;
 
@@ -10,7 +9,7 @@ namespace MiniChess.Core.Actions
 {
     /// <summary>
     /// 기본 공격으로 장애물을 치는 명령. 양 팀 모두 칠 수 있다.
-    /// 검사와 비용은 유닛 기본 공격과 같다(사거리, AP, 턴당 기본 공격 1회, 상태효과 차단). 피해량과 무관하게 피격 1회로 센다.
+    /// 검사와 비용은 유닛 기본 공격과 같다(사거리, AP, 턴당 기본 공격 1회, 상태효과 차단). 공격력만큼 피해를 주고, 적중 상태는 걸지 않는다.
     /// </summary>
     internal class AttackObstacleAction
     {
@@ -28,7 +27,7 @@ namespace MiniChess.Core.Actions
             AttackFailReason attackerReason = AttackAction.ValidateAttacker(state, Attacker);
             if (attackerReason != AttackFailReason.None) return attackerReason;
 
-            if (FindObstacle(state, Target) == null) return AttackFailReason.InvalidTarget;
+            if (ObstacleDamage.Find(state, Target) == null) return AttackFailReason.InvalidTarget;
 
             return AttackAction.ValidateRangeAndAp(state, Attacker, Target);
         }
@@ -44,7 +43,8 @@ namespace MiniChess.Core.Actions
 
             AttackAction.PayCost(state, Attacker);
 
-            bool destroyed = FindObstacle(state, Target).TakeHit(state, Attacker, Target);
+            state.Events.Record(new ObstacleHitEvent(Attacker.Id, Target));
+            bool destroyed = ObstacleDamage.Apply(state, Attacker, Target, Attacker.Stats.Attack, DamageType.Direct);
 
             return new AttackObstacleResult(Attacker, Target, destroyed, state.Events.Since(eventStart));
         }
@@ -58,19 +58,11 @@ namespace MiniChess.Core.Actions
 
             foreach (Position position in AttackAction.GetReach(state, attacker))
             {
-                if (FindObstacle(state, position) != null)
+                if (ObstacleDamage.Find(state, position) != null)
                     positions.Add(position);
             }
 
             return positions;
-        }
-
-        private static Obstacle FindObstacle(GameState state, Position position)
-        {
-            if (!state.Board.IsInBounds(position))
-                return null;
-
-            return state.Board.GetCell(position).GetEffect(CellEffectLayer.Obstacle) as Obstacle;
         }
     }
 

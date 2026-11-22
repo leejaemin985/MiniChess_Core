@@ -6,7 +6,7 @@ using MiniChess.Core.State;
 
 namespace MiniChess.Core.Turns
 {
-    /// <summary>매 턴 종료에 양 팀의 보드 위 유닛(소환물 포함)에게 같은 라운드의 피로도 피해를 준다.</summary>
+    /// <summary>매 턴 종료에 양 팀의 보드 위 유닛(소환물 포함)과 장애물에게 같은 라운드의 피로도 피해를 준다.</summary>
     public static class FatigueSystem
     {
         /// <summary>8 라운드(전체 턴 15·16) 1, 9 라운드(17·18) 2, ... 시작 전/비활성은 0.</summary>
@@ -33,6 +33,8 @@ namespace MiniChess.Core.Turns
             DamageRequest[] requests = state.AllUnits().Where(unit => unit.IsOnBoard)
                 .Select(unit => new DamageRequest(null, unit, damage, DamageType.Fatigue)).ToArray();
             DamageSystem.ApplyBatch(state, requests);
+
+            ObstacleDamage.ApplyInCells(state, null, ObstacleDamage.AllPositions(state), damage, DamageType.Fatigue);
         }
     }
 }

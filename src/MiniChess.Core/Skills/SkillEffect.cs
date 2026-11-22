@@ -11,6 +11,9 @@ namespace MiniChess.Core.Skills
     {
         public abstract void Apply(SkillContext context);
 
+        /// <summary>장애물에 피해를 주는 효과인지. 하나라도 있으면 그 스킬은 장애물 칸도 지정할 수 있다(SkillDefinition).</summary>
+        public virtual bool DamagesObstacles => false;
+
         /// <summary>범위 안에서 조건에 맞는 살아 있는 유닛(범위 칸 순서).</summary>
         protected static List<Unit> GetUnitsInArea(SkillContext context, TargetFilter filter)
         {
