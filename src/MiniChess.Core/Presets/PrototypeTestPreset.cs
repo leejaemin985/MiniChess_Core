@@ -262,7 +262,7 @@ namespace MiniChess.Core.Presets
             t.Assassin.Shuriken.Range = 3;
             t.Assassin.Shuriken.Damage = 2;
             t.Assassin.ChainSlash.ApCost = 4;
-            t.Assassin.ChainSlash.Range = 3;
+            t.Assassin.ChainSlash.Range = 4;
             t.Assassin.ChainSlash.ChainRange = 2;
             t.Assassin.ChainSlash.SingleDamage = 6;
             t.Assassin.ChainSlash.MultiDamage = 3;

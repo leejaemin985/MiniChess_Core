@@ -6,7 +6,7 @@ using MiniChess.Core.State;
 namespace MiniChess.Core.Skills.Targeting
 {
     /// <summary>
-    /// 적을 1~MaxTargets 명 차례로 지정한 뒤, 마지막 대상의 상하좌우 칸 하나를 착지 칸으로 지정한다(연속 베기).
+    /// 적을 1~MaxTargets 명 차례로 지정한 뒤, 마지막 대상 주변 1칸(정사각형, 대각선 포함) 중 하나를 착지 칸으로 지정한다(연속 베기).
     ///   1. 시전자 사거리 안의 적.
     ///   2. 앞 대상의 연쇄 거리 안에 있는 다른 적(같은 적은 다시 못 고름), 또는 앞 대상의 착지 칸 → 착지 칸을 고르면 지정이 끝난다.
     /// 착지 칸은 빈 칸이거나 시전자가 지금 서 있는 칸이다. 착지 칸까지 지정을 마칠 수 없는 대상은 후보에서 뺀다.
@@ -14,7 +14,6 @@ namespace MiniChess.Core.Skills.Targeting
     /// </summary>
     public class ChainStrikeTargeting : SkillTargeting
     {
-        private static readonly (int X, int Y)[] LandingOffsets = { (0, 1), (1, 0), (0, -1), (-1, 0) };
 
         /// <summary>첫 대상을 고르는 시전자 기준 사거리(칸). [TBD 가능]</summary>
         public int? Range { get; }
@@ -110,15 +109,11 @@ namespace MiniChess.Core.Skills.Targeting
             }
         }
 
-        /// <summary>target 의 상하좌우 칸 중 착지할 수 있는 칸(빈 칸 또는 시전자가 서 있는 칸).</summary>
+        /// <summary>target 주변 1칸(정사각형) 중 착지할 수 있는 칸(빈 칸 또는 시전자가 서 있는 칸).</summary>
         private static IEnumerable<Position> LandingCells(GameState state, Unit caster, Position target)
         {
-            foreach ((int dx, int dy) in LandingOffsets)
+            foreach (Position cell in RangeCalculator.GetPositionsInRange(state.Board, target, 1, RangeShape.Square))
             {
-                Position cell = target.Offset(dx, dy);
-                if (!state.Board.IsInBounds(cell))
-                    continue;
-
                 if (state.Board.CanPlace(cell) || cell == caster.Position.Value)
                     yield return cell;
             }

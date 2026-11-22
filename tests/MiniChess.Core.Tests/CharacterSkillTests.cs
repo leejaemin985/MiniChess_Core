@@ -1986,7 +1986,7 @@ namespace MiniChess.Core.Tests
             Assert.Equal(8, u[1].Stats.CurrentHp);
         }
 
-        // 사용자 확정: 한 명만 고르면 높은 피해, 마지막 대상 상하좌우 중 고른 칸에 순간이동해 착지
+        // 사용자 확정: 한 명만 고르면 높은 피해, 마지막 대상 주변 1칸(대각선 포함) 중 고른 칸에 순간이동해 착지
         [Fact]
         public void ChainSlash_SingleTarget_DealsSingleDamage_AndWarpsToChosenLanding()
         {
@@ -2013,22 +2013,31 @@ namespace MiniChess.Core.Tests
                 .Place(Team.Player2, 5, 2, TestGame.Stats(hp: 10)) // 첫 대상에서 3칸
                 .Start();
 
-            // 첫 대상 다음: 연쇄 거리 안의 다른 적 + 첫 대상의 착지 칸
+            // 첫 대상 다음: 연쇄 거리 안의 다른 적 + 첫 대상 주변 1칸의 착지 칸
             Assert.Equal(
-                Sorted(new[] { new Position(3, 4), new Position(2, 3), new Position(3, 2), new Position(2, 1), new Position(1, 2) }),
+                Sorted(new[]
+                {
+                    new Position(3, 4),
+                    new Position(1, 1), new Position(1, 2), new Position(1, 3), new Position(2, 1),
+                    new Position(2, 3), new Position(3, 1), new Position(3, 2), new Position(3, 3),
+                }),
                 Sorted(ChainCandidates(state, u[0], new Position(2, 2))));
 
-            // 두 명을 고른 뒤에는 두 번째 대상의 착지 칸만
+            // 두 명을 고른 뒤에는 두 번째 대상 주변 1칸의 착지 칸만
             Assert.Equal(
-                Sorted(new[] { new Position(3, 5), new Position(4, 4), new Position(3, 3), new Position(2, 4) }),
+                Sorted(new[]
+                {
+                    new Position(2, 3), new Position(2, 4), new Position(2, 5), new Position(3, 3),
+                    new Position(3, 5), new Position(4, 3), new Position(4, 4), new Position(4, 5),
+                }),
                 Sorted(ChainCandidates(state, u[0], new Position(2, 2), new Position(3, 4))));
 
-            UseChain(state, u[0], new Position(2, 2), new Position(3, 4), new Position(4, 4));
+            UseChain(state, u[0], new Position(2, 2), new Position(3, 4), new Position(4, 5)); // 대각선 착지
 
             Assert.Equal(7, u[1].Stats.CurrentHp);
             Assert.Equal(7, u[2].Stats.CurrentHp);
             Assert.Equal(10, u[3].Stats.CurrentHp);
-            Assert.Equal(new Position(4, 4), u[0].Position);
+            Assert.Equal(new Position(4, 5), u[0].Position);
         }
 
         // 지정 수가 바뀌는 스킬: 착지 칸을 고르면 끝. 착지 칸 없이 끝내거나 같은 적을 두 번 고른 지정은 거절
@@ -2054,7 +2063,7 @@ namespace MiniChess.Core.Tests
             Assert.Equal(SkillFailReason.None, CheckChain(state, u[0], new Position(2, 2), new Position(3, 3), new Position(3, 4)));
         }
 
-        // 사용자 확정: 착지할 칸(벽/유닛 없는 상하좌우)이 없는 대상은 고를 수 없다
+        // 사용자 확정: 착지할 칸(벽/유닛 없는 주변 1칸)이 없는 대상은 고를 수 없다
         [Fact]
         public void ChainSlash_TargetWithoutLanding_IsNotCandidate()
         {
