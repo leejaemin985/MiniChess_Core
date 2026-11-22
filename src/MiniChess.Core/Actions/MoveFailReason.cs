@@ -30,7 +30,7 @@ namespace MiniChess.Core.Actions
         /// <summary>이동 거리 제한 상태의 한도 초과.</summary>
         DistanceLimited,
 
-        /// <summary>설치 상태라 자발적 이동 불가.</summary>
+        /// <summary>설치 중인 박격포라 자발적 이동 불가.</summary>
         Installed,
 
         /// <summary>봉인 상태라 이동 불가.</summary>

@@ -14,6 +14,7 @@ namespace MiniChess.Core.Characters.Pieces
     /// 마법공학 박격포 여학생 (명세 5, 사용자 확정).
     /// 스킬 1 포격, 스킬 2 충격탄, 고유 기능 해체.
     /// 흐름: (해체 상태로 시작) 포격 = 설치 + 조준 → 다음 내 턴 시작에 착탄 → 다시 포격 또는 해체 → 해체 상태에서 충격탄.
+    /// 설치는 상태효과가 아닌 박격포 전용 값(Unit.IsInstalled)이다. 상태 목록/배지에 나오지 않고 정화 등 상태 제거의 대상이 아니다.
     /// </summary>
     public class MortarPiece : PieceModule
     {
@@ -41,7 +42,7 @@ namespace MiniChess.Core.Characters.Pieces
 
         /// <summary>
         /// 포격: 범위를 조준하고 다음 내 턴 시작에 착탄해 범위 안 적에게 장판 피해.
-        /// 설치 상태가 아니면 이때 설치되며 보호막을 받는다(이미 설치 중이면 보호막은 다시 받지 않는다).
+        /// 설치 중이 아니면 이때 설치되며 보호막을 받는다(이미 설치 중이면 보호막은 다시 받지 않는다).
         /// 설치 중에는 자발적 이동/기본 공격이 막히므로, 착탄한 턴에는 다시 포격하거나 해체만 할 수 있다.
         /// 착탄 위치는 조준한 칸에 고정. 착탄 전에 시전자가 죽으면 예약이 취소된다.
         /// </summary>
@@ -53,16 +54,16 @@ namespace MiniChess.Core.Characters.Pieces
                 SkillBuildUtil.Area(t.Area),
                 new SkillEffect[]
                 {
-                    new ApplySelfStatusEffect(
-                        StatusLibrary.Installed(),
-                        onApplied: new SkillEffect[] { new ApplyShieldEffect(InstallShieldId, t.InstallShieldAmount) }),
+                    new SetInstalledEffect(
+                        installed: true,
+                        onChanged: new SkillEffect[] { new ApplyShieldEffect(InstallShieldId, t.InstallShieldAmount) }),
                     new ScheduleStrikeEffect(t.Damage),
                 },
                 new SkillCondition[] { new MaxActiveStrikesCondition(BombardId, t.MaxActive) });
         }
 
         /// <summary>
-        /// 해체: 설치 상태를 풀고 설치 보호막을 제거한다. 설치 중에만 보이는 고유 기능이다.
+        /// 해체: 설치를 풀고 설치 보호막을 제거한다. 설치 중에만 보이는 고유 기능이다.
         /// </summary>
         public static SkillDefinition Uninstall(UninstallTuning t)
         {
@@ -72,11 +73,11 @@ namespace MiniChess.Core.Characters.Pieces
                 PatternArea.SingleCell,
                 new SkillEffect[]
                 {
-                    new RemoveSelfStatusEffect(
-                        StatusLibrary.InstalledId,
-                        onRemoved: new SkillEffect[] { new RemoveShieldEffect(InstallShieldId) }),
+                    new SetInstalledEffect(
+                        installed: false,
+                        onChanged: new SkillEffect[] { new RemoveShieldEffect(InstallShieldId) }),
                 },
-                new SkillCondition[] { new HasStatusCondition(StatusLibrary.InstalledId) });
+                new SkillCondition[] { new InstalledCondition(required: true) });
         }
 
         /// <summary>
@@ -97,7 +98,7 @@ namespace MiniChess.Core.Characters.Pieces
                         new ApplyStatusEffect(StatusLibrary.DistanceLimit(t.LimitCells, t.LimitTurns)),
                     }),
                 },
-                new SkillCondition[] { new LacksStatusCondition(StatusLibrary.InstalledId) },
+                new SkillCondition[] { new InstalledCondition(required: false) },
                 requiredTuning: SkillBuildUtil.Require(
                     (nameof(t.LimitCells), t.LimitCells),
                     (nameof(t.LimitTurns), t.LimitTurns)));

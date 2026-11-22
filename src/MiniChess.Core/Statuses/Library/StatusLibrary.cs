@@ -7,7 +7,7 @@ namespace MiniChess.Core.Statuses.Library
     /// 공용 상태효과 정의 모음. 스킬, 덫, 보상 등 어디서든 같은 상태를 이 정의로 건다.
     /// 수치가 하나라도 null 이면 null 을 반환한다(그 상태를 쓰는 기능은 설정 누락으로 사용 불가).
     /// 쌓임 범위(사용자 확정): 중독/화상/속박/기절/이동 제한은 출처별(건 유닛 + 원인 스킬마다 따로),
-    /// 호위/설치/저주 표식/봉인은 대상당 하나. "다시 걸면 갱신" 설명은 같은 건끼리의 규칙이다.
+    /// 호위/저주 표식/봉인은 대상당 하나. "다시 걸면 갱신" 설명은 같은 건끼리의 규칙이다.
     /// </summary>
     public static class StatusLibrary
     {
@@ -16,7 +16,6 @@ namespace MiniChess.Core.Statuses.Library
         public const string PoisonId = "POISON";
         public const string DistanceLimitId = "DISTANCE_LIMIT";
         public const string GuardId = "GUARD";
-        public const string InstalledId = "INSTALLED";
         public const string CurseMarkId = "CURSE_MARK";
         public const string SealedId = "SEALED";
         public const string StunnedId = "STUNNED";
@@ -136,20 +135,6 @@ namespace MiniChess.Core.Statuses.Library
         }
 
         /// <summary>
-        /// 설치: 영구 상태(해체할 때까지). 자발적 이동과 기본 공격 불가, 외부 강제 이동은 허용. 다시 걸어도 아무 일 없다.
-        /// 설치형 캐릭터 공용이며, 설치/해체 시 부가 효과(보호막 등)는 각 캐릭터의 스킬이 정한다.
-        /// </summary>
-        public static StatusDefinition Installed()
-        {
-            return new StatusDefinition(
-                InstalledId,
-                duration: 1,
-                StatusStackPolicy.Ignore,
-                decrement: null,
-                behavior: new InstalledBehavior());
-        }
-
-        /// <summary>
         /// 저주 표식: 표식 소유자(건 유닛의 소환자)의 다음 직접 피해에 추가 피해 1회, 발동하면 소모.
         /// 지속 시간 없이 발동할 때까지 유지된다(사용자 확정). 스택하지 않으며 다시 걸면 건 유닛을 새로 건 쪽으로 갱신한다.
         /// 건 유닛(분신)이 죽어도 유지된다.
@@ -183,7 +168,6 @@ namespace MiniChess.Core.Statuses.Library
                 case PoisonId: return Poison(Get(nameof(DamageOverTimeBehavior.DamagePerTrigger)), duration);
                 case DistanceLimitId: return DistanceLimit(Get(nameof(DistanceLimitBehavior.MaxCells)), duration);
                 case GuardId: return Guard(Get(nameof(GuardBehavior.MaxDistance)));
-                case InstalledId: return Installed();
                 case CurseMarkId: return CurseMark(Get(nameof(CurseMarkBehavior.BonusDamage)));
                 case SealedId: return Sealed();
                 case StunnedId: return Stunned(duration);

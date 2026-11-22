@@ -85,6 +85,7 @@ namespace MiniChess.Core.Actions
                 if (attacker.TurnState.BasicAttackUsed) return AttackFailReason.AlreadyUsedThisTurn;
             }
             if (StatusSystem.BlocksBasicAttack(state, attacker)) return AttackFailReason.BlockedByStatus;
+            if (attacker.IsInstalled) return AttackFailReason.Installed;
 
             return AttackFailReason.None;
         }

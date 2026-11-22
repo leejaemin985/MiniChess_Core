@@ -8,6 +8,7 @@ using MiniChess.Core.Effects;
 using MiniChess.Core.Events;
 using MiniChess.Core.Presets;
 using MiniChess.Core.Snapshots;
+using MiniChess.Core.State;
 using MiniChess.Core.Statuses.Library;
 using Xunit;
 
@@ -96,7 +97,8 @@ namespace MiniChess.Core.Tests
 
             Assert.DoesNotContain(theirs, e => e is StrikeScheduledEvent);
             Assert.Empty(Assert.IsType<SkillUsedEvent>(theirs[0]).Targets);
-            Assert.Contains(theirs, e => e is StatusAppliedEvent applied && applied.Status.StatusId == StatusLibrary.InstalledId);
+            Assert.Contains(theirs, e => e is UnitInstallChangedEvent installed && installed.IsInstalled);
+            Assert.True(game.GetSnapshot(Team.Player2).Units.Single(unit => unit.Position == new Position(1, 1)).IsInstalled);
             Assert.Contains(game.GetVisibleEvents(Team.Player1, bombardEvents), e => e is StrikeScheduledEvent);
 
             Assert.Single(game.GetSnapshot(Team.Player1).Strikes);
@@ -271,6 +273,23 @@ namespace MiniChess.Core.Tests
 
             Assert.False(restored.State.Board.GetCell(TrapCell).HasEffect(CellEffectLayer.Trap));
             Assert.Empty(restored.State.ScheduledStrikes);
+        }
+
+        // 설치는 상태효과가 아닌 유닛 값이라 스냅샷 필드로 넘어가고, 복원한 쪽에서도 이동/기본 공격을 막는다
+        [Theory]
+        [InlineData(Team.Player1)]
+        [InlineData(Team.Player2)]
+        public void Restore_KeepsInstalledMortar(Team viewer)
+        {
+            var (game, _, _) = TrapAndBombard();
+            int mortarId = UnitAt(game, new Position(1, 1));
+
+            GameController restored = GameController.Restore(Config(), OverTheWire(game.GetSnapshot(viewer)));
+            Unit mortar = restored.State.FindUnit(mortarId);
+
+            Assert.True(mortar.IsInstalled);
+            Assert.Empty(mortar.Statuses);
+            Assert.Empty(restored.GetMoveDestinations(mortarId));
         }
 
         #endregion

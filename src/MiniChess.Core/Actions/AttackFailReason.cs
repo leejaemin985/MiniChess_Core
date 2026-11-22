@@ -25,7 +25,7 @@ namespace MiniChess.Core.Actions
         /// <summary>이번 턴에 더 이상 행동할 수 없는 유닛(예: 사용 후 행동이 끝나는 스킬을 쓴 직후).</summary>
         ActionsEnded,
 
-        /// <summary>상태효과가 기본 공격을 막음(설치 중인 박격포 등).</summary>
+        /// <summary>상태효과가 기본 공격을 막음(기절, 봉인 등).</summary>
         BlockedByStatus,
 
         /// <summary>요청 형식이 잘못됨(요청 없음, 존재하지 않는 팀 등).</summary>
@@ -33,5 +33,8 @@ namespace MiniChess.Core.Actions
 
         /// <summary>이번 턴에 이미 기본 공격(장애물 공격 포함)을 함. 기본 공격은 유닛당 턴에 한 번.</summary>
         AlreadyUsedThisTurn,
+
+        /// <summary>설치 중인 박격포라 기본 공격 불가(Unit.IsInstalled).</summary>
+        Installed,
     }
 }

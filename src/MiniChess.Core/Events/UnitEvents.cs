@@ -122,6 +122,21 @@ namespace MiniChess.Core.Events
         }
     }
 
+    /// <summary>박격포가 설치되었거나(포격) 해체되었다(Unit.IsInstalled 가 바뀜). 양 팀 모두에게 보인다.</summary>
+    public class UnitInstallChangedEvent : GameEvent
+    {
+        public int UnitId { get; }
+
+        /// <summary>바뀐 뒤 값. true 면 설치, false 면 해체.</summary>
+        public bool IsInstalled { get; }
+
+        public UnitInstallChangedEvent(int unitId, bool isInstalled)
+        {
+            UnitId = unitId;
+            IsInstalled = isInstalled;
+        }
+    }
+
     /// <summary>유닛의 보호막 하나(Id 기준)의 양이 바뀌었다(부여/재충전 또는 피해 흡수). 0 이면 그 보호막은 사라졌다.</summary>
     public class UnitShieldChangedEvent : GameEvent
     {

@@ -199,7 +199,6 @@ namespace MiniChess.Core.Tests
             [nameof(StatusLibrary.Poison)] = StatusLibrary.Poison(5, 6),
             [nameof(StatusLibrary.DistanceLimit)] = StatusLibrary.DistanceLimit(2, 3),
             [nameof(StatusLibrary.Guard)] = StatusLibrary.Guard(2),
-            [nameof(StatusLibrary.Installed)] = StatusLibrary.Installed(),
             [nameof(StatusLibrary.CurseMark)] = StatusLibrary.CurseMark(4),
             [nameof(StatusLibrary.Sealed)] = StatusLibrary.Sealed(),
             [nameof(StatusLibrary.Stunned)] = StatusLibrary.Stunned(2),

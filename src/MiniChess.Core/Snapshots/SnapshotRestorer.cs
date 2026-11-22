@@ -74,7 +74,7 @@ namespace MiniChess.Core.Snapshots
                     SkillIds = value.SkillIds.ToArray(),
                 };
 
-                var unit = new Unit(value.Id, value.Team, stats) { IsSummon = value.IsSummon };
+                var unit = new Unit(value.Id, value.Team, stats) { IsSummon = value.IsSummon, IsInstalled = value.IsInstalled };
                 unit.Stats.RestoreHp(value.Hp);
                 unit.TurnState.Restore(value.ActionsEnded, value.VoluntaryCellsMoved, value.BasicAttackUsed, value.UsedSkillIds);
                 state.RestoreUnit(unit);

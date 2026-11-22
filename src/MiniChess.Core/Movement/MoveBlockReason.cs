@@ -14,7 +14,7 @@ namespace MiniChess.Core.Movement
         /// <summary>이동 거리 제한 상태(볼라 등)의 한도 초과.</summary>
         DistanceLimited,
 
-        /// <summary>설치 상태라 자발적 이동 불가(박격포).</summary>
+        /// <summary>설치 중인 박격포라 자발적 이동 불가(Unit.IsInstalled, 상태효과 아님).</summary>
         Installed,
 
         /// <summary>봉인 상태라 어떤 이동도 불가.</summary>

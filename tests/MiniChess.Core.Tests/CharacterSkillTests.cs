@@ -1270,9 +1270,8 @@ namespace MiniChess.Core.Tests
         private static UnitBaseStats Mortar() =>
             TestGame.Stats("mortar", skills: new[] { MortarPiece.BombardId, MortarPiece.ShockShellId, MortarPiece.UninstallId });
 
-        /// <summary>박격포를 설치 상태로 만든다(보호막 없이 상태만).</summary>
-        private static void InstallMortar(GameState state, Unit mortar) =>
-            Statuses.StatusSystem.Apply(state, StatusLibrary.Installed(), mortar, mortar);
+        /// <summary>박격포를 설치 중으로 만든다(보호막 없이 값만).</summary>
+        private static void InstallMortar(Unit mortar) => mortar.IsInstalled = true;
 
         // 사용자 확정: 해체 상태에서 포격하면 설치 + 보호막, 다음 내 턴 시작에 착탄
         [Fact]
@@ -1286,9 +1285,12 @@ namespace MiniChess.Core.Tests
                 .Place(Team.Player1, 2, 3) // 범위 안 아군
                 .Start();
 
-            Use(state, u[0], MortarPiece.BombardId, 3, 3);
+            SkillResult result = Use(state, u[0], MortarPiece.BombardId, 3, 3);
 
-            Assert.NotNull(u[0].FindStatus(StatusLibrary.InstalledId));
+            // 설치는 상태효과가 아니다: 상태 목록에 없고 설치 이벤트만 남는다
+            Assert.True(u[0].IsInstalled);
+            Assert.Empty(u[0].Statuses);
+            Assert.Equal(u[0].Id, Assert.Single(result.Events.OfType<UnitInstallChangedEvent>(), e => e.IsInstalled).UnitId);
             Assert.Equal(2, u[0].Stats.Shield);
             Assert.Equal(10, u[1].Stats.CurrentHp);
             Assert.Single(state.ScheduledStrikes);
@@ -1323,10 +1325,11 @@ namespace MiniChess.Core.Tests
             Assert.Equal(SkillFailReason.None, Check(state, u[0], MortarPiece.UninstallId, 0, 0));
             Assert.Equal(SkillFailReason.ConditionNotMet, Check(state, u[0], MortarPiece.ShockShellId, 1, 1));
             Assert.Equal(MoveFailReason.Installed, new MoveAction(u[0], new Position(0, 1)).Validate(state));
-            Assert.Equal(AttackFailReason.BlockedByStatus, new AttackAction(u[0], u[1]).Validate(state));
+            Assert.Equal(AttackFailReason.Installed, new AttackAction(u[0], u[1]).Validate(state));
 
-            Use(state, u[0], MortarPiece.BombardId, 4, 4);
+            SkillResult again = Use(state, u[0], MortarPiece.BombardId, 4, 4);
             Assert.Equal(1, u[0].Stats.Shield);
+            Assert.Empty(again.Events.OfType<UnitInstallChangedEvent>()); // 이미 설치 중이면 바뀌지 않는다
         }
 
         // 사용자 확정: 착탄 위치는 조준한 칸에 고정, 예상하고 움직이면 피할 수 있다
@@ -1401,8 +1404,9 @@ namespace MiniChess.Core.Tests
             EndTurn(state);
             EndTurn(state);
 
-            Use(state, u[0], MortarPiece.UninstallId, 0, 0);
-            Assert.Null(u[0].FindStatus(StatusLibrary.InstalledId));
+            SkillResult result = Use(state, u[0], MortarPiece.UninstallId, 0, 0);
+            Assert.False(u[0].IsInstalled);
+            Assert.False(Assert.Single(result.Events.OfType<UnitInstallChangedEvent>()).IsInstalled);
             Assert.Equal(0, u[0].Stats.Shield);
             Assert.Equal(SkillFailReason.None, Check(state, u[0], MortarPiece.ShockShellId, 1, 2));
             Assert.Equal(MoveFailReason.None, new MoveAction(u[0], new Position(0, 1)).Validate(state));
@@ -1422,7 +1426,7 @@ namespace MiniChess.Core.Tests
                 .Place(Team.Player1, 1, 0, Mortar())
                 .Place(Team.Player2, 6, 6)
                 .Start();
-            InstallMortar(state, u[1]);
+            InstallMortar(u[1]);
 
             Warp(u[0], (1, 0), (2, 0)).Execute(state);
 

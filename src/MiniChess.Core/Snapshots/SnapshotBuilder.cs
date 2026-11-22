@@ -33,7 +33,8 @@ namespace MiniChess.Core.Snapshots
                 unit.TurnState.VoluntaryCellsMoved,
                 unit.TurnState.BasicAttackUsed,
                 unit.TurnState.UsedSkillIds.ToList(),
-                unit.Stats.Base.MoveCostMultiplier);
+                unit.Stats.Base.MoveCostMultiplier,
+                unit.IsInstalled);
         }
 
         public static StatusSnapshot Status(StatusEffect status)

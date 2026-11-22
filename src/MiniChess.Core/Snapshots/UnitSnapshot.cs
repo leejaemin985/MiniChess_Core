@@ -31,6 +31,9 @@ namespace MiniChess.Core.Snapshots
         /// <summary>소환자 Id. 소환물이 아니면 null.</summary>
         public int? SummonOwnerId { get; }
 
+        /// <summary>박격포 설치 중인지(Unit.IsInstalled).</summary>
+        public bool IsInstalled { get; }
+
         public IReadOnlyList<string> SkillIds { get; }
         public IReadOnlyList<ShieldSnapshot> Shields { get; }
 
@@ -54,9 +57,10 @@ namespace MiniChess.Core.Snapshots
             int hp, int maxHp, int attack, int attackRange, bool isSummon, int? summonOwnerId,
             IReadOnlyList<string> skillIds, IReadOnlyList<ShieldSnapshot> shields, IReadOnlyList<StatusSnapshot> statuses,
             bool actionsEnded, int voluntaryCellsMoved, bool basicAttackUsed, IReadOnlyList<string> usedSkillIds,
-            int moveCostMultiplier = 1)
+            int moveCostMultiplier = 1, bool isInstalled = false)
         {
             MoveCostMultiplier = moveCostMultiplier;
+            IsInstalled = isInstalled;
             ActionsEnded = actionsEnded;
             VoluntaryCellsMoved = voluntaryCellsMoved;
             BasicAttackUsed = basicAttackUsed;

@@ -27,6 +27,13 @@ namespace MiniChess.Core.State
         /// <summary>이 소환물을 소환한 유닛. 소환물이 아니면 null.</summary>
         public Unit SummonOwner { get; internal set; }
 
+        /// <summary>
+        /// 박격포가 설치 중인지(포격으로 설치, 해체로 풀림). 상태효과가 아닌 박격포 전용 값이다.
+        /// 설치 중에는 자발적 이동과 기본 공격이 막힌다(MovementControl, AttackAction). 외부 이동은 허용.
+        /// 바꿀 때는 SetInstalledEffect 를 거쳐 UnitInstallChangedEvent 를 남긴다.
+        /// </summary>
+        public bool IsInstalled { get; internal set; }
+
         /// <summary>이 유닛의 기본 공격이 적중하면 대상에게 거는 상태(분신의 저주 표식 등). 팀 버프와 별개.</summary>
         public IReadOnlyList<StatusDefinition> BasicAttackStatuses => _basicAttackStatuses;
 
@@ -94,6 +101,7 @@ namespace MiniChess.Core.State
             var copy = new Unit(Id, Team, Stats.Base)
             {
                 IsSummon = IsSummon,
+                IsInstalled = IsInstalled,
                 Position = Position,
             };
             copy.Stats.RestoreHp(Stats.CurrentHp);
