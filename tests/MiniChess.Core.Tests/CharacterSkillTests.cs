@@ -123,17 +123,17 @@ namespace MiniChess.Core.Tests
                 .Start();
 
             Use(state, u[0], FlamePiece.CompressedShellId, 2, 2);
-            Assert.Equal(9, u[1].Stats.CurrentHp);
+            Assert.Equal(7, u[1].Stats.CurrentHp);
 
             EndTurn(state); // P1 종료: 화상 없음
-            Assert.Equal(9, u[1].Stats.CurrentHp);
+            Assert.Equal(7, u[1].Stats.CurrentHp);
 
             EndTurn(state); // P2 종료: 화상 1회
-            Assert.Equal(8, u[1].Stats.CurrentHp);
+            Assert.Equal(6, u[1].Stats.CurrentHp);
 
             EndTurn(state);
             EndTurn(state); // P2 종료: 화상 2회째, 만료
-            Assert.Equal(7, u[1].Stats.CurrentHp);
+            Assert.Equal(5, u[1].Stats.CurrentHp);
             Assert.Empty(u[1].Statuses);
         }
 
@@ -154,7 +154,7 @@ namespace MiniChess.Core.Tests
             Assert.Equal(2, u[2].Statuses.Count);
             EndTurn(state);
             EndTurn(state);
-            Assert.Equal(16, u[2].Stats.CurrentHp); // 즉시 1 × 2, 화상 1 × 2건
+            Assert.Equal(12, u[2].Stats.CurrentHp); // 즉시 3 × 2, 화상 1 × 2건
 
             Use(state, u[0], FlamePiece.CompressedShellId, 2, 2); // 같은 유닛·스킬: 갱신
             Assert.Equal(new[] { 2, 1 }, u[2].Statuses.Select(s => s.Remaining));
@@ -197,7 +197,7 @@ namespace MiniChess.Core.Tests
             MovementResult move = new MoveAction(u[1], new Position(0, 1)).Execute(state);
 
             Assert.Equal(new Position(0, 2), move.StoppedAt);
-            Assert.Equal(9, u[1].Stats.CurrentHp);
+            Assert.Equal(6, u[1].Stats.CurrentHp);
             Assert.NotNull(u[1].FindStatus(StatusLibrary.RootId));
             Assert.Null(state.Board.GetCell(new Position(0, 2)).GetEffect(CellEffectLayer.Trap));
             Assert.Equal(MoveFailReason.Rooted, new MoveAction(u[1], new Position(1, 2)).Validate(state));
@@ -569,7 +569,7 @@ namespace MiniChess.Core.Tests
 
             Use(state, u[0], GardenerPiece.SingleShieldId, 3, 3);
 
-            Assert.Equal(2, u[1].Stats.FindShield(GardenerPiece.SingleShieldId).Amount);
+            Assert.Equal(3, u[1].Stats.FindShield(GardenerPiece.SingleShieldId).Amount);
             Assert.Same(u[0], u[1].Stats.FindShield(GardenerPiece.SingleShieldId).Source);
             Assert.Equal(1, state.GetPlayer(Team.Player1).Ap.Current);
             Assert.True(u[0].TurnState.HasUsedSkill(GardenerPiece.SingleShieldId));
@@ -586,7 +586,7 @@ namespace MiniChess.Core.Tests
             Assert.Equal(SkillFailReason.InvalidTarget, Check(state, u[0], GardenerPiece.SingleShieldId, 2, 2));
 
             Use(state, u[0], GardenerPiece.SingleShieldId, 1, 1);
-            Assert.Equal(2, u[0].Stats.Shield);
+            Assert.Equal(3, u[0].Stats.Shield);
         }
 
         [Fact]
@@ -597,12 +597,12 @@ namespace MiniChess.Core.Tests
                 .Place(Team.Player2, 6, 6)
                 .Start();
             Use(state, u[0], GardenerPiece.SingleShieldId, 1, 1);
-            DamageSystem.Apply(state, new DamageRequest(null, u[0], 1, DamageType.Direct)); // 2 → 1
+            DamageSystem.Apply(state, new DamageRequest(null, u[0], 1, DamageType.Direct)); // 3 → 2
             EndTurn(state); EndTurn(state);
 
             Use(state, u[0], GardenerPiece.SingleShieldId, 1, 1);
 
-            Assert.Equal(2, u[0].Stats.Shield);
+            Assert.Equal(3, u[0].Stats.Shield);
             Assert.Single(u[0].Stats.Shields);
         }
 
@@ -617,7 +617,7 @@ namespace MiniChess.Core.Tests
 
             Use(state, u[0], GardenerPiece.SingleShieldId, 1, 1);
 
-            Assert.Equal(5, u[0].Stats.Shield);
+            Assert.Equal(6, u[0].Stats.Shield);
             Assert.Equal(new[] { ShieldReward.ShieldId, GardenerPiece.SingleShieldId }, u[0].Stats.Shields.Select(s => s.Id));
         }
 
@@ -638,11 +638,11 @@ namespace MiniChess.Core.Tests
             Assert.Equal(9, u[1].Stats.CurrentHp);
             EndTurn(state);
 
-            // 프리셋 누적 2칸: 3칸 이동은 막히고, 1칸 이동 뒤에는 추가 1칸만 된다(추가 2칸은 막힌다).
-            Assert.Equal(MoveFailReason.DistanceLimited, new MoveAction(u[1], new Position(2, 5)).Validate(state));
+            // 프리셋 누적 1칸: 2칸 이동은 막히고, 1칸 이동 뒤에는 추가 1칸도 막힌다.
+            Assert.Equal(MoveFailReason.DistanceLimited, new MoveAction(u[1], new Position(2, 4)).Validate(state));
+            Assert.Equal(MoveFailReason.None, new MoveAction(u[1], new Position(2, 3)).Validate(state));
             new MoveAction(u[1], new Position(2, 3)).Execute(state);
-            Assert.Equal(MoveFailReason.DistanceLimited, new MoveAction(u[1], new Position(2, 5)).Validate(state));
-            Assert.Equal(MoveFailReason.None, new MoveAction(u[1], new Position(2, 4)).Validate(state));
+            Assert.Equal(MoveFailReason.DistanceLimited, new MoveAction(u[1], new Position(2, 4)).Validate(state));
         }
 
         [Fact]
@@ -764,7 +764,7 @@ namespace MiniChess.Core.Tests
             Use(state, u[0], WarriorPiece.DashId, 0, 3);
 
             Assert.Equal(new Position(0, 3), u[0].Position);
-            Assert.Equal(9, u[0].Stats.CurrentHp);
+            Assert.Equal(6, u[0].Stats.CurrentHp);
             Assert.NotNull(u[0].FindStatus(StatusLibrary.RootId));
             Assert.Equal(7, u[2].Stats.CurrentHp);
         }
@@ -1997,7 +1997,7 @@ namespace MiniChess.Core.Tests
 
             SkillResult result = UseChain(state, u[0], new Position(2, 2), new Position(2, 3));
 
-            Assert.Equal(4, u[1].Stats.CurrentHp);
+            Assert.Equal(5, u[1].Stats.CurrentHp);
             Assert.Equal(new Position(2, 3), u[0].Position);
             Assert.Equal(MoveKind.Warp, result.Events.OfType<UnitMovedEvent>().Single().Kind);
         }
@@ -2091,7 +2091,7 @@ namespace MiniChess.Core.Tests
 
             SkillResult result = UseChain(state, u[0], new Position(2, 2), new Position(2, 3));
 
-            Assert.Equal(4, u[1].Stats.CurrentHp);
+            Assert.Equal(5, u[1].Stats.CurrentHp);
             Assert.Equal(new Position(2, 3), u[0].Position);
             Assert.Empty(result.Events.OfType<UnitMovedEvent>());
         }
@@ -2266,7 +2266,7 @@ namespace MiniChess.Core.Tests
             SkillResult result = Correction(u[0], target, chosen).Execute(state);
 
             Assert.Equal(chosen, u[1].Position);
-            Assert.Equal(9, u[1].Stats.CurrentHp);
+            Assert.Equal(8, u[1].Stats.CurrentHp);
             Assert.All(result.Events.OfType<UnitMovedEvent>(), moved => Assert.Equal(MoveKind.Knockback, moved.Kind));
         }
 
@@ -2303,7 +2303,7 @@ namespace MiniChess.Core.Tests
             SkillResult result = Correction(u[0], target, wall).Execute(state);
 
             Assert.Equal(target, u[1].Position);
-            Assert.Equal(9, u[1].Stats.CurrentHp);
+            Assert.Equal(8, u[1].Stats.CurrentHp);
             Assert.Empty(result.Events.OfType<UnitMovedEvent>());
             Assert.True(state.GetPlayer(Team.Player1).Ap.Current < apBefore);
         }
@@ -2371,7 +2371,7 @@ namespace MiniChess.Core.Tests
             Assert.Null(u[1].FindStatus(StatusLibrary.StunnedId));
         }
 
-        // 사용자 확정: 심판은 피해 3 을 준 뒤 밀어낸다
+        // 사용자 확정: 심판은 피해 1 을 준 뒤 밀어낸다
         [Fact]
         public void Judgment_DealsDamage_ThenPushes()
         {
@@ -2382,7 +2382,7 @@ namespace MiniChess.Core.Tests
 
             SkillResult result = Use(state, u[0], InquisitorPiece.JudgmentId, 3, 4);
 
-            Assert.Equal(7, u[1].Stats.CurrentHp);
+            Assert.Equal(9, u[1].Stats.CurrentHp);
             Assert.Equal(new Position(3, 6), u[1].Position);
             List<GameEvent> events = result.Events.ToList();
             Assert.True(events.FindIndex(e => e is UnitDamagedEvent) < events.FindIndex(e => e is UnitMovedEvent));
@@ -2394,7 +2394,7 @@ namespace MiniChess.Core.Tests
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 3, 3, Inquisitor())
-                .Place(Team.Player2, 3, 4, TestGame.Stats(hp: 3))
+                .Place(Team.Player2, 3, 4, TestGame.Stats(hp: 1))
                 .Start();
 
             SkillResult result = Use(state, u[0], InquisitorPiece.JudgmentId, 3, 4);

@@ -167,13 +167,13 @@ namespace MiniChess.Core.Presets
 
             t.Flame.CompressedShell.ApCost = 3;
             t.Flame.CompressedShell.Range = 3;
-            t.Flame.CompressedShell.ImpactDamage = 1;
+            t.Flame.CompressedShell.ImpactDamage = 3;
             t.Flame.CompressedShell.BurnDamage = 1;
             t.Flame.CompressedShell.BurnTriggers = 2;
 
             t.Chemist.RootTrap.ApCost = 3;
             t.Chemist.RootTrap.Range = 3;
-            t.Chemist.RootTrap.Damage = 1;
+            t.Chemist.RootTrap.Damage = 4;
             t.Chemist.RootTrap.RootTurns = 1;
             t.Chemist.RootTrap.MaxActive = 2;
             t.Chemist.RootTrap.Lifetime = 3;
@@ -214,7 +214,7 @@ namespace MiniChess.Core.Presets
 
             t.Gardener.SingleShield.ApCost = 3;
             t.Gardener.SingleShield.Range = 2;
-            t.Gardener.SingleShield.Amount = 2;
+            t.Gardener.SingleShield.Amount = 3;
 
             t.Mortar.Bombard.ApCost = 4;
             t.Mortar.Bombard.Range = 4;
@@ -248,7 +248,7 @@ namespace MiniChess.Core.Presets
             t.Scythe.ShadowClone.MarkBonusDamage = 2;
             t.Scythe.CloneSwap.ApCost = 1;
 
-            t.Seamstress.Warp.ApCost = 3;
+            t.Seamstress.Warp.ApCost = 2;
             t.Seamstress.Warp.Range = 3;
 
             t.Seamstress.Obstacle.ApCost = 3;
@@ -264,27 +264,27 @@ namespace MiniChess.Core.Presets
             t.Assassin.ChainSlash.ApCost = 4;
             t.Assassin.ChainSlash.Range = 4;
             t.Assassin.ChainSlash.ChainRange = 2;
-            t.Assassin.ChainSlash.SingleDamage = 6;
+            t.Assassin.ChainSlash.SingleDamage = 5;
             t.Assassin.ChainSlash.MultiDamage = 3;
 
             t.Sculptor.Seal.ApCost = 4;
             t.Sculptor.Seal.Range = 3;
             t.Sculptor.Correction.ApCost = 2;
             t.Sculptor.Correction.Range = 3;
-            t.Sculptor.Correction.Damage = 1;
+            t.Sculptor.Correction.Damage = 2;
             t.Sculptor.Correction.PushCells = 2;
 
             t.Inquisitor.Purify.ApCost = 3;
             t.Inquisitor.Purify.Range = 2;
             t.Inquisitor.Judgment.ApCost = 3;
             t.Inquisitor.Judgment.Range = 1;
-            t.Inquisitor.Judgment.Damage = 3;
+            t.Inquisitor.Judgment.Damage = 1;
             t.Inquisitor.Judgment.PushCells = 2;
 
             t.Archer.Bola.ApCost = 3;
             t.Archer.Bola.Range = 3;
             t.Archer.Bola.Damage = 1;
-            t.Archer.Bola.MaxCells = 2;
+            t.Archer.Bola.MaxCells = 1;
             t.Archer.Bola.TargetTurns = 1;
 
             return t;
