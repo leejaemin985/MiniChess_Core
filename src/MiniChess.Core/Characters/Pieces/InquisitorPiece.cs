@@ -4,13 +4,12 @@ using MiniChess.Core.Skills;
 using MiniChess.Core.Skills.Areas;
 using MiniChess.Core.Skills.Effects;
 using MiniChess.Core.Skills.Targeting;
-using MiniChess.Core.Statuses.Library;
 
 namespace MiniChess.Core.Characters.Pieces
 {
     /// <summary>
     /// 이단심판관 (사용자 기획).
-    /// 스킬 1 정화, 스킬 2 심판. 아군의 나쁜 상태이상을 풀고, 가까운 적을 밀어내 기절시키는 수호형.
+    /// 스킬 1 정화, 스킬 2 심판. 아군의 나쁜 상태이상을 풀고, 가까운 적을 밀어내는 수호형.
     /// </summary>
     public class InquisitorPiece : PieceModule
     {
@@ -44,8 +43,8 @@ namespace MiniChess.Core.Characters.Pieces
         }
 
         /// <summary>
-        /// 심판: 사거리 안의 적 하나에게 피해를 주고, 시전자 반대쪽으로 밀어낸 뒤(코어 밀어내기 규칙) 한 턴 기절시킨다.
-        /// 막혀서 덜 밀리거나 못 밀려도 기절은 걸린다. 피해로 죽거나 밀리는 도중 죽으면 밀기/기절은 일어나지 않는다.
+        /// 심판: 사거리 안의 적 하나에게 피해를 주고, 시전자 반대쪽으로 밀어낸다(코어 밀어내기 규칙).
+        /// 피해로 죽으면 밀기는 일어나지 않는다. (사용자 확정: 기절 제거)
         /// </summary>
         public static SkillDefinition Judgment(JudgmentTuning t)
         {
@@ -56,7 +55,7 @@ namespace MiniChess.Core.Characters.Pieces
                 new SkillEffect[]
                 {
                     new DamageEffect(t.Damage),
-                    new KnockbackEffect(t.PushCells, afterPush: new SkillEffect[] { new ApplyStatusEffect(StatusLibrary.Stunned(1)) }),
+                    new KnockbackEffect(t.PushCells),
                 });
         }
     }
@@ -76,7 +75,7 @@ namespace MiniChess.Core.Characters.Pieces
         public int? Range { get; set; }
     }
 
-    /// <summary>심판. 기절 지속은 "한 턴"으로 확정.</summary>
+    /// <summary>심판.</summary>
     public class JudgmentTuning
     {
         public int? ApCost { get; set; }

@@ -1612,7 +1612,7 @@ namespace MiniChess.Core.Tests
             Assert.Equal(SkillFailReason.None, Check(state, u[1], InquisitorPiece.JudgmentId, 0, 2)); // 우리 팀 장애물
             SkillResult result = Use(state, u[1], InquisitorPiece.JudgmentId, 0, 2);
 
-            Assert.Equal(3, ObstacleAt(state, 0, 2).Hp); // 심판 피해 1
+            Assert.Equal(1, ObstacleAt(state, 0, 2).Hp); // 심판 피해 3
             Assert.Single(result.Events.OfType<ObstacleDamagedEvent>());
             Assert.DoesNotContain(result.Events, e => e is UnitMovedEvent || e is StatusAppliedEvent);
             Assert.Equal(new Position(0, 3), u[1].Position);
@@ -2500,27 +2500,23 @@ namespace MiniChess.Core.Tests
             Assert.Empty(u[0].Statuses);
         }
 
-        // 사용자 기획: 가까운 적 하나를 뒤로 밀어낸 뒤 한 턴 기절
+        // 사용자 확정: 가까운 적 하나를 뒤로 밀어낸다. 기절은 걸지 않는다(기절 제거)
         [Fact]
-        public void Judgment_PushesEnemyBack_ThenStunsForOneTurn()
+        public void Judgment_PushesEnemyBack_WithoutStun()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 3, 3, Inquisitor())
                 .Place(Team.Player2, 3, 4)
                 .Start();
 
-            Use(state, u[0], InquisitorPiece.JudgmentId, 3, 4);
+            SkillResult result = Use(state, u[0], InquisitorPiece.JudgmentId, 3, 4);
 
             Assert.Equal(new Position(3, 6), u[1].Position); // 2칸
-            Assert.NotNull(u[1].FindStatus(StatusLibrary.StunnedId));
-
-            EndTurn(state);
-            Assert.Equal(MoveFailReason.Stunned, new MoveAction(u[1], new Position(3, 5)).Validate(state));
-            EndTurn(state); // 대상의 턴 종료: 기절 해제
             Assert.Null(u[1].FindStatus(StatusLibrary.StunnedId));
+            Assert.DoesNotContain(result.Events, e => e is StatusAppliedEvent);
         }
 
-        // 사용자 확정: 심판은 피해 1 을 준 뒤 밀어낸다
+        // 사용자 확정: 심판은 피해 3 을 준 뒤 밀어낸다
         [Fact]
         public void Judgment_DealsDamage_ThenPushes()
         {
@@ -2531,15 +2527,15 @@ namespace MiniChess.Core.Tests
 
             SkillResult result = Use(state, u[0], InquisitorPiece.JudgmentId, 3, 4);
 
-            Assert.Equal(9, u[1].Stats.CurrentHp);
+            Assert.Equal(7, u[1].Stats.CurrentHp);
             Assert.Equal(new Position(3, 6), u[1].Position);
             List<GameEvent> events = result.Events.ToList();
             Assert.True(events.FindIndex(e => e is UnitDamagedEvent) < events.FindIndex(e => e is UnitMovedEvent));
         }
 
-        // [가정] 피해로 죽으면 밀기/기절은 일어나지 않는다
+        // [가정] 피해로 죽으면 밀기는 일어나지 않는다
         [Fact]
-        public void Judgment_KillingBlow_NoPushNoStun()
+        public void Judgment_KillingBlow_NoPush()
         {
             var (state, u) = Game()
                 .Place(Team.Player1, 3, 3, Inquisitor())
@@ -2550,23 +2546,6 @@ namespace MiniChess.Core.Tests
 
             Assert.False(u[1].IsAlive);
             Assert.DoesNotContain(result.Events, e => e is UnitMovedEvent);
-            Assert.DoesNotContain(result.Events, e => e is StatusAppliedEvent);
-        }
-
-        // [가정] 막혀서 밀리지 않아도 기절은 걸린다
-        [Fact]
-        public void Judgment_StunsEvenWhenPushIsBlocked()
-        {
-            var (state, u) = Game()
-                .WithMap(".......", "...#...", ".......", ".......", ".......", ".......", ".......")
-                .Place(Team.Player1, 3, 3, Inquisitor())
-                .Place(Team.Player2, 3, 4)
-                .Start();
-
-            Use(state, u[0], InquisitorPiece.JudgmentId, 3, 4);
-
-            Assert.Equal(new Position(3, 4), u[1].Position);
-            Assert.NotNull(u[1].FindStatus(StatusLibrary.StunnedId));
         }
 
         // [가정] "가까운 적" = 사거리 1(대각선 포함)
@@ -2583,7 +2562,6 @@ namespace MiniChess.Core.Tests
             Use(state, u[0], InquisitorPiece.JudgmentId, 4, 4);
 
             Assert.Equal(new Position(4, 6), u[2].Position); // 대각선은 세로 차이 >= 가로 차이 규칙으로 위쪽
-            Assert.NotNull(u[2].FindStatus(StatusLibrary.StunnedId));
         }
 
         #endregion
