@@ -8,6 +8,7 @@ namespace MiniChess.Core.Skills.Conditions
     /// <summary>
     /// 시전자가 이 스킬로 설치해 보드에 남아 있는 구역 수가 한도 미만일 때만 사용 가능.
     /// [가정] 한도에 도달하면 새 설치를 거부한다(오래된 것을 교체하지 않는다).
+    /// 테스트 규칙의 장판 개수 제한 없음(GameRuleData.HasUnlimitedZones)이 켜진 팀은 한도를 무시한다.
     /// </summary>
     public class MaxActiveZonesCondition : SkillCondition
     {
@@ -29,7 +30,7 @@ namespace MiniChess.Core.Skills.Conditions
 
         public override bool IsMet(GameState state, Unit caster)
         {
-            return CountActiveZones(state, caster, SkillId) < Max.Value;
+            return state.Rules.HasUnlimitedZones(caster.Team) || CountActiveZones(state, caster, SkillId) < Max.Value;
         }
 
         public static int CountActiveZones(GameState state, Unit caster, string skillId)

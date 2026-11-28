@@ -518,6 +518,29 @@ namespace MiniChess.Core.Tests
             Assert.Equal(5, u[2].Stats.CurrentHp);
         }
 
+        // 테스트 규칙 "장판 개수 제한 없음": 켜진 팀만 동시 설치 한도(회복 초원 1)를 넘어 설치한다
+        [Theory]
+        [InlineData(true, Team.Player1, SkillFailReason.None, 2)]
+        [InlineData(false, Team.Player1, SkillFailReason.ConditionNotMet, 1)]
+        [InlineData(true, Team.Player2, SkillFailReason.ConditionNotMet, 1)]
+        public void TestRule_UnlimitedZones_IgnoresMaxActiveOnlyForAppliedTeam(bool unlimitedZones, Team appliedTeam, SkillFailReason second, int activeZones)
+        {
+            var (state, u) = Game()
+                .Place(Team.Player1, 1, 1, With(GardenerPiece.HealingMeadowId))
+                .Place(Team.Player2, 6, 6)
+                .WithRules(r => r.Test = new TestRuleData { UnlimitedZones = unlimitedZones, Teams = new[] { appliedTeam } })
+                .Start();
+
+            Use(state, u[0], GardenerPiece.HealingMeadowId, 1, 1);
+            EndTurn(state); EndTurn(state); // 다음 자기 턴(턴당 1회 제한을 피한다). 첫 초원은 아직 남아 있다
+
+            Assert.Equal(second, Check(state, u[0], GardenerPiece.HealingMeadowId, 3, 3));
+            if (second == SkillFailReason.None)
+                Use(state, u[0], GardenerPiece.HealingMeadowId, 3, 3);
+
+            Assert.Equal(activeZones, Skills.Conditions.MaxActiveZonesCondition.CountActiveZones(state, u[0], GardenerPiece.HealingMeadowId));
+        }
+
         // 명세 14: "3×3 회복지대 일부에 독가스 설치" → 겹치는 타일의 회복지대가 교체됨
         [Fact]
         public void PoisonGas_OverwritesOverlappingMeadowTiles_OthersRemain()

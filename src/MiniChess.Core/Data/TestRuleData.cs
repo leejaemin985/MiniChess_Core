@@ -16,6 +16,9 @@ namespace MiniChess.Core.Data
         /// <summary>기본 공격과 스킬의 턴당 1회 제한, 행동 종료(행동이 끝나는 스킬)를 무시한다.</summary>
         public bool UnlimitedActions { get; set; }
 
+        /// <summary>장판 스킬의 시전자당 동시 설치 수 한도(MaxActiveZonesCondition)를 무시한다.</summary>
+        public bool UnlimitedZones { get; set; }
+
         /// <summary>적용할 팀. null 이면 모든 팀.</summary>
         public IReadOnlyCollection<Team> Teams { get; set; }
 

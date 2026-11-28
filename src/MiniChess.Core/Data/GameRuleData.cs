@@ -32,6 +32,12 @@ namespace MiniChess.Core.Data
             return Test != null && Test.UnlimitedActions && Test.AppliesTo(team);
         }
 
+        /// <summary>team 이 장판 동시 설치 수 한도 없이 설치하는지(테스트 규칙).</summary>
+        public bool HasUnlimitedZones(Team team)
+        {
+            return Test != null && Test.UnlimitedZones && Test.AppliesTo(team);
+        }
+
         /// <summary>team 이 실제로 내는 기본 공격 AP.</summary>
         public int GetBasicAttackCost(Team team)
         {
